@@ -1,0 +1,18 @@
+{
+  "Settings": {
+    "Language": "en",
+    "Mode": "read",
+    "GameId": 2,
+    "SaveFilePath": "/path/to/save/file.sav"
+  },
+  "ConnectionStrings": {
+    "Database": "Server=___;Uid=___;Pwd=___;Database=pokemon;"
+  },
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft": "Warning",
+      "Microsoft.Hosting.Lifetime": "Information"
+    }
+  }
+}
