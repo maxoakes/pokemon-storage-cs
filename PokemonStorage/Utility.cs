@@ -1,4 +1,6 @@
 ﻿using System.Data.Common;
+using System.Text;
+using Org.BouncyCastle.Asn1.X509;
 
 namespace PokemonStorage;
 
@@ -65,15 +67,112 @@ public static class Utility
 
     #region Bits and Bytes
 
-    public static byte GetBit(byte data, byte index, bool isLittleEndian = false, bool isSigned = false)
+    public static byte GetBit(byte data, byte index, bool isBigEndian = false)
     {
         return Convert.ToByte((data & (1 << (index - 1))) != 0);
     }
-
-    public static int GetInt(byte[] data, int offset, int length, bool isLittleEndian=false, bool isSigned=false)
+    
+    public static byte GetByte(byte[] data, int offset)
     {
-        return BitConverter.ToInt32(data, offset) >> length;
+        return data[offset];
+    }
+
+    public static ushort GetUnsignedShort(byte[] data, int offset, bool isBigEndian=false)
+    {
+        return (ushort)BitConverter.ToInt16(GetBytes(data, offset, 2, isBigEndian), 0);
+    }
+
+    public static int GetInt(byte[] data, int offset, int numberofBits = 32, bool isBigEndian=false)
+    {
+        return BitConverter.ToInt32(GetBytes(data, offset, 8, isBigEndian), 0) >> 32 - numberofBits;
     }
     
+    public static byte[] GetBytes(byte[] data, int offset, int length, bool isBigEndian=false)
+    {
+        if (data == null) return [];
+
+        if (offset < 0 || length < 0 || offset + length > data.Length)
+            throw new ArgumentOutOfRangeException(nameof(offset), "Invalid offset or length.");
+
+        byte[] result = new byte[length];
+        Array.Copy(data, offset, result, 0, length);
+
+        if (isBigEndian)
+            return [.. result.Reverse()];
+        else
+            return result;
+    }
+
+    public static string GetEncodedString(byte[] data, int version, string lang)
+    {
+        StringBuilder result = new StringBuilder();
+
+        if (version is >= 1 and <= 7)
+        {
+            List<byte> nullTerminators;
+            switch (version)
+            {
+                case 1:
+                case 2:
+                case 3:
+                case 4:
+                    nullTerminators = [0x00, 0x50];
+                    break;
+                default:
+                    nullTerminators = [0xFF, 0xFE];
+                    break;
+            };
+
+            foreach (var b in data)
+            {
+                string c = GetEncodedCharacter(b, version);
+                if (!nullTerminators.Contains(b))
+                    result.Append(c);
+                else
+                    break;
+            }
+        }
+        else if (version is >= 8 and <= 10)
+        {
+            for (int i = 0; i < data.Length; i++)
+            {
+                if (i % 2 == 0)
+                {
+                    ushort charBytes = GetUnsignedShort(data, i);
+                    string ch = GetEncodedCharacter(charBytes, version);
+                    if (charBytes != 0xFFFF)
+                        result.Append(ch);
+                    else
+                        break;
+                }
+            }
+        }
+
+        return result.ToString();
+    }
+    
+    public static string GetEncodedCharacter(ushort character, int generation)
+    {
+        switch (generation)
+        {
+            case 1:
+            case 2:
+                return CharacterEncoding.EN_GEN1.GetValueOrDefault(character, "");
+            case 3:
+            case 4:
+                return CharacterEncoding.EN_GEN2.GetValueOrDefault(character, "");
+            case 5:
+            case 6:
+            case 7:
+                return CharacterEncoding.WEST_GEN3.GetValueOrDefault(character, "");
+            case 8:
+            case 9:
+            case 10:
+                return CharacterEncoding.WEST_GEN4.GetValueOrDefault(character, "");
+            default:
+                return "?";
+        }
+    }
+
     #endregion
 }

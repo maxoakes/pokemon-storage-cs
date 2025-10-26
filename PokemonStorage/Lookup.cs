@@ -379,9 +379,11 @@ public class Lookup
         };
     }
 
-    public (int hp, int attack, int defense, int spAttack, int spDefense, int speed) GetBaseStats(int speciesId)
+    public static (int hp, int attack, int defense, int spAttack, int spDefense, int speed) GetBaseStats(int speciesId)
     {
-        List<MySqlParameter> parameters = [new MySqlParameter("Id", MySqlDbType.Int16)];
+        List<MySqlParameter> parameters = [
+            new MySqlParameter("Id", MySqlDbType.Int16) { Value = speciesId }
+        ];
 
         DataTable statDataTable = DbInterface.RetrieveTable("""
                 SELECT 
@@ -414,9 +416,11 @@ public class Lookup
         return (0, 0, 0, 0, 0, 0);
     }
 
-    public (int increased, int decreased) GetNatureStats(int natureId)
+    public static (int increased, int decreased) GetNatureStats(int natureId)
     {
-        List<MySqlParameter> parameters = [new MySqlParameter("Id", MySqlDbType.Int16)];
+        List<MySqlParameter> parameters = [
+            new MySqlParameter("Id", MySqlDbType.Int16) { Value = natureId }
+        ];
         DataTable statDataTable = DbInterface.RetrieveTable("SELECT increased_stat_id, decreased_stat_id FROM natures WHERE id = @Id", parameters);
 
         foreach (DataRow row in statDataTable.Rows)
@@ -429,9 +433,11 @@ public class Lookup
         return (0, 0);
     }
 
-    public int GetGrowthRateId(int speciesId)
+    public static int GetGrowthRateId(int speciesId)
     {
-        List<MySqlParameter> parameters = [new MySqlParameter("Id", MySqlDbType.Int16)];
+        List<MySqlParameter> parameters = [
+            new MySqlParameter("Id", MySqlDbType.Int16) { Value = speciesId }
+        ];
         DataTable statDataTable = DbInterface.RetrieveTable("SELECT growth_rate_id FROM pokemon_species WHERE id=@Id", parameters);
 
         foreach (DataRow row in statDataTable.Rows)
@@ -441,11 +447,11 @@ public class Lookup
         return 0;
     }
 
-    public int GetLevelFromExperience(int speciesId, int experience)
+    public static int GetLevelFromExperience(int speciesId, int experience)
     {
         List<MySqlParameter> parameters = [
-            new MySqlParameter("Id", MySqlDbType.Int16),
-            new MySqlParameter("Experience", MySqlDbType.Int32)
+            new MySqlParameter("Id", MySqlDbType.Int16) { Value = speciesId },
+            new MySqlParameter("Experience", MySqlDbType.Int32) { Value = experience }
         ];
 
         DataTable statDataTable = DbInterface.RetrieveTable("""

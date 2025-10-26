@@ -2,65 +2,49 @@
 using Microsoft.Extensions.Logging;
 using PokemonStorage.Models;
 using System.Configuration;
-using System.IO;
-// import os
-// import sys
-// from dotenv import load_dotenv
-// from Database import Database
-// from Extractor import Extractor
-// from Lookup import Lookup
-// from Models.GameState import GameState
-// from Models.Pokemon import Pokemon
-// from Models.Trainer import Trainer
-
-// def main():
 
 namespace PokemonStorage;
 
-
 public class Program
 {
+    public static ILogger Logger;
     public static string ConnectionString = "";
-    public static string Language = "";
-    public static string Mode = "";
-    public static int GameId = 0;
     public static string SaveFilePath = "";
-
-    public static Trainer OriginalTrainer = new("OAK", (int)Gender.MALE, 1, 0);
+    public static Trainer ManagerTrainer = new("OAK", (int)Gender.MALE, 1, 0);
 
     public static void Main()
     {
         // Read Configs
         IConfiguration config = new ConfigurationBuilder()
             .SetBasePath(Directory.GetCurrentDirectory())
-            .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+            .AddJsonFile("appsettings.json", optional: false, reloadOnChange: false)
             .Build();
 
         // Init logger
         using ILoggerFactory factory = LoggerFactory.Create(builder => builder.AddConsole());
-        ILogger logger = factory.CreateLogger<Program>();
+        Logger = factory.CreateLogger<Program>();
 
         // Access configuration values
         ConnectionString = config.GetConnectionString("Database") ?? "";
-        Language = config.GetValue<string>("Settings:Language") ?? "";
-        Mode = config.GetValue<string>("Settings:Mode") ?? "";
-        GameId = config.GetValue<int>("Settings:GameId");
+        string language = config.GetValue<string>("Settings:Language") ?? "";
+        string mode = config.GetValue<string>("Settings:Mode") ?? "";
+        int gameId = config.GetValue<int>("Settings:GameId");
         SaveFilePath = config.GetValue<string>("Settings:SaveFilePath") ?? "";
 
-        if (string.IsNullOrWhiteSpace(Language) || string.IsNullOrWhiteSpace(Mode) || GameId == 0 || string.IsNullOrWhiteSpace(SaveFilePath))
+        if (string.IsNullOrWhiteSpace(language) || string.IsNullOrWhiteSpace(mode) || gameId == 0 || string.IsNullOrWhiteSpace(SaveFilePath))
         {
             throw new ConfigurationErrorsException("appsettings.json is not configured correctly");
         }
 
-        logger.LogInformation($"Connection String: {ConnectionString}");
-        logger.LogInformation($"Settings: ({Language})({GameId}) {Utility.ProperCapitalizeString(Mode)} from [{SaveFilePath}]");
+        Logger.LogInformation($"Connection String: {ConnectionString}");
+        Console.WriteLine($"Settings: ({language})({gameId}) {Utility.ProperCapitalizeString(mode)} from [{SaveFilePath}]");
 
         Lookup.Initialize();
 
         Game game;
         try
         {
-            game = Lookup.Games[GameId];
+            game = Lookup.Games[gameId];
         }
         catch (KeyNotFoundException ex)
         {
@@ -79,11 +63,12 @@ public class Program
         }
         catch (Exception ex)
         {
-            logger.LogTrace(ex, "Something went wrong loading the save game file");
+            Logger.LogTrace(ex, "Something went wrong loading the save game file");
             return;
         }
 
         Console.WriteLine($"Loaded {game} with {originalSaveData.Length} bytes.");
+        GameState gameState = new(originalSaveData, game, language);
 
         //     print(f"Reading {game} for version {game.version_id} in '{lang}' with length {len(content)}...")
         //     game_state = GameState(content, game, lang)

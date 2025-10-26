@@ -6,10 +6,10 @@ public class Trainer
 {
     public string Name { get; set; }
     public Gender Gender { get; set; }
-    public byte PublicId { get; set; }
-    public byte SecretId { get; set; }
+    public ushort PublicId { get; set; }
+    public ushort SecretId { get; set; }
 
-    public Trainer(string name, int gender, byte publicId, byte secretId)
+    public Trainer(string name, int gender, ushort publicId, ushort secretId)
     {
         Name = name;
         Gender = (Gender)gender;
