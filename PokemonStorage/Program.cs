@@ -70,17 +70,20 @@ public class Program
         Console.WriteLine($"Loaded {game} with {originalSaveData.Length} bytes.");
         GameState gameState = new(originalSaveData, game, language);
 
-        //     print(f"Reading {game} for version {game.version_id} in '{lang}' with length {len(content)}...")
-        //     game_state = GameState(content, game, lang)
-
-        //     print("Party:")
-        //     for (i, p) in game_state.party.items():
-        //         print(f"  Slot {i+1}: {p.get_one_liner_description()}")
-        //     for (b_id, box) in game_state.box_lists.items():
-        //         print(f"Box {b_id}")
-        //         for (i, p) in box.items():
-        //             print(f"  Slot {i+1}: {p.get_one_liner_description()}")
-
-
+        Console.WriteLine("Party:");
+        foreach ((int slot, PartyPokemon pokemon) in gameState.Party)
+        {
+            Console.WriteLine($"{slot}: {pokemon.PrintRelevant()}");
+            pokemon.PrintFullDetails();
         }
+        foreach ((int boxId, var boxList) in gameState.BoxList)
+        {
+            Console.WriteLine($"Box {boxId}");
+            foreach ((int slot, PartyPokemon pokemon) in boxList)
+            {
+                Console.WriteLine($"{slot}: {pokemon.PrintRelevant()}");
+                pokemon.PrintFullDetails();
+            }
+        }
+    }
 }

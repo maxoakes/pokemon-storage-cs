@@ -1,5 +1,6 @@
 using System.Data;
 using System.Text.Json;
+using Google.Protobuf.WellKnownTypes;
 using MySql.Data.MySqlClient;
 using PokemonStorage.DatabaseIO;
 using PokemonStorage.Models;
@@ -256,20 +257,20 @@ public class Lookup
         return 0;
     }
 
-    public static string GetItemName(int id)
+    public static string GetItemName(ushort id)
     {
         if (id == 0) return "";
-        return Items.TryGetValue(id, out var item) ? item.Name : "???";
+        return Items.TryGetValue(id, out var item) ? item.Name : "??";
     }
 
-    public static int GetSpeciesIdByIndex(int generation, int gameIndex)
+    public static ushort GetSpeciesIdByIndex(int generation, int gameIndex)
     {
         return generation switch
         {
-            1 => PokemonGen1Index.GetValueOrDefault(gameIndex, 0),
-            3 => PokemonGen3Index.GetValueOrDefault(gameIndex, 0),
-            4 => PokemonGen4Index.GetValueOrDefault(gameIndex, 0),
-            _ => gameIndex
+            1 => (ushort)PokemonGen1Index.GetValueOrDefault(gameIndex, 0),
+            3 => (ushort)PokemonGen3Index.GetValueOrDefault(gameIndex, 0),
+            4 => (ushort)PokemonGen4Index.GetValueOrDefault(gameIndex, 0),
+            _ => (ushort)gameIndex
         };
     }
 
@@ -303,9 +304,9 @@ public class Lookup
     }
             
 
-    public static int GetBaseHappiness(int speciesId)
+    public static byte GetBaseHappiness(uint speciesId)
     {
-        return BaseHappiness.GetValueOrDefault(speciesId, 0);
+        return (byte)BaseHappiness.GetValueOrDefault((int)speciesId, 0);
     }
         
 
@@ -379,7 +380,7 @@ public class Lookup
         };
     }
 
-    public static (int hp, int attack, int defense, int spAttack, int spDefense, int speed) GetBaseStats(int speciesId)
+    public static StatHextuple GetBaseStats(int speciesId)
     {
         List<MySqlParameter> parameters = [
             new MySqlParameter("Id", MySqlDbType.Int16) { Value = speciesId }
@@ -404,16 +405,16 @@ public class Lookup
 
         foreach (DataRow row in statDataTable.Rows)
         {
-            return (
-                row.Field<int>("hp"),
-                row.Field<int>("attack"),
-                row.Field<int>("defense"),
-                row.Field<int>("special_attack"),
-                row.Field<int>("special_defense"),
-                row.Field<int>("speed")
+            return new StatHextuple(
+                row.Field<decimal>("hp"),
+                row.Field<decimal>("attack"),
+                row.Field<decimal>("defense"),
+                row.Field<decimal>("special_attack"),
+                row.Field<decimal>("special_defense"),
+                row.Field<decimal>("speed")
             );
         }
-        return (0, 0, 0, 0, 0, 0);
+        return new StatHextuple();
     }
 
     public static (int increased, int decreased) GetNatureStats(int natureId)
@@ -447,7 +448,7 @@ public class Lookup
         return 0;
     }
 
-    public static int GetLevelFromExperience(int speciesId, int experience)
+    public static byte GetLevelFromExperience(uint speciesId, uint experience)
     {
         List<MySqlParameter> parameters = [
             new MySqlParameter("Id", MySqlDbType.Int16) { Value = speciesId },
@@ -471,7 +472,7 @@ public class Lookup
 
         foreach (DataRow row in statDataTable.Rows)
         {
-            return Math.Max(row.Field<int>("level")-1, 0);
+            return (byte)Math.Max(row.Field<int>("level")-1, 0);
         }
         return 0;
     }
