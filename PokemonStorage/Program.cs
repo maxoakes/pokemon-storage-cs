@@ -74,7 +74,6 @@ public class Program
         foreach ((int slot, PartyPokemon pokemon) in gameState.Party)
         {
             Console.WriteLine($"{slot}: {pokemon.PrintRelevant()}");
-            pokemon.PrintFullDetails();
         }
         foreach ((int boxId, var boxList) in gameState.BoxList)
         {
@@ -82,7 +81,6 @@ public class Program
             foreach ((int slot, PartyPokemon pokemon) in boxList)
             {
                 Console.WriteLine($"{slot}: {pokemon.PrintRelevant()}");
-                pokemon.PrintFullDetails();
             }
         }
     }

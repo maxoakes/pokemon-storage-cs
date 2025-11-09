@@ -4,13 +4,19 @@ namespace PokemonStorage.Models;
 
 public class Stat
 {
-    public int Value { get; set; }
-    public int Ev { get; set; }
-    public int Iv { get; set; }
+    public ushort Value { get; set; }
+    public ushort Ev { get; set; }
+    public byte Iv { get; set; }
 
     public Stat(int value, int ev, int iv)
     {
-        Value = value;
+        Value = (ushort)value;
+        Ev = (ushort)ev;
+        Iv = (byte)iv;
+    }
+
+    public Stat(ushort ev, byte iv)
+    {
         Ev = ev;
         Iv = iv;
     }

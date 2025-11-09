@@ -1,3 +1,5 @@
+using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 
@@ -23,7 +25,7 @@ public class PartyPokemon
     public string Nickname { get; set; }
 
     // Status
-    public byte Level { get; set; }
+    public byte Level { get { return Lookup.GetLevelFromExperience(SpeciesId, ExperiencePoints); } }
     public uint ExperiencePoints { get; set; }
     public ushort HeldItem { get; set; }
     public byte Friendship { get; set; }
@@ -83,7 +85,6 @@ public class PartyPokemon
         Nickname = "";
 
         // Status
-        Level = 1;
         ExperiencePoints = 0;
         HeldItem = 0;
         Friendship = 0;
@@ -141,7 +142,6 @@ public class PartyPokemon
         OriginalTrainer = new Trainer(trainerName, 0, Utility.GetUnsignedNumber<ushort>(content, 0x0C, 2, true), 0);
         SpeciesId = Lookup.GetSpeciesIdByIndex(1, Utility.GetByte(content, 0x00));
         ExperiencePoints = Utility.GetUnsignedNumber<uint>(content, 0x0E, 3, true);
-        Level = Lookup.GetLevelFromExperience(SpeciesId, ExperiencePoints);
         HasNickname = CheckIfNickname();
         Friendship = Lookup.GetBaseHappiness(SpeciesId);
 
@@ -170,37 +170,31 @@ public class PartyPokemon
 
         // Get Stats
         ushort ivData = Utility.GetUnsignedNumber<ushort>(content, 0x1B, 2, true);
-        string ivBinary = Convert.ToString(ivData, 2).PadLeft(8, '0');
+        string ivBinary = Convert.ToString(ivData, 2).PadLeft(16, '0');
 
         HP = new Stat(
-            0,
             Utility.GetUnsignedNumber<ushort>(content, 0x11, 2, true),
-            0);
+            Convert.ToByte(string.Join("", ivBinary.Chunk(4).Select(x => x.Last())), 2));
 
         Attack = new Stat(
-            0,
             Utility.GetUnsignedNumber<ushort>(content, 0x13, 2, true),
-            Convert.ToInt32(ivBinary.Substring(0, 2)));
+            Convert.ToByte(ivBinary.Substring(0, 4), 2));
 
         Defense = new Stat(
-            0,
             Utility.GetUnsignedNumber<ushort>(content, 0x15, 2, true),
-            Convert.ToInt32(ivBinary.Substring(2, 2)));
+            Convert.ToByte(ivBinary.Substring(4, 4), 2));
 
         Speed = new Stat(
-            0,
             Utility.GetUnsignedNumber<ushort>(content, 0x17, 2, true),
-            Convert.ToInt32(ivBinary.Substring(4, 2)));
+            Convert.ToByte(ivBinary.Substring(8, 4), 2));
 
         SpecialAttack = new Stat(
-            0,
             Utility.GetUnsignedNumber<ushort>(content, 0x19, 2, true),
-            Convert.ToInt32(ivBinary.Substring(6, 2)));
+            Convert.ToByte(ivBinary.Substring(12, 4), 2));
 
         SpecialDefense = new Stat(
-            0,
             Utility.GetUnsignedNumber<ushort>(content, 0x19, 2, true),
-            Convert.ToInt32(ivBinary.Substring(6, 2)));
+            Convert.ToByte(ivBinary.Substring(12, 4), 2));
 
         StatHextuple calculated = GetCalculatedStats(1);
         HP.Value = calculated.HP;
@@ -209,13 +203,118 @@ public class PartyPokemon
         SpecialAttack.Value = calculated.SpecialAttack;
         SpecialDefense.Value = calculated.SpecialDefense;
         Speed.Value = calculated.Speed;
+
+        PrintFullDetails();
     }
 
     public void LoadFromGen2Bytes(byte[] content, int version, string nickname, string trainerName)
     {
+        Origin = new Origin
+        {
+            OriginGameId = version
+        };
 
+        Nickname = nickname;
+        HasNickname = CheckIfNickname();
+        SpeciesId = Utility.GetByte(content, 0x00);
+        HeldItem = Lookup.GetItemIdByIndex(2, Utility.GetUnsignedNumber<byte>(content, 0x01, 1, true));
+        OriginalTrainer = new Trainer(trainerName, 0, Utility.GetUnsignedNumber<ushort>(content, 0x06, 2, true), 0);
+        ExperiencePoints = Utility.GetUnsignedNumber<uint>(content, 0x08, 3, true);  
+        Friendship = Utility.GetUnsignedNumber<byte>(content, 0x1B, 1, true);
+
+        // Get Moves
+        (int moveIndexOffset, int movePpOffset)[] moveDataOffsets = [
+            (0x02, 0x17),
+            (0x03, 0x18),
+            (0x04, 0x19),
+            (0x05, 0x1A)
+        ];
+
+        for (int i = 0; i < moveDataOffsets.Length; i++)
+        {
+            int moveIndexOffset = moveDataOffsets[i].moveIndexOffset;
+            int movePpOffset = moveDataOffsets[i].movePpOffset;
+
+            byte ppData = Utility.GetUnsignedNumber<byte>(content, movePpOffset, 1, true);
+            string ppBinary = Convert.ToString(ppData, 2).PadLeft(8, '0');
+
+            int powerUps = Convert.ToInt32(ppBinary.Substring(0, 2), 2);
+            int currentPp = Convert.ToInt32(ppBinary.Substring(2, 6), 2);
+            int moveIndex = Utility.GetUnsignedNumber<byte>(content, moveIndexOffset, 1, true);
+
+            Moves[i] = new Move(moveIndex, currentPp, powerUps);
+        }
+
+        // Get Stats
+        ushort ivData = Utility.GetUnsignedNumber<ushort>(content, 0x15, 2, true);
+        string ivBinary = Convert.ToString(ivData, 2).PadLeft(16, '0');
+        Program.Logger.LogInformation($"IV Binary: {string.Join('_', ivBinary.Chunk(4).Select(x => new string(x)))}");
+
+        HP = new Stat(
+            Utility.GetUnsignedNumber<ushort>(content, 0x0B, 2, true),
+            Convert.ToByte(string.Join("", ivBinary.Chunk(4).Select(x => x.Last())), 2));
+
+        Attack = new Stat(
+            Utility.GetUnsignedNumber<ushort>(content, 0x0D, 2, true),
+            Convert.ToByte(ivBinary.Substring(0, 4), 2));
+
+        Defense = new Stat(
+            Utility.GetUnsignedNumber<ushort>(content, 0x0F, 2, true),
+            Convert.ToByte(ivBinary.Substring(4, 4), 2));
+
+        Speed = new Stat(
+            Utility.GetUnsignedNumber<ushort>(content, 0x11, 2, true),
+            Convert.ToByte(ivBinary.Substring(8, 4), 2));
+
+        SpecialAttack = new Stat(
+            Utility.GetUnsignedNumber<ushort>(content, 0x13, 2, true),
+            Convert.ToByte(ivBinary.Substring(12, 4), 2));
+
+        SpecialDefense = new Stat(
+            Utility.GetUnsignedNumber<ushort>(content, 0x13, 2, true),
+            Convert.ToByte(ivBinary.Substring(12, 4), 2));
+
+        StatHextuple calculated = GetCalculatedStats(2);
+        HP.Value = calculated.HP;
+        Attack.Value = calculated.Attack;
+        Defense.Value = calculated.Defense;
+        SpecialAttack.Value = calculated.SpecialAttack;
+        SpecialDefense.Value = calculated.SpecialDefense;
+        Speed.Value = calculated.Speed;
+
+        // Pokerus
+        byte pokerusData = Utility.GetUnsignedNumber<byte>(content, 0x1C, 1, true);
+        PokerusStrain = (uint)(pokerusData >> 4);
+        PokerusDaysRemaining = (uint)(pokerusData % 16);
+        Pokerus = PokerusStrain != 0;
+
+
+        // Caught Data
+        ushort caughtData = Utility.GetUnsignedNumber<ushort>(content, 0x1D, 2, true);
+        string caughtBinary = Convert.ToString(caughtData, 2).PadLeft(16, '0');
+        byte timeframe = Convert.ToByte(ivBinary.Substring(0, 2));
+        switch (timeframe)
+        {
+            case 1:
+                Origin.MetDateTime = DateTime.Now.Date + TimeSpan.FromHours(9);
+                break;
+            case 2:
+                Origin.MetDateTime = DateTime.Now.Date + TimeSpan.FromHours(13);
+                break;
+            case 3:
+                Origin.MetDateTime = DateTime.Now.Date + TimeSpan.FromHours(21);
+                break;
+            default:
+                Origin.MetDateTime = DateTime.Now.Date + TimeSpan.FromHours(12);
+                break;
+        }
+        Origin.MetLevel = Convert.ToByte(caughtBinary.Substring(2, 6), 2);
+        OriginalTrainer.Gender = Convert.ToByte(caughtBinary.Substring(8, 1), 2) == 1 ? Gender.FEMALE : Gender.MALE;
+        Origin.MetLocation = Lookup.GetLocationIdByIndex(2, Convert.ToUInt16(caughtBinary.Substring(9, 7), 2));
+
+        PrintFullDetails();
     }
-    
+
     #endregion
 
     #region Console Print
@@ -226,26 +325,40 @@ public class PartyPokemon
         int displayGeneration = inputGeneration;
         if (displayGeneration == 0) displayGeneration = Generation;
 
-        switch (displayGeneration)
+        StringBuilder returnString = new();
+
+        returnString.AppendLine($"\t{SpeciesId}: {speciesName} ({Nickname}) OT:{OriginalTrainer}");
+        returnString.AppendLine($"\tLv.{Level} Exp:{ExperiencePoints}");
+        if (displayGeneration > 1)
         {
-            case 1:
-                return string.Join(Environment.NewLine,
-                [
-                    $"\t{SpeciesId}: {speciesName} ({Nickname}) OT:{OriginalTrainer}",
-                    $"\tLv.{Level} Exp:{ExperiencePoints}",
-                    $"\tM1:{(Moves.TryGetValue(0, out var m1) ? m1 : "")}",
-                    $"\tM2:{(Moves.TryGetValue(1, out var m2) ? m2 : "")}",
-                    $"\tM3:{(Moves.TryGetValue(2, out var m3) ? m3 : "")}",
-                    $"\tM4:{(Moves.TryGetValue(3, out var m4) ? m4 : "")}",
-                    $"\tHP:      {HP}",
-                    $"\tAttack:  {Attack}",
-                    $"\tDefense: {Defense}",
-                    $"\tSpeed:   {Speed}",
-                    $"\tSpecial: {SpecialAttack}",
-                ]);
-            default:
-                return "";
+            returnString.AppendLine($"\tHeld Item:{Lookup.GetItemName(HeldItem)}");
         }
+        if (displayGeneration == 2)
+        {
+            returnString.AppendLine($"\tGender:{GetGenderByAttackIv()} Happiness:{Friendship} Shiny:{GetShinyByIv()}");
+        }
+        else if (displayGeneration > 2)
+        {
+            returnString.AppendLine($"\t\tGender:{GetGenderByPersonalityValue()} Happiness:{Friendship} Shiny:{GetShinyFromPersonalityValue()}");
+        }
+
+        returnString.AppendLine($"\tM1:{(Moves.TryGetValue(0, out var m1) ? m1 : "")}");
+        returnString.AppendLine($"\tM2:{(Moves.TryGetValue(1, out var m2) ? m2 : "")}");
+        returnString.AppendLine($"\tM3:{(Moves.TryGetValue(2, out var m3) ? m3 : "")}");
+        returnString.AppendLine($"\tM4:{(Moves.TryGetValue(3, out var m4) ? m4 : "")}");
+        returnString.AppendLine($"\tHP:      {HP}");
+        returnString.AppendLine($"\tAttack:  {Attack}");
+        returnString.AppendLine($"\tDefense: {Defense}");
+        returnString.AppendLine($"\tSpeed:   {Speed}");
+        returnString.AppendLine($"\tSpA:     {SpecialAttack}");
+        returnString.AppendLine($"\tSpD:     {SpecialDefense}");
+
+        if (displayGeneration == 2)
+        {
+            returnString.AppendLine($"\tMeet Time: {Origin.MetDateTime.TimeOfDay.Hours} Location: {Lookup.GetLocationNameById(Origin.MetLocation)} Level: {Origin.MetLevel}");
+        }
+
+        return returnString.ToString();
     }
     public void PrintFullDetails()
     {
@@ -369,18 +482,26 @@ public class PartyPokemon
         else
         {
             return new StatHextuple(
-                Math.Floor(((baseStats.HP + HP.Iv) * 2 + Math.Floor(Math.Sqrt(HP.Ev) / 4.0)) * Level / 100.0) + Level + 10,
-                Math.Floor(((baseStats.Attack + Attack.Iv) * 2 + Math.Floor(Math.Sqrt(Attack.Ev) / 4.0)) * Level / 100.0) + 5,
-                Math.Floor(((baseStats.Defense + Defense.Iv) * 2 + Math.Floor(Math.Sqrt(Defense.Ev) / 4.0)) * Level / 100.0) + 5,
-                Math.Floor(((baseStats.SpecialAttack + SpecialAttack.Iv) * 2 + Math.Floor(Math.Sqrt(SpecialAttack.Ev) / 4.0)) * Level / 100.0) + 5,
-                Math.Floor(((baseStats.SpecialDefense + SpecialDefense.Iv) * 2 + Math.Floor(Math.Sqrt(SpecialDefense.Ev) / 4.0)) * Level / 100.0) + 5,
-                Math.Floor(((baseStats.Speed + Speed.Iv) * 2 + Math.Floor(Math.Sqrt(Speed.Ev) / 4.0)) * Level / 100.0) + 5
+                Math.Floor(((baseStats.HP + HP.Iv) * 2 + Math.Floor(Math.Ceiling(Math.Sqrt(HP.Ev)) / 4)) * Level / 100) + Level + 10,
+                Math.Floor(((baseStats.Attack + Attack.Iv) * 2 + Math.Floor(Math.Ceiling(Math.Sqrt(Attack.Ev)) / 4)) * Level / 100) + 5,
+                Math.Floor(((baseStats.Defense + Defense.Iv) * 2 + Math.Floor(Math.Ceiling(Math.Sqrt(Defense.Ev)) / 4)) * Level / 100) + 5,
+                Math.Floor(((baseStats.SpecialAttack + SpecialAttack.Iv) * 2 + Math.Floor(Math.Ceiling(Math.Sqrt(SpecialAttack.Ev)) / 4)) * Level / 100) + 5,
+                Math.Floor(((baseStats.SpecialDefense + SpecialDefense.Iv) * 2 + Math.Floor(Math.Ceiling(Math.Sqrt(SpecialDefense.Ev)) / 4)) * Level / 100) + 5,
+                Math.Floor(((baseStats.Speed + Speed.Iv) * 2 + Math.Floor(Math.Ceiling(Math.Sqrt(Speed.Ev)) / 4)) * Level / 100) + 5
             );
         }
 
 
     }
 
+    private bool GetShinyByIv()
+    {
+        return Attack.Iv > 1 &&
+            Defense.Iv == 10 &&
+            Speed.Iv == 10 &&
+            SpecialAttack.Iv == 10;
+    }
+    
     private bool GetShinyFromPersonalityValue()
     {
         UInt32 p1 = PersonalityValue / 65536;
@@ -418,6 +539,22 @@ public class PartyPokemon
         return string.Join(" ", bytes);
     }
 
+    private Gender GetGenderByAttackIv()
+    {
+        int ratio = Lookup.GetGenderRate(SpeciesId);
+        switch (ratio)
+        {
+            case 0:
+                return Gender.MALE;
+            case 8:
+                return Gender.FEMALE;
+            case -1:
+                return Gender.GENDERLESS;
+            default:
+                return Attack.Iv <= ratio ? Gender.FEMALE : Gender.MALE;
+        }
+
+    }
     private Gender GetGenderByPersonalityValue()
     {
         int pGender = (int)(PersonalityValue % 256);

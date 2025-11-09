@@ -1,6 +1,5 @@
 using System.Data;
 using System.Text.Json;
-using Google.Protobuf.WellKnownTypes;
 using MySql.Data.MySqlClient;
 using PokemonStorage.DatabaseIO;
 using PokemonStorage.Models;
@@ -245,13 +244,13 @@ public class Lookup
         return JsonSerializer.Deserialize<T>(text);
     }
 
-    public static int GetItemIdByIndex(int generation, int gameIndex)
+    public static ushort GetItemIdByIndex(int generation, int gameIndex)
     {
         if (gameIndex != 0)
         {
             foreach (var item in Items.Values)
             {
-                if (item.IdMapping.ContainsKey(generation) && item.IdMapping[generation] == gameIndex) return item.Id;
+                if (item.IdMapping.ContainsKey(generation) && item.IdMapping[generation] == gameIndex) return (ushort)item.Id;
             }
         }
         return 0;
@@ -260,7 +259,7 @@ public class Lookup
     public static string GetItemName(ushort id)
     {
         if (id == 0) return "";
-        return Items.TryGetValue(id, out var item) ? item.Name : "??";
+        return Items.TryGetValue(id, out var item) ? item.Name : "???";
     }
 
     public static ushort GetSpeciesIdByIndex(int generation, int gameIndex)
