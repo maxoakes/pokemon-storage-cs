@@ -13,12 +13,15 @@ public class PartyPokemon
 
     // Overview
     public ushort SpeciesId { get; set; }
+    public string SpeciesIdentifier { get { return Lookup.GetSpeciesName(SpeciesId); } }
     public uint AlternateFormId { get; set; }
     public uint PersonalityValue { get; set; }
     public bool IsEgg { get; set; }
     public Origin Origin { get; set; }
     public Trainer OriginalTrainer { get; set; }
-    public string Ability { get; set; }
+    public ushort AbilityId { get; set; }
+    public string AbilityIdentifier { get { return Lookup.GetAbilityName(AbilityId); } }
+    
 
     // Nickname
     public bool HasNickname { get; set; }
@@ -27,7 +30,8 @@ public class PartyPokemon
     // Status
     public byte Level { get { return Lookup.GetLevelFromExperience(SpeciesId, ExperiencePoints); } }
     public uint ExperiencePoints { get; set; }
-    public ushort HeldItem { get; set; }
+    public ushort HeldItemId { get; set; }
+    public string HeldItemIdentifier { get { return Lookup.GetItemName(HeldItemId); } }
     public byte Friendship { get; set; }
     public byte WalkingMood { get; set; }
 
@@ -40,7 +44,6 @@ public class PartyPokemon
     public Stat SpecialDefense { get; set; }
 
     public Dictionary<int, Move> Moves { get; set; }
-    public bool Pokerus { get; set; }
     public uint PokerusDaysRemaining { get; set; }
     public uint PokerusStrain { get; set; }
 
@@ -51,11 +54,9 @@ public class PartyPokemon
     public uint Smartness { get; set; }
     public uint Toughness { get; set; }
     public uint Sheen { get; set; }
-    public uint Obedience { get; set; }
+    public bool Obedience { get; set; }
     public RibbonSet Ribbons { get; set; }
     public Markings Markings { get; set; }
-    public byte[] Seals { get; set; }
-    public byte[] SealCoordinates { get; set; }
 
     public bool ShinyLeaf1 { get; set; }
     public bool ShinyLeaf2 { get; set; }
@@ -78,7 +79,6 @@ public class PartyPokemon
         AlternateFormId = 0;
         PersonalityValue = 0;
         IsEgg = false;
-        Ability = "";
 
         // Nickname
         HasNickname = false;
@@ -86,7 +86,7 @@ public class PartyPokemon
 
         // Status
         ExperiencePoints = 0;
-        HeldItem = 0;
+        HeldItemId = 0;
         Friendship = 0;
         WalkingMood = 0;
 
@@ -97,9 +97,13 @@ public class PartyPokemon
         Speed = new Stat(0, 0, 0);
         SpecialAttack = new Stat(0, 0, 0);
         SpecialDefense = new Stat(0, 0, 0);
+        
         Moves = [];
+        for (int i = 0; i < 4; i++)
+        {
+            Moves[i] = new Move(0, 0, 0);
+        }
 
-        Pokerus = false;
         PokerusDaysRemaining = 0;
         PokerusStrain = 0;
 
@@ -110,14 +114,11 @@ public class PartyPokemon
         Smartness = 0;
         Toughness = 0;
         Sheen = 0;
-        Obedience = 0;
+        Obedience = false;
 
         Ribbons = new RibbonSet();
         Markings = new Markings(generation, 0);
         Origin = new Origin();
-
-        Seals = [0x00];
-        SealCoordinates = [0x00];
 
         ShinyLeaf1 = false;
         ShinyLeaf2 = false;
@@ -142,7 +143,7 @@ public class PartyPokemon
         OriginalTrainer = new Trainer(trainerName, 0, Utility.GetUnsignedNumber<ushort>(content, 0x0C, 2, true), 0);
         SpeciesId = Lookup.GetSpeciesIdByIndex(1, Utility.GetByte(content, 0x00));
         ExperiencePoints = Utility.GetUnsignedNumber<uint>(content, 0x0E, 3, true);
-        HasNickname = CheckIfNickname();
+        HasNickname = NicknameExists();
         Friendship = Lookup.GetBaseHappiness(SpeciesId);
 
         // Get Moves
@@ -161,11 +162,9 @@ public class PartyPokemon
             byte ppData = Utility.GetUnsignedNumber<byte>(content, movePpOffset, 1, true);
             string ppBinary = Convert.ToString(ppData, 2).PadLeft(8, '0');
 
-            int powerUps = Convert.ToInt32(ppBinary.Substring(0, 2), 2);
-            int currentPp = Convert.ToInt32(ppBinary.Substring(2, 6), 2);
-            int moveIndex = Utility.GetUnsignedNumber<byte>(content, moveIndexOffset, 1, true);
-
-            Moves[i] = new Move(moveIndex, currentPp, powerUps);
+            Moves[i].TimesIncreased = Convert.ToInt32(ppBinary.Substring(0, 2), 2);
+            Moves[i].Pp = Convert.ToInt32(ppBinary.Substring(2, 6), 2);
+            Moves[i].Id = Utility.GetUnsignedNumber<byte>(content, moveIndexOffset, 1, true);
         }
 
         // Get Stats
@@ -215,11 +214,11 @@ public class PartyPokemon
         };
 
         Nickname = nickname;
-        HasNickname = CheckIfNickname();
+        HasNickname = NicknameExists();
         SpeciesId = Utility.GetByte(content, 0x00);
-        HeldItem = Lookup.GetItemIdByIndex(2, Utility.GetUnsignedNumber<byte>(content, 0x01, 1, true));
+        HeldItemId = Lookup.GetItemIdByIndex(2, Utility.GetUnsignedNumber<byte>(content, 0x01, 1, true));
         OriginalTrainer = new Trainer(trainerName, 0, Utility.GetUnsignedNumber<ushort>(content, 0x06, 2, true), 0);
-        ExperiencePoints = Utility.GetUnsignedNumber<uint>(content, 0x08, 3, true);  
+        ExperiencePoints = Utility.GetUnsignedNumber<uint>(content, 0x08, 3, true);
         Friendship = Utility.GetUnsignedNumber<byte>(content, 0x1B, 1, true);
 
         // Get Moves
@@ -238,11 +237,9 @@ public class PartyPokemon
             byte ppData = Utility.GetUnsignedNumber<byte>(content, movePpOffset, 1, true);
             string ppBinary = Convert.ToString(ppData, 2).PadLeft(8, '0');
 
-            int powerUps = Convert.ToInt32(ppBinary.Substring(0, 2), 2);
-            int currentPp = Convert.ToInt32(ppBinary.Substring(2, 6), 2);
-            int moveIndex = Utility.GetUnsignedNumber<byte>(content, moveIndexOffset, 1, true);
-
-            Moves[i] = new Move(moveIndex, currentPp, powerUps);
+            Moves[i].Id = Utility.GetUnsignedNumber<byte>(content, moveIndexOffset, 1, true);
+            Moves[i].Pp = Convert.ToInt32(ppBinary.Substring(2, 6), 2);
+            Moves[i].TimesIncreased = Convert.ToInt32(ppBinary.Substring(0, 2), 2);
         }
 
         // Get Stats
@@ -286,8 +283,6 @@ public class PartyPokemon
         byte pokerusData = Utility.GetUnsignedNumber<byte>(content, 0x1C, 1, true);
         PokerusStrain = (uint)(pokerusData >> 4);
         PokerusDaysRemaining = (uint)(pokerusData % 16);
-        Pokerus = PokerusStrain != 0;
-
 
         // Caught Data
         ushort caughtData = Utility.GetUnsignedNumber<ushort>(content, 0x1D, 2, true);
@@ -314,6 +309,188 @@ public class PartyPokemon
 
         PrintFullDetails();
     }
+    
+    public void LoadFromGen3Bytes(byte[] content, int version, string language)
+    {
+        Origin = new Origin
+        {
+            OriginGameId = version
+        };
+
+        PersonalityValue = Utility.GetUnsignedNumber<uint>(content, 0x00, 4);
+        uint otId = Utility.GetUnsignedNumber<uint>(content, 0x04, 4);
+        OriginalTrainer = new Trainer(
+            Utility.GetEncodedString(Utility.GetBytes(content, 0x14, 7), version, language),
+            0,
+            Utility.GetUnsignedNumber<ushort>(content, 0x04, 2),
+            Utility.GetUnsignedNumber<ushort>(content, 0x06, 2)
+        );
+
+        Nickname = Utility.GetEncodedString(Utility.GetBytes(content, 0x08, 10), version, language);
+        HasNickname = NicknameExists();
+        Language = Lookup.GetLanguageById(Utility.GetUnsignedNumber<byte>(content, 0x12, 1));
+        Gen3Misc = Utility.GetUnsignedNumber<byte>(content, 0x13, 1);
+        Markings = new Markings(3, Utility.GetUnsignedNumber<byte>(content, 0x1B, 1));
+
+        // Data Section Decryption
+
+        ushort checksum = Utility.GetUnsignedNumber<ushort>(content, 0x1C, 2);
+        byte[] fullEncryptedData = Utility.GetBytes(content, 0x20, 48);
+        int order_index = (int)(PersonalityValue % 24);
+
+        Dictionary<int, string> order = new()
+        {
+            {0, "GAEM"}, {1,"GAME"}, {2,"GEAM"}, {3,"GEMA"},{4, "GMAE"}, {5,"GMEA"}, {6,"AGEM"}, {7,"AGME"},
+            {8, "AEGM"}, {9,"AEMG"},{10,"AMGE"},{11,"AMEG"},{12,"AGAM"},{13,"EGMA"},{14,"EAGM"},{15,"EAMG"},
+            {16,"EMGA"},{17,"EMAG"},{18,"MGAE"},{19,"MGEA"},{20,"MAGE"},{21,"MAEG"},{22,"MEGA"},{23,"MEAG"}
+        };
+
+        string orderString = order[order_index];
+        Program.Logger.LogInformation($"Decryption Order: {order_index}:{orderString}");
+        uint decryptionKey = PersonalityValue ^ otId;
+        byte[] decryptedData = [];
+        for (int i = 0; i < 48; i += 4)
+        {
+            byte[] y = Utility.GetBytes(fullEncryptedData, 0x1 * i, 4);
+            byte[] unencryptedBytes = y.Zip(BitConverter.GetBytes(decryptionKey)).Select(x => Convert.ToByte(x.First ^ x.Second)).ToArray();
+            decryptedData = decryptedData.Concat(unencryptedBytes).ToArray();
+        }
+
+        uint calculatedChecksum = 0;
+        for (int i = 0; i < 48; i += 2)
+        {
+            calculatedChecksum += Utility.GetUnsignedNumber<ushort>(decryptedData, 0x1 * i, 2);
+        }
+
+        Program.Logger.LogInformation($"{checksum & 0xffff} ?== {calculatedChecksum & 0xffff}");
+        Program.Logger.LogInformation($"{Convert.ToString(calculatedChecksum, 2).PadLeft(17, '0')}");
+        Program.Logger.LogInformation($"{Convert.ToString(checksum, 2).PadLeft(17, '0')}");
+
+        foreach ((char c, int i) in orderString.Select((c, i) => (c, i)))
+        {
+            int offset = i * 12;
+            byte[] substructureBytes = Utility.GetBytes(decryptedData, offset, 12);
+            Program.Logger.LogInformation($"{c} ==> {BitConverter.ToString(substructureBytes)}");
+            switch (c)
+            {
+                case 'G':
+                    SpeciesId = Lookup.GetSpeciesIdByIndex(3, Utility.GetUnsignedNumber<ushort>(substructureBytes, 0x00, 2));
+                    HeldItemId = Lookup.GetItemIdByIndex(3, Utility.GetUnsignedNumber<ushort>(substructureBytes, 0x02, 2));
+                    ExperiencePoints = Utility.GetUnsignedNumber<uint>(substructureBytes, 0x04, 4);
+
+                    byte ppBonuses = Utility.GetUnsignedNumber<byte>(substructureBytes, 0x08, 1);
+                    string ppBinary = Convert.ToString(ppBonuses, 2).PadLeft(8, '0');
+                    for (int j = 0; j < 4; j++)
+                    {
+                        int bonuses = Convert.ToInt32(ppBinary.Substring(j * 2, 2), 2);
+                        Moves[j].TimesIncreased = bonuses;
+                    }
+                    Friendship = Utility.GetUnsignedNumber<byte>(substructureBytes, 0x09, 1);
+                    break;
+
+                case 'A':
+                    for (int j = 0; j < 4; j++)
+                    {
+                        Moves[j].Id = Utility.GetUnsignedNumber<ushort>(substructureBytes, j * 2, 2);
+                    }
+
+                    for (int j = 0; j < 4; j++)
+                    {
+                        Moves[j].Pp = Utility.GetUnsignedNumber<byte>(substructureBytes, 0x08 + j, 1);
+                    }
+                    break;
+
+                case 'E':
+                    HP.Ev = Utility.GetUnsignedNumber<byte>(substructureBytes, 0x00, 1);
+                    Attack.Ev = Utility.GetUnsignedNumber<byte>(substructureBytes, 0x01, 1);
+                    Defense.Ev = Utility.GetUnsignedNumber<byte>(substructureBytes, 0x02, 1);
+                    Speed.Ev = Utility.GetUnsignedNumber<byte>(substructureBytes, 0x03, 1);
+                    SpecialAttack.Ev = Utility.GetUnsignedNumber<byte>(substructureBytes, 0x04, 1);
+                    SpecialDefense.Ev = Utility.GetUnsignedNumber<byte>(substructureBytes, 0x05, 1);
+
+                    Coolness = Utility.GetUnsignedNumber<byte>(substructureBytes, 0x06, 1);
+                    Beauty = Utility.GetUnsignedNumber<byte>(substructureBytes, 0x07, 1);
+                    Cuteness = Utility.GetUnsignedNumber<byte>(substructureBytes, 0x08, 1);
+                    Smartness = Utility.GetUnsignedNumber<byte>(substructureBytes, 0x09, 1);
+                    Toughness = Utility.GetUnsignedNumber<byte>(substructureBytes, 0x0A, 1);
+                    Sheen = Utility.GetUnsignedNumber<byte>(substructureBytes, 0x0B, 1);
+                    break;
+
+                case 'M':
+                    // Pokerus
+                    byte pokerusData = Utility.GetUnsignedNumber<byte>(substructureBytes, 0x00, 1);
+                    string pokerusBinary = Convert.ToString(pokerusData, 2).PadLeft(8, '0');
+
+                    // Stra Days
+                    // 0000 0000
+                    Program.Logger.LogInformation($"Pokerus Data: {pokerusBinary}");
+                    PokerusStrain = Convert.ToByte(pokerusBinary.Substring(0, 4), 2);
+                    PokerusDaysRemaining = Convert.ToByte(pokerusBinary.Substring(4, 4), 2);
+
+                    // Origin
+                    Origin.MetLocation = Lookup.GetLocationIdByIndex(3, Utility.GetUnsignedNumber<ushort>(substructureBytes, 0x01, 1));
+                    ushort originData = Utility.GetUnsignedNumber<ushort>(substructureBytes, 0x02, 2);
+                    string originBinary = Convert.ToString(originData, 2).PadLeft(16, '0');
+
+                    // G Poke Game Level
+                    // 0 0000 0000 0000000
+                    Program.Logger.LogInformation($"Origin Data: {originBinary}");
+
+                    OriginalTrainer.Gender = originBinary[0] == '1' ? Gender.FEMALE : Gender.MALE;
+                    Origin.PokeballIdentifier = Lookup.GetCatchBallById(3, Convert.ToUInt16(originBinary.Substring(1, 4), 2));
+                    Origin.OriginGameId = Lookup.GetGameOfOrigin(3, Convert.ToUInt16(originBinary.Substring(5, 4), 2));
+                    Origin.MetLevel = Convert.ToByte(originBinary.Substring(9, 7), 2);
+
+                    // IVs, Egg, Ability
+                    uint miscData = Utility.GetUnsignedNumber<uint>(substructureBytes, 0x04, 4);
+                    string miscBinary = Convert.ToString(miscData, 2).PadLeft(32, '0');
+
+                    // A E SpD   SpA   Spe   Def   Atk   HP
+                    // 0 0 00000 00000 00000 00000 00000 00000
+                    Program.Logger.LogInformation($"Misc Data: {miscBinary}");
+
+                    AbilityId = Convert.ToByte(miscBinary[0]);
+                    IsEgg = miscBinary[1] == '1';
+                    SpecialDefense.Iv = Convert.ToByte(miscBinary.Substring(2, 5), 2);
+                    SpecialAttack.Iv = Convert.ToByte(miscBinary.Substring(7, 5), 2);
+                    Speed.Iv = Convert.ToByte(miscBinary.Substring(12, 5), 2);
+                    Defense.Iv = Convert.ToByte(miscBinary.Substring(17, 5), 2);
+                    Attack.Iv = Convert.ToByte(miscBinary.Substring(22, 5), 2);
+                    HP.Iv = Convert.ToByte(miscBinary.Substring(27, 5), 2);
+
+                    // Ribbons, Obedience
+                    string ribbonBinary = Convert.ToString(Utility.GetUnsignedNumber<uint>(substructureBytes, 0x08, 4), 2).PadLeft(32, '0');
+
+                    // O ---- W E N C n r b E A V W C Tou Sma Cut Bea Coo
+                    // 0 0000 0 0 0 0 0 0 0 0 0 0 0 0 000 000 000 000 000
+                    Program.Logger.LogInformation($"Ribbon Data: {ribbonBinary}");
+                    Obedience = ribbonBinary[0] == '1';
+                    Ribbons.World = ribbonBinary[5] == '1';
+                    Ribbons.Earth = ribbonBinary[6] == '1';
+                    Ribbons.National = ribbonBinary[7] == '1';
+                    Ribbons.Country = ribbonBinary[8] == '1';
+                    Ribbons.Sky = ribbonBinary[9] == '1';
+                    Ribbons.Land = ribbonBinary[10] == '1';
+                    Ribbons.Marine = ribbonBinary[11] == '1';
+                    Ribbons.Effort = ribbonBinary[12] == '1';
+                    Ribbons.Artist = ribbonBinary[13] == '1';
+                    Ribbons.Victory = ribbonBinary[14] == '1';
+                    Ribbons.Winning = ribbonBinary[15] == '1';
+                    Ribbons.Champion = ribbonBinary[16] == '1';
+                    Ribbons.HeonnTough = Convert.ToByte(ribbonBinary.Substring(17, 3), 2);
+                    Ribbons.HeonnSmart = Convert.ToByte(ribbonBinary.Substring(20, 3), 2);
+                    Ribbons.HeonnCute = Convert.ToByte(ribbonBinary.Substring(23, 3), 2);
+                    Ribbons.HeonnBeauty = Convert.ToByte(ribbonBinary.Substring(26, 3), 2);
+                    Ribbons.HeonnCool = Convert.ToByte(ribbonBinary.Substring(29, 3), 2);
+                    break;
+
+                default:
+                    break;
+            }
+        }
+
+        PrintFullDetails();
+    }
 
     #endregion
 
@@ -321,17 +498,16 @@ public class PartyPokemon
 
     public string PrintRelevant(int inputGeneration = 0)
     {
-        string speciesName = Lookup.GetSpeciesName(SpeciesId);
         int displayGeneration = inputGeneration;
         if (displayGeneration == 0) displayGeneration = Generation;
 
         StringBuilder returnString = new();
 
-        returnString.AppendLine($"\t{SpeciesId}: {speciesName} ({Nickname}) OT:{OriginalTrainer}");
+        returnString.AppendLine($"\t{SpeciesId}: {SpeciesIdentifier} ({Nickname}) OT:{OriginalTrainer}");
         returnString.AppendLine($"\tLv.{Level} Exp:{ExperiencePoints}");
         if (displayGeneration > 1)
         {
-            returnString.AppendLine($"\tHeld Item:{Lookup.GetItemName(HeldItem)}");
+            returnString.AppendLine($"\tHeld Item:{HeldItemIdentifier}");
         }
         if (displayGeneration == 2)
         {
@@ -339,7 +515,7 @@ public class PartyPokemon
         }
         else if (displayGeneration > 2)
         {
-            returnString.AppendLine($"\t\tGender:{GetGenderByPersonalityValue()} Happiness:{Friendship} Shiny:{GetShinyFromPersonalityValue()}");
+            returnString.AppendLine($"\t\tGender:{GetGenderByPersonalityValue()} Ability: {AbilityIdentifier} Happiness:{Friendship} Shiny:{GetShinyFromPersonalityValue()}");
         }
 
         returnString.AppendLine($"\tM1:{(Moves.TryGetValue(0, out var m1) ? m1 : "")}");
@@ -369,7 +545,7 @@ public class PartyPokemon
 
             $"\tHasNickname:{HasNickname} Nickname:[{Nickname}]",
 
-            $"\tOT:{OriginalTrainer} Item:{Lookup.GetItemName(HeldItem)}",
+            $"\tOT:{OriginalTrainer} Item:{Lookup.GetItemName(HeldItemId)}",
 
             $"\tLv.{Level} Exp:{ExperiencePoints} Frnd:{Friendship} " +
                 $"WalkMood:{WalkingMood} Ob:{Obedience} IsEgg:{IsEgg}",
@@ -377,11 +553,11 @@ public class PartyPokemon
             $"\tPv:{GetPersonalityString()} : {PersonalityValue}",
 
             $"\t\tGender:{GetGenderByPersonalityValue()} " +
-                $"Ability:{Lookup.GetAbilityName(GetAbilityFromPersonalityValue())} " +
+                $"Ability:{AbilityIdentifier} " +
                 $"Nature:{Lookup.GetNatureName(GetNatureFromPersonalityValue())} " +
                 $"Shiny:{GetShinyFromPersonalityValue()}",
 
-            $"\tPokerus:{Pokerus} Rem:{PokerusDaysRemaining} Str:{PokerusStrain}",
+            $"\tPokerus:{PokerusStrain != 0} Rem:{PokerusDaysRemaining} Str:{PokerusStrain}",
 
             $"\tOrigin:{Origin}",
 
@@ -389,9 +565,6 @@ public class PartyPokemon
                 $"Smart:{Smartness} Tough:{Toughness} Sheen:{Sheen}",
 
             $"\tRibbons:{Ribbons}",
-
-            $"\tSeals: {Convert.ToString(Utility.GetUnsignedNumber<uint>(Seals, 0, Seals.Length, true), 2).PadLeft(Seals.Length * 8, '0')} " +
-                $"Coordinates: {Convert.ToString(Utility.GetUnsignedNumber<uint>(SealCoordinates, 0, SealCoordinates.Length, true), 2).PadLeft(SealCoordinates.Length * 8, '0')}",
 
             $"\tShinyLeafs:{ShinyLeaf1}:{ShinyLeaf2}:{ShinyLeaf3}:{ShinyLeaf4} Crown:{ShinyCrown}",
 
@@ -582,7 +755,7 @@ public class PartyPokemon
         return (uint)random.NextInt64(UInt32.MaxValue);
     }
 
-    private bool CheckIfNickname()
+    private bool NicknameExists()
     {
         return !string.Equals(Regex.Replace(Nickname.ToLower().Replace(" ", "-"), @"[^0-9a-zA-Z\w]+", ""), Lookup.GetSpeciesName(SpeciesId).ToLower());
     }

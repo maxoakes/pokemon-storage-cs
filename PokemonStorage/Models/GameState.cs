@@ -50,7 +50,7 @@ public class GameState
                 0
             );
             Program.Logger.LogInformation(Trainer.ToString());
-            
+
             int partyOffset = Game.VersionId == 3 ? 0x288A : 0x2865;
             byte[] partyBytes = Utility.GetBytes(content, partyOffset, 428);
 
@@ -65,6 +65,52 @@ public class GameState
                 BoxList[i] = GetPokemonFromStorageGen2(boxBytes, Game.VersionId, language, 20, 32);
             }
             return;
+        }
+        else if (Game.VersionId == 5 || Game.VersionId == 6 || Game.VersionId == 7)
+        {
+            byte[] save1 = Utility.GetBytes(content, 0x0000, 57344);
+            byte[] save2 = Utility.GetBytes(content, 0xE000, 57344);
+            uint save1Index = Utility.GetUnsignedNumber<uint>(save1, 0x0FFC, 4);
+            uint save2Index = Utility.GetUnsignedNumber<uint>(save2, 0x0FFC, 4);
+            byte[] saveData;
+            if (save1Index >= save2Index && save1Index != uint.MaxValue)
+            {
+                Console.WriteLine($"Using Save 1 (Index: {save1Index})");
+                saveData = save1;
+            }
+            else
+            {
+                Console.WriteLine($"Using Save 2 (Index: {save2Index})");
+                saveData = save2;
+            }
+            Dictionary<int, byte[]> sections = [];
+            for (int i = 0; i < 14; i++)
+            {
+                int sectionOffset = 0x1000 * i;
+                ushort sectionId = Utility.GetUnsignedNumber<ushort>(saveData, sectionOffset + 0x0FF4, 2);
+                byte[] sectionData = Utility.GetBytes(saveData, sectionOffset, 0x1000);
+                sections[sectionId] = sectionData;
+            }
+
+            Trainer = new(
+                Utility.GetEncodedString(Utility.GetBytes(sections[0], 0, 7), Game.VersionId, language),
+                Utility.GetUnsignedNumber<byte>(sections[0], 0x0008, 1),
+                Utility.GetUnsignedNumber<ushort>(sections[0], 0x000A, 2),
+                Utility.GetUnsignedNumber<ushort>(sections[0], 0x000C, 2)
+            );
+
+            int partySizeOffset = Game.VersionId == 5 || Game.VersionId == 6 ? 0x0234 : 0x0034;
+            int partyOffset = Game.VersionId == 5 || Game.VersionId == 6 ? 0x0238 : 0x0038;
+            uint partySize = Utility.GetUnsignedNumber<uint>(sections[1], partySizeOffset, 4);
+            byte[] partyBytes = Utility.GetBytes(sections[1], partyOffset, 600);
+
+            for (int i = 0; i < partySize; i++)
+            {
+                PartyPokemon pokemon = new(3);
+                byte[] pokemonBytes = Utility.GetBytes(partyBytes, i * 100, 100);
+                pokemon.LoadFromGen3Bytes(pokemonBytes, Game.VersionId, language);
+                Party[i] = pokemon;
+            }
         }
         else
         {

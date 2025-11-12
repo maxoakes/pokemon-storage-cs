@@ -1,7 +1,9 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using PokemonStorage.Models;
 using System.Configuration;
+using System.Text.Json;
 
 namespace PokemonStorage;
 
@@ -21,13 +23,21 @@ public class Program
             .Build();
 
         // Init logger
-        using ILoggerFactory factory = LoggerFactory.Create(builder => builder.AddConsole());
+        using ILoggerFactory factory = LoggerFactory.Create(builder =>
+            builder.AddSimpleConsole(options =>
+            {
+                options.IncludeScopes = false;
+                options.SingleLine = true;
+                options.TimestampFormat = "HH:mm:ss.ffff ";
+            })
+        );
         Logger = factory.CreateLogger<Program>();
 
         // Access configuration values
         ConnectionString = config.GetConnectionString("Database") ?? "";
         string language = config.GetValue<string>("Settings:Language") ?? "";
         string mode = config.GetValue<string>("Settings:Mode") ?? "";
+        string readOutput = config.GetValue<string>("Settings:ReadOutput") ?? "";
         int gameId = config.GetValue<int>("Settings:GameId");
         SaveFilePath = config.GetValue<string>("Settings:SaveFilePath") ?? "";
 
@@ -70,18 +80,49 @@ public class Program
         Console.WriteLine($"Loaded {game} with {originalSaveData.Length} bytes.");
         GameState gameState = new(originalSaveData, game, language);
 
-        Console.WriteLine("Party:");
-        foreach ((int slot, PartyPokemon pokemon) in gameState.Party)
+        if (readOutput.ToLower() == "file")
         {
-            Console.WriteLine($"{slot}: {pokemon.PrintRelevant()}");
+            var pokemonStorageDictionary = new Dictionary<string, Dictionary<string, PartyPokemon>>();
+            foreach ((int index, PartyPokemon pokemon) in gameState.Party)
+            {
+                if (!pokemonStorageDictionary.ContainsKey("Party"))
+                    pokemonStorageDictionary["Party"] = new Dictionary<string, PartyPokemon>();
+
+                pokemonStorageDictionary["Party"].Add(index.ToString(), pokemon);
+            }
+
+            foreach ((int box, Dictionary<int, PartyPokemon> boxDictionary) in gameState.BoxList)
+            {
+                string boxId = box.ToString();
+                if (!pokemonStorageDictionary.ContainsKey(boxId))
+                    pokemonStorageDictionary[boxId] = new Dictionary<string, PartyPokemon>();
+
+                foreach ((int slot, PartyPokemon pokemon) in boxDictionary)
+                {
+                    string slotId = slot.ToString();
+                    if (!pokemonStorageDictionary[boxId].ContainsKey(slotId.ToString()))
+                        pokemonStorageDictionary[boxId].Add(slotId.ToString(), pokemon);
+                }
+            }
+
+            File.WriteAllText($"{SaveFilePath.Split('/').Last()}.json", JsonConvert.SerializeObject(pokemonStorageDictionary, Formatting.Indented));
+            
         }
-        foreach ((int boxId, var boxList) in gameState.BoxList)
+        else if (readOutput.ToLower() == "console")
         {
-            Console.WriteLine($"Box {boxId}");
-            foreach ((int slot, PartyPokemon pokemon) in boxList)
+            Console.WriteLine("Party:");
+            foreach ((int slot, PartyPokemon pokemon) in gameState.Party)
             {
                 Console.WriteLine($"{slot}: {pokemon.PrintRelevant()}");
             }
-        }
+            foreach ((int boxId, var boxList) in gameState.BoxList)
+            {
+                Console.WriteLine($"Box {boxId}");
+                foreach ((int slot, PartyPokemon pokemon) in boxList)
+                {
+                    Console.WriteLine($"{slot}: {pokemon.PrintRelevant()}");
+                }
+            }
+        }        
     }
 }

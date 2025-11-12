@@ -122,6 +122,22 @@ public static class Utility
 
     #endregion
 
+    #region Quick Things
+
+    public static string ReverseString(string input)
+    {
+        if (string.IsNullOrWhiteSpace(input))
+        {
+            return "";
+        }
+
+        char[] charArray = input.ToCharArray();
+        Array.Reverse(charArray);
+        return new string(charArray);
+    }
+    
+    #endregion
+
     #region Bits and Bytes
 
     public static byte GetBit(byte data, byte index, bool isBigEndian = false)
@@ -151,15 +167,13 @@ public static class Utility
         if (offset < 0 || bytes > 8 || offset + bytes > data.Length)
             throw new ArgumentOutOfRangeException("Invalid offset or number of bytes.", $"data[{data.Length}]@{offset}:{bytes}");
 
-        byte[] resultBytes = new byte[8];
-        Array.Fill<byte>(resultBytes, 0);
-        Array.Copy(data, offset, resultBytes, 8 - bytes, bytes);
-
-        ulong resultNumber =
-            (BitConverter.IsLittleEndian == isBigEndian)
-            ? BitConverter.ToUInt64([.. resultBytes.Reverse()])
-            : BitConverter.ToUInt64(resultBytes.Reverse().ToArray());
-
+        List<byte> byteList = [.. data[offset..(offset + bytes)]];
+        if (isBigEndian) byteList.Reverse();
+        for (int i = bytes; i < 8; i++)
+        {
+            byteList.Add(0x00);
+        }
+        ulong resultNumber = BitConverter.ToUInt64(byteList.ToArray());
         return (T)Convert.ChangeType(resultNumber, typeof(T));
     }
 

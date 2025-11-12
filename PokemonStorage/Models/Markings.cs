@@ -4,33 +4,27 @@ namespace PokemonStorage.Models;
 
 public class Markings
 {
-    public bool Circle { get; set; }
-    public bool Square { get; set; }
-    public bool Triangle { get; set; }
-    public bool Heart { get; set; }
-    public bool Star { get; set; }
-    public bool Diamond { get; set; }
+    public byte Bits { get; set; }
+    public bool Circle { get { return (Bits & 0x01) > 0; } }
+    public bool Square { get { return (Bits & 0x04) > 0; } }
+    public bool Triangle { get { return (Bits & 0x02) > 0; } }
+    public bool Heart { get { return (Bits & 0x08) > 0; } }
+    public bool Star { get { return (Bits & 0x10) > 0; } }
+    public bool Diamond { get { return (Bits & 0x20) > 0; } }
 
     public Markings(int generation, byte value)
     {
-        // if (generation == 3)
-        // {
-        //     Circle = ByteUtility.GetBit(value, 0);
-        //     Square = ByteUtility.GetBit(value, 1);
-        //     Triangle = ByteUtility.GetBit(value, 2);
-        //     Heart = ByteUtility.GetBit(value, 3);
-        //     Star = false;
-        //     Diamond = false;
-        // }
-        // else
-        // {
-        //     Circle = ByteUtility.GetBit(value, 0);
-        //     Triangle = ByteUtility.GetBit(value, 1);
-        //     Square = ByteUtility.GetBit(value, 2);
-        //     Heart = ByteUtility.GetBit(value, 3);
-        //     Star = ByteUtility.GetBit(value, 4);
-        //     Diamond = ByteUtility.GetBit(value, 5);
-        // }
+        if (generation == 3)
+        {
+            Bits |= (byte)(Utility.GetBit(value, 0) == 1 ? 1 : 0); // circle
+            Bits |= (byte)(Utility.GetBit(value, 1) == 1 ? 4 : 0); // square
+            Bits |= (byte)(Utility.GetBit(value, 2) == 1 ? 2 : 0); // trinagle
+            Bits |= (byte)(Utility.GetBit(value, 3) == 1 ? 8 : 0); // heart
+        }
+        else
+        {
+            Bits = value;
+        }
     }
 
     public override string ToString()

@@ -58,26 +58,11 @@ public class RibbonSet
     public bool SinnohToughMaster { get; set; } = false;
 
     // Hoenn Set
-    public bool HeonnCool { get; set; } = false;
-    public bool HeonnCoolSuper { get; set; } = false;
-    public bool HeonnCoolHyper { get; set; } = false;
-    public bool HeonnCoolMaster { get; set; } = false;
-    public bool HeonnBeauty { get; set; } = false;
-    public bool HeonnBeautySuper { get; set; } = false;
-    public bool HeonnBeautyHyper { get; set; } = false;
-    public bool HeonnBeautyMaster { get; set; } = false;
-    public bool HeonnCute { get; set; } = false;
-    public bool HeonnCuteSuper { get; set; } = false;
-    public bool HeonnCuteHyper { get; set; } = false;
-    public bool HeonnCuteMaster { get; set; } = false;
-    public bool HeonnSmart { get; set; } = false;
-    public bool HeonnSmartSuper { get; set; } = false;
-    public bool HeonnSmartHyper { get; set; } = false;
-    public bool HeonnSmartMaster { get; set; } = false;
-    public bool HeonnTough { get; set; } = false;
-    public bool HeonnToughSuper { get; set; } = false;
-    public bool HeonnToughHyper { get; set; } = false;
-    public bool HeonnToughMaster { get; set; } = false;
+    public byte HeonnCool { get; set; } = 0;
+    public byte HeonnBeauty { get; set; } = 0;
+    public byte HeonnCute { get; set; } = 0;
+    public byte HeonnSmart { get; set; } = 0;
+    public byte HeonnTough { get; set; } = 0;
     public bool Champion { get; set; } = false;
     public bool Winning { get; set; } = false;
     public bool Victory { get; set; } = false;

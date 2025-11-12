@@ -2,6 +2,7 @@
   "Settings": {
     "Language": "en",
     "Mode": "read",
+    "ReadOutput": "file",
     "GameId": 2,
     "SaveFilePath": "/path/to/save/file.sav"
   },
