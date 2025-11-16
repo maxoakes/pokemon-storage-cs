@@ -4,12 +4,12 @@ namespace PokemonStorage.Models;
 
     public class Move
     {
-        public int Id { get; set; }
+        public ushort Id { get; set; }
         public string Identifier { get { return Lookup.Moves.TryGetValue(Id, out var name) ? name : string.Empty; } }
-        public int Pp { get; set; }
-        public int TimesIncreased { get; set; }
+        public byte Pp { get; set; }
+        public byte TimesIncreased { get; set; }
 
-        public Move(int id, int pp, int timesIncreased)
+        public Move(ushort id, byte pp, byte timesIncreased)
         {
             Id = id;
             Pp = pp;

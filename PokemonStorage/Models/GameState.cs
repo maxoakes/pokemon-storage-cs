@@ -112,6 +112,66 @@ public class GameState
                 Party[i] = pokemon;
             }
         }
+        else if (Game.VersionId == 8 || Game.VersionId == 9 || Game.VersionId == 10)
+        {
+            (int start, int end) littleBlockOffsets = (0x00000, 0x00000);
+            (int start, int end) bigBlockOffsets = (0x00000, 0x00000);
+            if (Game.VersionId == 8)
+            {
+                littleBlockOffsets = (0x0000, 0x0C0FF);
+                bigBlockOffsets = (0x0C100, 0x1E2DF);
+            }
+            else if (Game.VersionId == 9)
+            {
+                littleBlockOffsets = (0x00000, 0x0CF2B);
+                bigBlockOffsets = (0x0CF2C, 0x1F10F);
+            }
+            else if (Game.VersionId == 10)
+            {
+                littleBlockOffsets = (0x00000, 0x0F6FF);
+                bigBlockOffsets = (0x0F700, 0x21A10);
+            }
+
+            byte[] littleBlockBytes = Utility.GetBytes(content, littleBlockOffsets.start, littleBlockOffsets.end - littleBlockOffsets.start);
+            byte[] bigBlockBytes = Utility.GetBytes(content, bigBlockOffsets.start, bigBlockOffsets.end - bigBlockOffsets.start);
+
+            Trainer = new(
+                Utility.GetEncodedString(Utility.GetBytes(littleBlockBytes, 0x68, 16), Game.VersionId, language),
+                Utility.GetUnsignedNumber<byte>(littleBlockBytes, 0x80, 1),
+                Utility.GetUnsignedNumber<ushort>(littleBlockBytes, 0x78, 2),
+                Utility.GetUnsignedNumber<ushort>(littleBlockBytes, 0x7A, 2)
+            );
+
+            int partySize = Utility.GetUnsignedNumber<byte>(littleBlockBytes, 0x9C, 1);
+            byte[] partyBytes = Utility.GetBytes(littleBlockBytes, 0xA0, 1416);
+
+            for (int i = 0; i < partySize; i++)
+            {
+                PartyPokemon pokemon = new(4);
+                byte[] pokemonBytes = Utility.GetBytes(partyBytes, i * 236, 236);
+                pokemon.LoadFromGen4Bytes(pokemonBytes, Game.VersionId, language);
+                Party[i] = pokemon;
+            }
+
+            for (int i = 0; i < 18; i++)
+            {
+                int pokemonOffset = (Game.VersionId == 10) ? 0x00 : 0x04;
+                int boxNameOffset = (Game.VersionId == 10) ? 0x12008 : 0x11EE4;
+                
+                byte[] boxNameBytes = Utility.GetBytes(bigBlockBytes, boxNameOffset + (i * 40), 40);
+                string boxName = Utility.GetEncodedString(boxNameBytes, Game.VersionId, language);
+                byte[] thisBoxBytes = Utility.GetBytes(bigBlockBytes, pokemonOffset * i, 136 * 30);
+
+                for (int j = 0; i < 30; i++)
+                {
+                    PartyPokemon pokemon = new(4);
+                    byte[] pokemonBytes = Utility.GetBytes(thisBoxBytes, j * 136, 136);
+                    pokemon.LoadFromGen4Bytes(pokemonBytes, Game.VersionId, language);
+                    BoxList[i][j] = pokemon;
+                }
+
+            }
+        }
         else
         {
             return;

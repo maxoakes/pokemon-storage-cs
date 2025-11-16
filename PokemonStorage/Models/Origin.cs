@@ -6,7 +6,7 @@ public class Origin
 {
     // General
     public bool FatefulEncounter { get; set; }
-    public int EncounterType { get; set; }
+    public byte EncounterTypeId { get; set; }
     public string EncounterTypeIdentifier { get { return "???"; } }
     public string PokeballIdentifier { get; set; }
     public int OriginGameId { get; set; }
@@ -27,7 +27,7 @@ public class Origin
     public Origin()
     {
         FatefulEncounter = false;
-        EncounterType = 0;
+        EncounterTypeId = 0;
         PokeballIdentifier = "poke-ball";
         OriginGameId = 1;
         EggReceiveDate = DateTime.ParseExact("2000/01/01 00:00:00", "yyyy/MM/dd HH:mm:ss", null);

@@ -36,26 +36,11 @@ public class RibbonSet
     public bool Premier { get; set; } = false;
 
     // Sinnoh Set 2
-    public bool SinnohCool { get; set; } = false;
-    public bool SinnohCoolGreat { get; set; } = false;
-    public bool SinnohCoolUltra { get; set; } = false;
-    public bool SinnohCoolMaster { get; set; } = false;
-    public bool SinnohBeauty { get; set; } = false;
-    public bool SinnohBeautyGreat { get; set; } = false;
-    public bool SinnohBeautyUltra { get; set; } = false;
-    public bool SinnohBeautyMaster { get; set; } = false;
-    public bool SinnohCute { get; set; } = false;
-    public bool SinnohCuteGreat { get; set; } = false;
-    public bool SinnohCuteUltra { get; set; } = false;
-    public bool SinnohCuteMaster { get; set; } = false;
-    public bool SinnohSmart { get; set; } = false;
-    public bool SinnohSmartGreat { get; set; } = false;
-    public bool SinnohSmartUltra { get; set; } = false;
-    public bool SinnohSmartMaster { get; set; } = false;
-    public bool SinnohTough { get; set; } = false;
-    public bool SinnohToughGreat { get; set; } = false;
-    public bool SinnohToughUltra { get; set; } = false;
-    public bool SinnohToughMaster { get; set; } = false;
+    public byte SinnohCool { get; set; } = 0;
+    public byte SinnohBeauty { get; set; } = 0;
+    public byte SinnohCute { get; set; } = 0;
+    public byte SinnohSmart { get; set; } = 0;
+    public byte SinnohTough { get; set; } = 0;
 
     // Hoenn Set
     public byte HeonnCool { get; set; } = 0;
@@ -79,6 +64,75 @@ public class RibbonSet
     public RibbonSet()
     {
 
+    }
+
+    /// <summary>
+    /// Parse a gen 4 ribbon set data value. Modes: 0=HoennSet, 1=SinnohSet1, 2=SinnohSet2
+    /// </summary>
+    /// <param name="mode"></param>
+    public void ParseRibbonSet(int mode, byte[] data)
+    {
+        switch (mode)
+        {
+            case 0:
+                HeonnCool =     (byte)(data[0] & 0xF);
+                HeonnBeauty =   (byte)(data[0] & 0xF0);
+                HeonnCute =     (byte)(data[1] & 0xF00);
+                HeonnSmart =    (byte)(data[1] & 0xF000);
+                HeonnTough =    (byte)(data[2] & 0xF0000);
+                Champion =  (data[2] & 0x10) != 0;
+                Winning =   (data[2] & 0x20) != 0;
+                Victory =   (data[2] & 0x40) != 0;
+                Artist =    (data[2] & 0x80) != 0;
+                Effort =    (data[3] & 0x01) != 0;
+                Marine =    (data[3] & 0x02) != 0;
+                Land =      (data[3] & 0x04) != 0;
+                Sky =       (data[3] & 0x08) != 0;
+                Country =   (data[3] & 0x10) != 0;
+                National =  (data[3] & 0x20) != 0;
+                Earth =     (data[3] & 0x40) != 0;
+                World =     (data[3] & 0x80) != 0;
+                break;
+            case 1:
+                SinnohChamp =   (data[0] & 0x01) != 0;
+                Ability =       (data[0] & 0x02) != 0;
+                GreatAbility =  (data[0] & 0x04) != 0;
+                DoubleAbility = (data[0] & 0x08) != 0;
+                MultiAbility =  (data[0] & 0x10) != 0;
+                PairAbility =   (data[0] & 0x20) != 0;
+                WorldAbility =  (data[0] & 0x40) != 0;
+                Alert =         (data[0] & 0x80) != 0;
+                Shock =         (data[1] & 0x01) != 0;
+                Downcast =      (data[1] & 0x02) != 0;
+                Careless =      (data[1] & 0x04) != 0;
+                Relax =         (data[1] & 0x08) != 0;
+                Snooze =        (data[1] & 0x10) != 0;
+                Smile =         (data[1] & 0x20) != 0;
+                Gorgeous =      (data[1] & 0x40) != 0;
+                Royal =         (data[1] & 0x80) != 0;
+                GorgeousRoyal = (data[2] & 0x01) != 0;
+                Footprint =     (data[2] & 0x02) != 0;
+                Record =        (data[2] & 0x04) != 0;
+                History =       (data[2] & 0x08) != 0;
+                Legend =        (data[2] & 0x10) != 0;
+                Red =           (data[2] & 0x20) != 0;
+                Green =         (data[2] & 0x40) != 0;
+                Blue =          (data[2] & 0x80) != 0;
+                Festival =      (data[3] & 0x01) != 0;
+                Carnival =      (data[3] & 0x02) != 0;
+                Classic =       (data[3] & 0x04) != 0;
+                Premier =       (data[3] & 0x08) != 0;
+                break;
+            case 2:
+                SinnohCool =    (byte)(data[0] & 0xF);
+                SinnohBeauty =  (byte)(data[0] & 0xF0);
+                SinnohCute =    (byte)(data[1] & 0xF00);
+                SinnohSmart =   (byte)(data[1] & 0xF000);
+                SinnohTough =   (byte)(data[2] & 0xF0000);
+                break;
+            default:
+                break;
+        }
     }
 
     public override string ToString()
