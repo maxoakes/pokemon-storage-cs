@@ -76,10 +76,10 @@ public class RibbonSet
         {
             case 0:
                 HeonnCool =     (byte)(data[0] & 0xF);
-                HeonnBeauty =   (byte)(data[0] & 0xF0);
-                HeonnCute =     (byte)(data[1] & 0xF00);
-                HeonnSmart =    (byte)(data[1] & 0xF000);
-                HeonnTough =    (byte)(data[2] & 0xF0000);
+                HeonnBeauty =   (byte)(data[0] >> 4 & 0xF);
+                HeonnCute =     (byte)(data[1] & 0xF);
+                HeonnSmart =    (byte)(data[1] >> 4 & 0xF);
+                HeonnTough =    (byte)(data[2] & 0xF);
                 Champion =  (data[2] & 0x10) != 0;
                 Winning =   (data[2] & 0x20) != 0;
                 Victory =   (data[2] & 0x40) != 0;
@@ -125,10 +125,10 @@ public class RibbonSet
                 break;
             case 2:
                 SinnohCool =    (byte)(data[0] & 0xF);
-                SinnohBeauty =  (byte)(data[0] & 0xF0);
-                SinnohCute =    (byte)(data[1] & 0xF00);
-                SinnohSmart =   (byte)(data[1] & 0xF000);
-                SinnohTough =   (byte)(data[2] & 0xF0000);
+                SinnohBeauty =  (byte)(data[0] >> 4 & 0xF);
+                SinnohCute =    (byte)(data[1] & 0xF);
+                SinnohSmart =   (byte)(data[1] >> 4 & 0xF);
+                SinnohTough =   (byte)(data[2] & 0xF);
                 break;
             default:
                 break;

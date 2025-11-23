@@ -11,7 +11,7 @@ public class GameState
     public string Language { get; set; }
     public Trainer Trainer { get; set; }
     public Dictionary<int, PartyPokemon> Party { get; set; } = [];
-    public Dictionary<int, Dictionary<int, PartyPokemon>> BoxList { get; set; } = [];
+    public Dictionary<string, Dictionary<int, PartyPokemon>> BoxList { get; set; } = [];
 
     public GameState(byte[] content, Game game, string language)
     {
@@ -36,7 +36,8 @@ public class GameState
             for (int i = 0; i < boxOffets.Length; i++)
             {
                 byte[] boxBytes = Utility.GetBytes(content, boxOffets[i], boxSize);
-                BoxList[i] = GetPokemonFromStorageGen1(boxBytes, Game.VersionId, language, 0x16, 0x21, 0x2AA, 0x386);
+                string boxName = $"Box{i+1}";
+                BoxList[boxName] = GetPokemonFromStorageGen1(boxBytes, Game.VersionId, language, 0x16, 0x21, 0x2AA, 0x386);
             }
         }
         else if (Game.VersionId == 3 || Game.VersionId == 4)
@@ -62,7 +63,8 @@ public class GameState
             for (int i = 0; i < boxOffets.Length; i++)
             {
                 byte[] boxBytes = Utility.GetBytes(content, boxOffets[i], boxSize);
-                BoxList[i] = GetPokemonFromStorageGen2(boxBytes, Game.VersionId, language, 20, 32);
+                string boxName = $"Box{i+1}";
+                BoxList[boxName] = GetPokemonFromStorageGen2(boxBytes, Game.VersionId, language, 20, 32);
             }
             return;
         }
@@ -147,12 +149,14 @@ public class GameState
 
             for (int i = 0; i < partySize; i++)
             {
+                Program.Logger.LogInformation($"Looking at Party:{i}");
                 PartyPokemon pokemon = new(4);
                 byte[] pokemonBytes = Utility.GetBytes(partyBytes, i * 236, 236);
                 pokemon.LoadFromGen4Bytes(pokemonBytes, Game.VersionId, language);
                 Party[i] = pokemon;
             }
 
+            int boxSize = (Game.VersionId == 10) ? 0x1000 : 0xFF0;
             for (int i = 0; i < 18; i++)
             {
                 int pokemonOffset = (Game.VersionId == 10) ? 0x00 : 0x04;
@@ -160,14 +164,24 @@ public class GameState
                 
                 byte[] boxNameBytes = Utility.GetBytes(bigBlockBytes, boxNameOffset + (i * 40), 40);
                 string boxName = Utility.GetEncodedString(boxNameBytes, Game.VersionId, language);
-                byte[] thisBoxBytes = Utility.GetBytes(bigBlockBytes, pokemonOffset * i, 136 * 30);
+                if (!BoxList.ContainsKey(boxName)) BoxList.Add(boxName, []);
+                byte[] thisBoxBytes = Utility.GetBytes(bigBlockBytes, pokemonOffset + (boxSize * i), 136 * 30);
 
-                for (int j = 0; i < 30; i++)
+                for (int j = 0; j < 30; j++)
                 {
+                    Program.Logger.LogInformation($"Looking at {boxName}:{j}");
+                    uint thisPv = Utility.GetUnsignedNumber<uint>(thisBoxBytes, (j * 136) + 0, 4);
+                    ushort thisCs = Utility.GetUnsignedNumber<ushort>(thisBoxBytes, (j * 136) + 6, 2);
+                    if (thisPv == 0 && thisCs == 0)
+                    {
+                        Program.Logger.LogInformation("No Pokemon");
+                        continue;
+                    }
+                    
                     PartyPokemon pokemon = new(4);
                     byte[] pokemonBytes = Utility.GetBytes(thisBoxBytes, j * 136, 136);
                     pokemon.LoadFromGen4Bytes(pokemonBytes, Game.VersionId, language);
-                    BoxList[i][j] = pokemon;
+                    BoxList[boxName][j] = pokemon;
                 }
 
             }

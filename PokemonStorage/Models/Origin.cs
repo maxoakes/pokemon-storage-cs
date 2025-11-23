@@ -10,10 +10,10 @@ public class Origin
     public string EncounterTypeIdentifier { get { return "???"; } }
     public string PokeballIdentifier { get; set; }
     public int OriginGameId { get; set; }
-    public string OriginGameName { get { return Lookup.Games[OriginGameId].GameName; } }
+    // public string OriginGameName { get { return Lookup.Games[OriginGameId].GameName; } }
 
     // Egg
-    public DateTime EggReceiveDate { get; set; }
+    public DateTime? EggReceiveDate { get; set; }
     public int EggHatchLocation { get; set; }
     public string EggHatchLocationIdentifier { get { return Lookup.GetLocationNameById(EggHatchLocation); } }
     
@@ -39,6 +39,6 @@ public class Origin
 
     public override string ToString()
     {
-        return $"Met at Lv.{MetLevel} at {MetLocation} in game {OriginGameName} via {PokeballIdentifier}";
+        return $"Met at Lv.{MetLevel} at {MetLocation} in game {OriginGameId} via {PokeballIdentifier}";
     }
 }

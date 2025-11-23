@@ -52,7 +52,7 @@ public class Lookup
             int gender_rate = row.Field<int>("gender_rate");
             int base_happiness = row.Field<int>("base_happiness");
 
-            if (generation_id <= 1 && generation_id >= 4) PokemonGen4Index[id] = id;
+            PokemonGen4Index[id] = id;
             GenderRates[id] = gender_rate;
             BaseHappiness[id] = base_happiness;
         }

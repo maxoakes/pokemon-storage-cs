@@ -56,7 +56,7 @@ public class Program
         {
             game = Lookup.Games[gameId];
         }
-        catch (KeyNotFoundException ex)
+        catch (KeyNotFoundException)
         {
             Console.WriteLine($"Game not valid. Choose from one of the following:");
             foreach (Game availableGame in Lookup.Games.Values.OrderBy(x => x.GameId))
@@ -91,21 +91,20 @@ public class Program
                 pokemonStorageDictionary["Party"].Add(index.ToString(), pokemon);
             }
 
-            foreach ((int box, Dictionary<int, PartyPokemon> boxDictionary) in gameState.BoxList)
+            foreach ((string box, Dictionary<int, PartyPokemon> boxDictionary) in gameState.BoxList)
             {
-                string boxId = box.ToString();
-                if (!pokemonStorageDictionary.ContainsKey(boxId))
-                    pokemonStorageDictionary[boxId] = new Dictionary<string, PartyPokemon>();
+                if (!pokemonStorageDictionary.ContainsKey(box))
+                    pokemonStorageDictionary[box] = new Dictionary<string, PartyPokemon>();
 
                 foreach ((int slot, PartyPokemon pokemon) in boxDictionary)
                 {
                     string slotId = slot.ToString();
-                    if (!pokemonStorageDictionary[boxId].ContainsKey(slotId.ToString()))
-                        pokemonStorageDictionary[boxId].Add(slotId.ToString(), pokemon);
+                    if (!pokemonStorageDictionary[box].ContainsKey(slotId.ToString()))
+                        pokemonStorageDictionary[box].Add(slotId.ToString(), pokemon);
                 }
             }
 
-            File.WriteAllText($"{SaveFilePath.Split('/').Last()}.json", JsonConvert.SerializeObject(pokemonStorageDictionary, Formatting.Indented));
+            File.WriteAllText($"{SaveFilePath.Split('/').Last()}.json", Program.SerializeObject(pokemonStorageDictionary));
             
         }
         else if (readOutput.ToLower() == "console")
@@ -115,14 +114,19 @@ public class Program
             {
                 Console.WriteLine($"{slot}: {pokemon.PrintRelevant()}");
             }
-            foreach ((int boxId, var boxList) in gameState.BoxList)
+            foreach ((string box, var boxList) in gameState.BoxList)
             {
-                Console.WriteLine($"Box {boxId}");
+                Console.WriteLine($"Box {box}");
                 foreach ((int slot, PartyPokemon pokemon) in boxList)
                 {
                     Console.WriteLine($"{slot}: {pokemon.PrintRelevant()}");
                 }
             }
         }        
+    }
+
+    public static string SerializeObject(object obj)
+    {
+        return JsonConvert.SerializeObject(obj, Formatting.Indented);
     }
 }
