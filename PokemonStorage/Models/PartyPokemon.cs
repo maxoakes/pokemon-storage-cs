@@ -289,7 +289,7 @@ public class PartyPokemon
         }
         Origin.MetLevel = Convert.ToByte(caughtBinary.Substring(2, 6), 2);
         OriginalTrainer.Gender = Convert.ToByte(caughtBinary.Substring(8, 1), 2) == 1 ? Gender.FEMALE : Gender.MALE;
-        Origin.MetLocation = Lookup.GetLocationIdByIndex(2, Convert.ToUInt16(caughtBinary.Substring(9, 7), 2));
+        Origin.MetLocationId = Lookup.GetLocationIdByIndex(2, Convert.ToUInt16(caughtBinary.Substring(9, 7), 2));
 
         // Calculations
         Gender = GetGenderByAttackIv();
@@ -422,7 +422,7 @@ public class PartyPokemon
                     PokerusDaysRemaining = Convert.ToByte(pokerusBinary.Substring(4, 4), 2);
 
                     // Origin
-                    Origin.MetLocation = Lookup.GetLocationIdByIndex(3, Utility.GetUnsignedNumber<ushort>(substructureBytes, 0x01, 1));
+                    Origin.MetLocationId = Lookup.GetLocationIdByIndex(3, Utility.GetUnsignedNumber<ushort>(substructureBytes, 0x01, 1));
                     ushort originData = Utility.GetUnsignedNumber<ushort>(substructureBytes, 0x02, 2);
                     string originBinary = Convert.ToString(originData, 2).PadLeft(16, '0');
 
@@ -431,7 +431,7 @@ public class PartyPokemon
                     Program.Logger.LogInformation($"Origin Data: {originBinary}");
 
                     OriginalTrainer.Gender = originBinary[0] == '1' ? Gender.FEMALE : Gender.MALE;
-                    Origin.PokeballIdentifier = Lookup.GetCatchBallById(3, Convert.ToUInt16(originBinary.Substring(1, 4), 2));
+                    Origin.PokeballId = Convert.ToByte(originBinary.Substring(1, 4), 2);
                     Origin.OriginGameId = Lookup.GetGameOfOrigin(3, Convert.ToUInt16(originBinary.Substring(5, 4), 2));
                     Origin.MetLevel = Convert.ToByte(originBinary.Substring(9, 7), 2);
 
@@ -531,8 +531,6 @@ public class PartyPokemon
         calculated &= 0xFFFF;
 
         Program.Logger.LogInformation($"{checksum & 0xffff} ?== {calculated & 0xffff}");
-        // Program.Logger.LogInformation($"CHSM:{Convert.ToString(checksum, 2).PadLeft(17, '0')}");
-        // Program.Logger.LogInformation($"CALC:{Convert.ToString(calculated, 2).PadLeft(17, '0')}");
         bool checksumResult = (checksum & 0xffff) == (calculated & 0xffff);
         if (!checksumResult)
         {
@@ -615,13 +613,13 @@ public class PartyPokemon
 
                     // IVs and more
                     uint ivData = Utility.GetUnsignedNumber<uint>(blockBytes, 0x10, 4);
-                    string ivBinary = Convert.ToString(ivData, 2).PadLeft(32, '0');
-                    HP.Iv = Convert.ToByte(ivBinary.Substring(0, 4), 2);
-                    Attack.Iv = Convert.ToByte(ivBinary.Substring(5, 4), 2);
-                    Defense.Iv = Convert.ToByte(ivBinary.Substring(10, 4), 2);
-                    Speed.Iv = Convert.ToByte(ivBinary.Substring(15, 4), 2);
-                    SpecialAttack.Iv = Convert.ToByte(ivBinary.Substring(20, 4), 2);
-                    SpecialDefense.Iv = Convert.ToByte(ivBinary.Substring(25, 4), 2);
+                    string ivBinary = Utility.ReverseString(Convert.ToString(ivData, 2).PadLeft(32, '0'));
+                    HP.Iv = Convert.ToByte(Utility.ReverseString(ivBinary.Substring(0, 5)), 2);
+                    Attack.Iv = Convert.ToByte(Utility.ReverseString(ivBinary.Substring(5, 5)), 2);
+                    Defense.Iv = Convert.ToByte(Utility.ReverseString(ivBinary.Substring(10, 5)), 2);
+                    Speed.Iv = Convert.ToByte(Utility.ReverseString(ivBinary.Substring(15, 5)), 2);
+                    SpecialAttack.Iv = Convert.ToByte(Utility.ReverseString(ivBinary.Substring(20, 5)), 2);
+                    SpecialDefense.Iv = Convert.ToByte(Utility.ReverseString(ivBinary.Substring(25, 5)), 2);
                     IsEgg = ivBinary[30] == '1';
                     HasNickname = ivBinary[31] == '1';
 
@@ -630,7 +628,7 @@ public class PartyPokemon
 
                     // Flags
                     int flagsData = Utility.GetUnsignedNumber<byte>(blockBytes, 0x18, 1);
-                    string flagsBinary = Convert.ToString(flagsData, 2).PadLeft(8, '0');
+                    string flagsBinary = Utility.ReverseString(Convert.ToString(flagsData, 2).PadLeft(8, '0'));
 
                     Origin.FatefulEncounter = flagsBinary[0] == '1';
                     if (flagsBinary[2] == '1') Gender = Gender.GENDERLESS;
@@ -639,13 +637,13 @@ public class PartyPokemon
                         Gender = flagsBinary[1] == '1' ? Gender.FEMALE : Gender.MALE;
                     }
                     
-                    AlternateFormId = (ushort)Convert.ToInt16(flagsBinary.Substring(3, 4), 2);
+                    AlternateFormId = (ushort)Convert.ToInt16(Utility.ReverseString(flagsBinary.Substring(3, 5)), 2);
                     ShinyLeaves = Utility.GetUnsignedNumber<byte>(blockBytes, 0x19, 1);
 
                     if (versionId == 9 || versionId == 10)
                     {
-                        Origin.MetLocation = Utility.GetUnsignedNumber<ushort>(blockBytes, 0x1C, 2);
-                        Origin.EggHatchLocation = Utility.GetUnsignedNumber<ushort>(blockBytes, 0x1E, 2);
+                        Origin.MetLocationId = Utility.GetUnsignedNumber<ushort>(blockBytes, 0x1C, 2);
+                        Origin.EggHatchLocationId = Utility.GetUnsignedNumber<ushort>(blockBytes, 0x1E, 2);
                     }
                     break;
 
@@ -667,7 +665,7 @@ public class PartyPokemon
                     byte metYear = Utility.GetUnsignedNumber<byte>(blockBytes, 0x13, 1);
                     byte metMonth = Utility.GetUnsignedNumber<byte>(blockBytes, 0x14, 1);
                     byte metDay = Utility.GetUnsignedNumber<byte>(blockBytes, 0x15, 1);
-                    if (metDay == 0)
+                    if (metDay != 0)
                     {
                         if (Origin.EggReceiveDate.HasValue)
                         {
@@ -678,11 +676,16 @@ public class PartyPokemon
                             Origin.MetDateTime = Origin.MetDateTime = new DateTime(metYear + 2000, metMonth, metDay);
                         }
                     }
+                    else
+                    {
+                        Origin.MetDateTime = ORIGIN_DATE;
+                    }
                     
                     if (versionId == 8)
                     {
-                        Origin.MetLocation = Utility.GetUnsignedNumber<ushort>(blockBytes, 0x16, 2);
-                        Origin.EggHatchLocation = Utility.GetUnsignedNumber<ushort>(blockBytes, 0x18, 2);
+                        Origin.EggHatchLocationId = Utility.GetUnsignedNumber<ushort>(blockBytes, 0x16, 2);
+                        Origin.MetLocationId = Utility.GetUnsignedNumber<ushort>(blockBytes, 0x18, 2);
+                        
                     }
 
                     byte pokerusData = Utility.GetUnsignedNumber<byte>(blockBytes, 0x1A, 1);
@@ -690,17 +693,17 @@ public class PartyPokemon
                     PokerusStrain = Convert.ToByte(pokerusBinary.Substring(0, 4), 2);
                     PokerusDaysRemaining = Convert.ToByte(pokerusBinary.Substring(4, 4), 2);
 
-                    Origin.PokeballIdentifier = Lookup.GetCatchBallById(4, Utility.GetUnsignedNumber<byte>(blockBytes, 0x1B, 1));
+                    Origin.PokeballId = Utility.GetUnsignedNumber<byte>(blockBytes, 0x1B, 1);
 
                     int originData = Utility.GetUnsignedNumber<byte>(blockBytes, 0x1C, 1);
-                    string originBinary = Convert.ToString(originData, 2).PadLeft(8, '0');
-                    Origin.MetLevel = Convert.ToInt32(originBinary.Substring(0, 6), 2);
+                    string originBinary = Utility.ReverseString(Convert.ToString(originData, 2).PadLeft(8, '0'));
+                    Origin.MetLevel = Convert.ToInt32(Utility.ReverseString(originBinary.Substring(0, 6)), 2);
                     OriginalTrainer.Gender = originBinary[7] == '1' ? Gender.FEMALE : Gender.MALE;
                     Origin.EncounterTypeId = Utility.GetUnsignedNumber<byte>(blockBytes, 0x1D, 1);
 
                     if (versionId == 10)
                     {
-                        Origin.PokeballIdentifier = Lookup.GetCatchBallById(4, Utility.GetUnsignedNumber<byte>(blockBytes, 0x1E, 1));
+                        Origin.PokeballId = Utility.GetUnsignedNumber<byte>(blockBytes, 0x1E, 1);
                         WalkingMood = Utility.GetUnsignedNumber<byte>(blockBytes, 0x1F, 1);
                     }
                     break;
@@ -714,51 +717,6 @@ public class PartyPokemon
     }
     #endregion
     
-    #endregion
-
-    #region Console Print
-
-    public string PrintRelevant(int inputGeneration = 0)
-    {
-        int displayGeneration = inputGeneration;
-        if (displayGeneration == 0) displayGeneration = Generation;
-
-        StringBuilder returnString = new();
-
-        returnString.AppendLine($"\t{SpeciesId}: {SpeciesIdentifier} ({Nickname}) OT:{OriginalTrainer}");
-        returnString.AppendLine($"\tLv.{Level} Exp:{ExperiencePoints}");
-        if (displayGeneration > 1)
-        {
-            returnString.AppendLine($"\tHeld Item:{HeldItemIdentifier}");
-        }
-        if (displayGeneration == 2)
-        {
-            returnString.AppendLine($"\tGender:{Gender} Happiness:{Friendship} Shiny:{GetShinyByIv()}");
-        }
-        else if (displayGeneration > 2)
-        {
-            returnString.AppendLine($"\t\tGender:{Gender} Ability: {AbilityIdentifier} Happiness:{Friendship} Shiny:{GetShinyFromPersonalityValue()}");
-        }
-
-        returnString.AppendLine($"\tM1:{(Moves.TryGetValue(0, out var m1) ? m1 : "")}");
-        returnString.AppendLine($"\tM2:{(Moves.TryGetValue(1, out var m2) ? m2 : "")}");
-        returnString.AppendLine($"\tM3:{(Moves.TryGetValue(2, out var m3) ? m3 : "")}");
-        returnString.AppendLine($"\tM4:{(Moves.TryGetValue(3, out var m4) ? m4 : "")}");
-        returnString.AppendLine($"\tHP:      {HP}");
-        returnString.AppendLine($"\tAttack:  {Attack}");
-        returnString.AppendLine($"\tDefense: {Defense}");
-        returnString.AppendLine($"\tSpeed:   {Speed}");
-        returnString.AppendLine($"\tSpA:     {SpecialAttack}");
-        returnString.AppendLine($"\tSpD:     {SpecialDefense}");
-
-        if (displayGeneration == 2)
-        {
-            returnString.AppendLine($"\tMeet Time: {Origin.MetDateTime.TimeOfDay.Hours} Location: {Lookup.GetLocationNameById(Origin.MetLocation)} Level: {Origin.MetLevel}");
-        }
-
-        return returnString.ToString();
-    }
-
     #endregion
 
     #region Getters

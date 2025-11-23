@@ -112,14 +112,14 @@ public class Program
             Console.WriteLine("Party:");
             foreach ((int slot, PartyPokemon pokemon) in gameState.Party)
             {
-                Console.WriteLine($"{slot}: {pokemon.PrintRelevant()}");
+                Console.WriteLine($"{slot}: {SerializeObject(pokemon)}");
             }
             foreach ((string box, var boxList) in gameState.BoxList)
             {
                 Console.WriteLine($"Box {box}");
                 foreach ((int slot, PartyPokemon pokemon) in boxList)
                 {
-                    Console.WriteLine($"{slot}: {pokemon.PrintRelevant()}");
+                    Console.WriteLine($"{slot}: {SerializeObject(pokemon)}");
                 }
             }
         }        

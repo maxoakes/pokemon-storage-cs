@@ -365,8 +365,7 @@ public class Lookup
     {
         return generationId switch
         {
-            3 => CatchBallIndexGen3.GetValueOrDefault(index, "???"),
-            _ => "poke-ball"
+            _ => CatchBallIndexGen3.GetValueOrDefault(index, "???"),
         };
     }
 
@@ -471,6 +470,12 @@ public class Lookup
 
         foreach (DataRow row in statDataTable.Rows)
         {
+            // Edge case, level 0 and 0 experience
+            if (experience == 0) return 1;
+
+            // Edge case, level 100
+            if (row.Field<int>("level") == 100 && row.Field<int>("experience") == experience) return 100;
+
             return (byte)Math.Max(row.Field<int>("level")-1, 0);
         }
         return 0;
