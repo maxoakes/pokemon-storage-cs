@@ -1,45 +1,40 @@
 ﻿using System.Data;
-using MySql.Data.MySqlClient;
+using Microsoft.Data.Sqlite;
 
 namespace PokemonStorage.DatabaseIO
 {
     public static class DbInterface
     {
-        #region MySql Database
+        #region Sqlite Database
 
         /// <summary>
-        /// Get an MySqlCommand based on a query.
+        /// Get an SqliteCommand based on a query.
         /// </summary>
-        /// <param name="query">Raw MySql statement</param>
+        /// <param name="query">Raw Sqlite statement</param>
         /// <returns></returns>
-        public static MySqlCommand PrepareSqlCommand(string query)
+        public static SqliteCommand PrepareSqlCommand(string query, string connectionString)
         {
             if (string.IsNullOrWhiteSpace(Program.ConnectionString)) throw new Exception("No connection string specified");
 
-            MySqlConnection connection = new(Program.ConnectionString);
-            MySqlCommand command = new(query, connection);
+            SqliteConnection connection = new(connectionString);
+            SqliteCommand command = new(query, connection);
             return command;
         }
 
         /// <summary>
-        /// Given MySqlParameter, conform the value to MySql database standards. 
+        /// Given SqliteParameter, conform the value to Sqlite database standards. 
         /// Incudes changing null values to DBNull, trimming strings to maximum varchar lengths, 
         /// and catching out of range dates.
         /// </summary>
-        /// <param name="input">Unconformed MySqlParameter</param>
-        /// <returns>SqlParameter ready for MySql statement</returns>
-        public static object PrepareParameterValue(MySqlParameter input)
+        /// <param name="input">Unconformed SqliteParameter</param>
+        /// <returns>SqlParameter ready for Sqlite statement</returns>
+        public static object PrepareParameterValue(SqliteParameter input)
         {
             if (input.Value == null)
             {
                 return DBNull.Value;
             }
-            if (input.MySqlDbType == MySqlDbType.VarChar ||
-                input.MySqlDbType == MySqlDbType.LongText ||
-                input.MySqlDbType == MySqlDbType.Text ||
-                input.MySqlDbType == MySqlDbType.MediumText ||
-                input.MySqlDbType == MySqlDbType.TinyText
-                )
+            if (input.SqliteType == SqliteType.Text)
             {
                 string str = (string)input.Value;
                 if (string.IsNullOrWhiteSpace(str))
@@ -51,29 +46,6 @@ namespace PokemonStorage.DatabaseIO
                     return Utility.TruncateString(str, input.Size);
                 }
             }
-            if (input.MySqlDbType == MySqlDbType.DateTime ||
-                input.MySqlDbType == MySqlDbType.Date)
-            {
-
-                if (DateTime.TryParse(input.Value.ToString(), out DateTime dateTime))
-                {
-                    return DBNull.Value;
-                }
-
-                try
-                {
-                    if (dateTime < DateTime.Parse("1/1/1000 12:00:00 AM") || (dateTime > DateTime.Parse("12/31/9999 11:59:59 PM")))
-                    {
-                        Console.WriteLine(string.Format("WARNING: MySqlDateTime overflow was caught and set to null: '{0}'", dateTime));
-                        return DBNull.Value;
-                    }
-                }
-                catch
-                {
-                    Console.WriteLine(string.Format("WARNING: Unknown MySqlDateTime was caught and set to null: '{0}'", input.Value));
-                    return DBNull.Value;
-                }
-            }
             return input.Value;
         }
 
@@ -82,16 +54,16 @@ namespace PokemonStorage.DatabaseIO
         #region Read Database
 
         /// <summary>
-        /// Get a DataTable based on an MySql select statement, and optionally a list of parameters used within the MySql statement.
+        /// Get a DataTable based on an Sqlite select statement, and optionally a list of parameters used within the Sqlite statement.
         /// </summary>
         /// <param name="query">SQL select statement</param>
-        /// <param name="parameters">List of MySqlParameters used in the MySql select statement</param>
+        /// <param name="parameters">List of SqliteParameters used in the Sqlite select statement</param>
         /// <param name="isStoredProcedure">True if the query parameter is the name of a table-returning stored procedure, 
         /// false if it is a whole select statement string</param>
         /// <returns></returns>
-        public static DataTable RetrieveTable(string query, List<MySqlParameter>? parameters = null, bool isStoredProcedure = false)
+        public static DataTable RetrieveTable(string query, string connectionString, List<SqliteParameter>? parameters = null, bool isStoredProcedure = false)
         {
-            MySqlCommand command = PrepareSqlCommand(query);
+            SqliteCommand command = PrepareSqlCommand(query, connectionString);
             if (isStoredProcedure)
             {
                 command.CommandType = CommandType.StoredProcedure;
@@ -101,24 +73,34 @@ namespace PokemonStorage.DatabaseIO
             {
                 command.Parameters.AddRange(parameters.ToArray());
             }
-            MySqlDataAdapter adapter = new(command);
+            
+            DataTable dataTable;
+            using (SqliteDataReader dr = command.ExecuteReader())
+            {
+                do
+                {
+                    dataTable = new DataTable();
+                    dataTable.BeginLoadData();
+                    dataTable.Load(dr);
+                    dataTable.EndLoadData();
 
-            DataSet dataSet = new();
-            adapter.Fill(dataSet);
-            return dataSet.Tables[0];
+                } while (!dr.IsClosed && dr.NextResult());
+            }
+
+            return dataTable;
         }
 
         /// <summary>
         /// Get a single value from a query.
         /// </summary>
         /// <param name="query">SQL statement</param>
-        /// <param name="parameters">List of MySqlParameters used in the MySql select statement</param>
+        /// <param name="parameters">List of SqliteParameters used in the Sqlite select statement</param>
         /// <param name="isStoredProcedure">True if the query parameter is the name of a table-returning stored procedure, 
         /// false if it is a whole select statement string</param>
         /// <returns></returns>
-        public static object RetrieveScalar(string query, List<MySqlParameter>? parameters = null, bool isStoredProcedure = false)
+        public static object RetrieveScalar(string query, string connectionString, List<SqliteParameter>? parameters = null, bool isStoredProcedure = false)
         {
-            MySqlCommand command = PrepareSqlCommand(query);
+            SqliteCommand command = PrepareSqlCommand(query, connectionString);
             if (isStoredProcedure)
             {
                 command.CommandType = CommandType.StoredProcedure;
@@ -136,12 +118,12 @@ namespace PokemonStorage.DatabaseIO
         /// <summary>
         /// Query a table and get the next highest integer for a given column. Used to get the next available primary key for tables that to not use identities.
         /// </summary>
-        /// <param name="table">Name of the MySql table.</param>
-        /// <param name="column">Name of the column in the MySql table.</param>
+        /// <param name="table">Name of the Sqlite table.</param>
+        /// <param name="column">Name of the column in the Sqlite table.</param>
         /// <returns></returns>
-        public static int GetNextHighestNumber(string table, string column)
+        public static int GetNextHighestNumber(string table, string column, string connectionString)
         {
-            MySqlCommand command = PrepareSqlCommand($"SELECT MAX({column}) FROM {table}");
+            SqliteCommand command = PrepareSqlCommand($"SELECT MAX({column}) FROM {table}", connectionString);
             int result = (int)ExecuteScalar(command);
             return result + 1;
         }
@@ -151,11 +133,11 @@ namespace PokemonStorage.DatabaseIO
         #region Write Database
 
         /// <summary>
-        /// Execute a command in the MySql database that returns a scalar value.
+        /// Execute a command in the Sqlite database that returns a scalar value.
         /// </summary>
-        /// <param name="command">Fully created MySqlCommand that includes the MySql command, parameters, and connection string.</param>
-        /// <returns>Result from the MySql scalar command</returns>
-        public static object ExecuteScalar(MySqlCommand command)
+        /// <param name="command">Fully created SqliteCommand that includes the Sqlite command, parameters, and connection string.</param>
+        /// <returns>Result from the Sqlite scalar command</returns>
+        public static object ExecuteScalar(SqliteCommand command)
         {
             object? result = null;
             try
@@ -172,11 +154,11 @@ namespace PokemonStorage.DatabaseIO
         }
 
         /// <summary>
-        /// Execute a command in the MySql database that does not return a value.
+        /// Execute a command in the Sqlite database that does not return a value.
         /// </summary>
-        /// <param name="command">Fully created MySqlCommand that includes the MySql command, parameters, and connection string.</param>
-        /// <returns>Number of rows affected by the MySql command</returns>
-        public static int ExecuteNonQuery(MySqlCommand command)
+        /// <param name="command">Fully created SqliteCommand that includes the Sqlite command, parameters, and connection string.</param>
+        /// <returns>Number of rows affected by the Sqlite command</returns>
+        public static int ExecuteNonQuery(SqliteCommand command)
         {
             int result = -1;
             try
@@ -193,14 +175,14 @@ namespace PokemonStorage.DatabaseIO
         }
 
         /// <summary>
-        /// Execute an MySql scalar command given a statement and list of parameters
+        /// Execute an Sqlite scalar command given a statement and list of parameters
         /// </summary>
         /// <param name="statement">SQL statement</param>
-        /// <param name="parameters">Raw MySql parameters</param>
+        /// <param name="parameters">Raw Sqlite parameters</param>
         /// <returns></returns>
-        public static object InsertAndGetPrimaryKey(string statement, List<MySqlParameter> parameters)
+        public static object InsertAndGetPrimaryKey(string statement, List<SqliteParameter> parameters, string connectionString)
         {
-            MySqlCommand command = PrepareSqlCommand(statement);
+            SqliteCommand command = PrepareSqlCommand(statement, connectionString);
             parameters.ForEach(e => e.Value = PrepareParameterValue(e));
             command.Parameters.AddRange(parameters.ToArray());
 
@@ -208,14 +190,14 @@ namespace PokemonStorage.DatabaseIO
         }
 
         /// <summary>
-        /// Execute an MySql command given a statement and list of parameters.
+        /// Execute an Sqlite command given a statement and list of parameters.
         /// </summary>
         /// <param name="statement">SQL statement</param>
-        /// <param name="parameters">Raw MySql parameters</param>
+        /// <param name="parameters">Raw Sqlite parameters</param>
         /// <returns>Number of rows affected</returns>
-        public static int UpdateAndGetResult(string statement, List<MySqlParameter> parameters)
+        public static int UpdateAndGetResult(string statement, List<SqliteParameter> parameters, string connectionString)
         {
-            MySqlCommand command = PrepareSqlCommand(statement);
+            SqliteCommand command = PrepareSqlCommand(statement, connectionString);
             parameters.ForEach(e => e.Value = PrepareParameterValue(e));
             command.Parameters.AddRange(parameters.ToArray());
 
@@ -226,15 +208,15 @@ namespace PokemonStorage.DatabaseIO
 
         #region Utility
 
-        public static void PrintSqlParameters(List<MySqlParameter> MySqlParameters)
+        public static void PrintSqlParameters(List<SqliteParameter> SqliteParameters)
         {
-            MySqlParameters.ForEach(e => Console.WriteLine($"\t{e.ParameterName}:{e.MySqlDbType}({e.Size})={e.Value}"));
+            SqliteParameters.ForEach(e => Console.WriteLine($"\t{e.ParameterName}:{e.SqliteType}({e.Size})={e.Value}"));
         }
 
-        private static void PrintCommandStatement(MySqlCommand command)
+        private static void PrintCommandStatement(SqliteCommand command)
         {
             Console.WriteLine(command.CommandText);
-            PrintSqlParameters([.. command.Parameters.Cast<MySqlParameter>()]);
+            PrintSqlParameters([.. command.Parameters.Cast<SqliteParameter>()]);
         }
 
         #endregion

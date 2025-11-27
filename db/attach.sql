@@ -1,0 +1,1 @@
+ATTACH DATABASE '/home/scouter/Projects/Programming/pokemon-storage-cs/db/vulkeen-pokemon.sqlite' AS vulkeen;
