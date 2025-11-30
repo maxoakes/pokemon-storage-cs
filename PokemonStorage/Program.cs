@@ -9,8 +9,8 @@ namespace PokemonStorage;
 
 public class Program
 {
-    public static ILogger Logger;
-    public static string ConnectionString = "";
+    public static ILogger? Logger;
+    public static Dictionary<string, string> ConnectionStrings = [];
     public static string SaveFilePath = "";
     public static Trainer ManagerTrainer = new("OAK", (int)Gender.MALE, 1, 0);
 
@@ -34,7 +34,9 @@ public class Program
         Logger = factory.CreateLogger<Program>();
 
         // Access configuration values
-        ConnectionString = config.GetConnectionString("Database") ?? "";
+        ConnectionStrings["veekun"] = config.GetConnectionString("veekun") ?? "";
+        ConnectionStrings["supplement"] = config.GetConnectionString("supplement") ?? "";
+        ConnectionStrings["storage"] = config.GetConnectionString("storage") ?? "";
         string language = config.GetValue<string>("Settings:Language") ?? "";
         string mode = config.GetValue<string>("Settings:Mode") ?? "";
         string readOutput = config.GetValue<string>("Settings:ReadOutput") ?? "";
@@ -46,7 +48,6 @@ public class Program
             throw new ConfigurationErrorsException("appsettings.json is not configured correctly");
         }
 
-        Logger.LogInformation($"Connection String: {ConnectionString}");
         Console.WriteLine($"Settings: ({language})({gameId}) {Utility.ProperCapitalizeString(mode)} from [{SaveFilePath}]");
 
         Lookup.Initialize();

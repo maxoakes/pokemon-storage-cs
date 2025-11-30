@@ -1,1 +1,2 @@
-ATTACH DATABASE '/home/scouter/Projects/Programming/pokemon-storage-cs/db/vulkeen-pokemon.sqlite' AS vulkeen;
+ATTACH DATABASE '/home/scouter/Projects/Programming/pokemon-storage-cs/db/supplement.sqlite' AS supplement;
+ATTACH DATABASE '/home/scouter/Projects/Programming/pokemon-storage-cs/db/storage.sqlite' AS storage;

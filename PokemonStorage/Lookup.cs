@@ -26,51 +26,11 @@ public class Lookup
     public static Dictionary<int, int> GenderRates { get; set; } = [];
     public static Dictionary<int, int> BaseHappiness { get; set; } = [];
     public static Dictionary<int, string> Languages { get; set; } = [];
-    public static Dictionary<int, Location> Locations { get; set; } = [];
-    public static Dictionary<int, int> PokemonGen1Index { get; set; } = [];
-    public static Dictionary<int, int> PokemonGen3Index { get; set; } = [];
-    public static Dictionary<int, int> PokemonGen4Index { get; set; } = [];
     public static Dictionary<int, int> GameGen3Index { get; set; } = [];
     public static Dictionary<int, string> CatchBallIndexGen3 { get; set; } = [];
 
     public static void Initialize()
     {
-        // Fill generation pokedex values
-
-        // Gen 1
-        PokemonGen1Index = Read<Dictionary<int, int>>(@"Mappings/pokemon_index_gen1.json") ?? [];
-
-        // Gen 3
-        PokemonGen3Index = Read<Dictionary<int, int>>(@"Mappings/pokemon_index_gen3.json") ?? [];
-
-        // Gen 4
-        DataTable pokemonSpeciesDataTable = DbInterface.RetrieveTable("SELECT id, generation_id, gender_rate, base_happiness FROM pokemon_species");
-        foreach (DataRow row in pokemonSpeciesDataTable.Rows)
-        {
-            int id = row.Field<int>("id");
-            int generation_id = row.Field<int>("generation_id");
-            int gender_rate = row.Field<int>("gender_rate");
-            int base_happiness = row.Field<int>("base_happiness");
-
-            PokemonGen4Index[id] = id;
-            GenderRates[id] = gender_rate;
-            BaseHappiness[id] = base_happiness;
-        }
-
-        // Special generation 4 mappings
-        PokemonGen4Index[496] = 386;
-        PokemonGen4Index[497] = 386;
-        PokemonGen4Index[498] = 386;
-        PokemonGen4Index[499] = 413;
-        PokemonGen4Index[500] = 413;
-        PokemonGen4Index[501] = 487;
-        PokemonGen4Index[502] = 492;
-        PokemonGen4Index[503] = 479;
-        PokemonGen4Index[504] = 479;
-        PokemonGen4Index[505] = 479;
-        PokemonGen4Index[506] = 479;
-        PokemonGen4Index[507] = 479;
-
         // Get basic game ids and names
         DataTable gameDataTable = DbInterface.RetrieveTable("""
             SELECT 
