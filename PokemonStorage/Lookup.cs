@@ -6,6 +6,70 @@ using PokemonStorage.Models;
 
 namespace PokemonStorage;
 
+#region Structs and Enums
+
+public struct BasicDatabaseEntry
+{
+    public int Id;
+    public string Identifier;
+    public string Name;
+}
+
+public struct Game
+{
+    public int GenerationId;
+    public int VersionId;
+    public int GameId;
+    public string GameName;
+
+    public override string ToString()
+    {
+        return $"{VersionId}: {GameName} (Gen {GenerationId})";
+    }
+}
+
+public struct AbilityMapping
+{
+    public int First;
+    public int Second;
+    public int Hidden;
+
+    public AbilityMapping()
+    {
+        First = 0;
+        Second = 0;
+        Hidden = 0;
+    }
+
+    public void Assign(int value, int slot, bool isHidden)
+    {
+        if (isHidden) Hidden = value;
+        else
+        {
+            if (slot == 1) First = value;
+            else Second = value;
+        }
+    }
+}
+
+public struct Nature
+{
+    public int Id;
+    public string Identifier;
+    public int DecreaseId;
+    public int IncreaseId;
+    public int GameIndex;
+}
+
+public struct PokemonIdentity
+{
+    public int PokemonId;
+    public int SpeciesId;
+    public int FormId;
+    public string FormIdentifier;
+    public string SpeciesIdentifier;
+}
+
 public enum Gender
 {
     MALE = 0,
@@ -13,229 +77,102 @@ public enum Gender
     GENDERLESS = 2
 }
 
+#endregion
+
+#region Static Lookup
+
 public class Lookup
 {
-    public static Dictionary<int, Game> Games { get; set; } = [];
-    public static Dictionary<int, string> Pokemon { get; set; } = [];
-    public static Dictionary<int, string> Moves { get; set; } = [];
-    public static Dictionary<int, Item> Items { get; set; } = [];
-    public static Dictionary<int, string> Abilities { get; set; } = [];
-    public static Dictionary<int, AbilityMapping> AbilityMapping { get; set; } = [];
-    public static Dictionary<int, string> Natures { get; set; } = [];
-    public static Dictionary<int, int> NatureMapping { get; set; } = [];
-    public static Dictionary<int, int> GenderRates { get; set; } = [];
-    public static Dictionary<int, int> BaseHappiness { get; set; } = [];
-    public static Dictionary<int, string> Languages { get; set; } = [];
-    public static Dictionary<int, int> GameGen3Index { get; set; } = [];
-    public static Dictionary<int, string> CatchBallIndexGen3 { get; set; } = [];
-
-    public static void Initialize()
+    public static string GetEncodedCharacterByGameIndex(int gameIndex, int generation, string language="en", bool standardCharacter=true)
     {
-        // Get basic game ids and names
-        DataTable gameDataTable = DbInterface.RetrieveTable("""
-            SELECT 
-                v.id,
-                v.version_group_id,
-                vg.generation_id,
-                vn.name
-            FROM
-                versions v 
-                LEFT JOIN version_groups vg ON vg.id = v.version_group_id 
-                LEFT JOIN version_names vn ON v.id = vn.version_id 
+        List<SqliteParameter> parameters = [
+            new SqliteParameter("DecValue", SqliteType.Integer) { Value = gameIndex },
+            new SqliteParameter("Generation", SqliteType.Integer) { Value = generation },
+            new SqliteParameter("Language", SqliteType.Text) { Value = language },
+            new SqliteParameter("StandardCharacter", SqliteType.Integer) { Value = standardCharacter ? 1 : 0 }
+        ];
+
+        string c = (string)DbInterface.RetrieveScalar("""
+            SELECT character FROM character_encoding 
             WHERE 
-                vn.local_language_id = 9
-            ORDER BY vg.`order`
-        """);
-
-        foreach (DataRow row in gameDataTable.Rows)
-        {
-            int id = row.Field<int>("id");
-            int versionGroup = row.Field<int>("version_group_id");
-            int generationId = row.Field<int>("generation_id");
-            string name = row.Field<string>("name") ?? "";
-
-            Games[id] = new Game(id, name, versionGroup, generationId);
-        }
-
-        GameGen3Index = Read<Dictionary<int, int>>(@"Mappings/game_index_gen3.json") ?? [];
-
-        // Moves
-        DataTable moveDataTable = DbInterface.RetrieveTable("SELECT id, identifier, generation_id FROM moves");
-        foreach (DataRow row in moveDataTable.Rows)
-        {
-            int id = row.Field<int>("id");
-            string identifier = row.Field<string>("identifier") ?? "???";
-            int generationId = row.Field<int>("generation_id");
-            Moves[id] = identifier;
-        }
-
-        // Pokemon Forms
-        DataTable formDataTable = DbInterface.RetrieveTable("SELECT id, identifier FROM pokemon_forms");
-        foreach (DataRow row in formDataTable.Rows)
-        {
-            int id = row.Field<int>("id");
-            string identifier = row.Field<string>("identifier") ?? "???";
-            Pokemon[id] = identifier;
-        }
-
-        // Items
-        DataTable itemDataTable = DbInterface.RetrieveTable("""
-                SELECT 
-                    i.id, 
-                    i.identifier, 
-                    igi.generation_id, 
-                    igi.game_index 
-                FROM items i 
-                    LEFT JOIN item_game_indices igi ON i.id = igi.item_id 
-                ORDER BY igi.generation_id, game_index
-            """);
-
-        foreach (DataRow row in itemDataTable.Rows)
-        {
-            int id = row.Field<int>("id");
-            string identifier = row.Field<string>("identifier") ?? "???";
-            int generationId = row.Field<int>("generation_id");
-            int gameIndex = row.Field<int>("game_index");
-
-            if (Items.ContainsKey(id))
-                Items[id].IdMapping[generationId] = gameIndex;
-            else
-                Items[id] = new Item(id, identifier);
-        }
-
-        var gen2ItemMapping = Read<Dictionary<int, int>>(@"Mappings/item_index_gen2.json") ?? [];
-        foreach (var pair in gen2ItemMapping)
-        {
-            Items[pair.Value].IdMapping[2] = pair.Key;
-        }
-
-        // Abilities
-        DataTable abilityDataTable = DbInterface.RetrieveTable("SELECT id, identifier, generation_id FROM abilities");
-        foreach (DataRow row in abilityDataTable.Rows)
-        {
-            int id = row.Field<int>("id");
-            string identifier = row.Field<string>("identifier") ?? "???";
-            int generationId = row.Field<int>("generation_id");
-
-            Abilities[id] = identifier;
-        }
-            
-
-        DataTable abilityMappingDataTable = DbInterface.RetrieveTable("""
-            SELECT 
-                ps.id AS species_id, 
-                pa.ability_id, 
-                pa.slot, 
-                pa.is_hidden 
-            FROM 
-                pokemon p 
-                LEFT JOIN pokemon_species ps ON p.species_id = ps.id 
-                LEFT JOIN pokemon_abilities pa ON p.id=pa.pokemon_id 
-            WHERE p.id <= 10000
-        """);
-
-        foreach (DataRow row in abilityMappingDataTable.Rows)
-        {
-            int speciesId = row.Field<int>("species_id");
-            int abilityId = row.Field<int>("ability_id");
-            int slot = row.Field<int>("slot");
-            bool isHidden = Convert.ToBoolean(row.Field<Int64>("is_hidden"));
-
-            if (!AbilityMapping.ContainsKey(speciesId))
-                AbilityMapping[speciesId] = new AbilityMapping();
-
-            AbilityMapping[speciesId].Assign(abilityId, slot, isHidden);
-        }
-
-        // Natures
-        DataTable natureDataTable = DbInterface.RetrieveTable("SELECT id, identifier, game_index FROM natures");
-        foreach (DataRow row in natureDataTable.Rows)
-        {
-            int id = row.Field<int>("id");
-            string identifier = row.Field<string>("identifier") ?? "???";
-            int gameIndex = row.Field<int>("game_index");
-            Natures[id] = identifier;
-            NatureMapping[gameIndex] = id;
-        }
-
-        // Locations
-        DataTable locationDataTable = DbInterface.RetrieveTable("""
-            SELECT 
-                l.id, l.identifier, lgi.generation_id, lgi.game_index 
-            FROM
-                locations l 
-                LEFT JOIN location_game_indices lgi ON l.id=lgi.location_id 
-            WHERE 
-                l.region_id IS NOT NULL 
-            ORDER BY
-                l.id
-        """);
-
-        foreach (DataRow row in locationDataTable.Rows)
-        {
-            int id = row.Field<int>("id");
-            string identifier = row.Field<string>("identifier") ?? "???";
-            int generation_id = row.Field<int?>("generation_id") ?? 0;
-            int gameIndex = row.Field<int?>("game_index") ?? 0;
-
-            if (!Locations.ContainsKey(id)) Locations[id] = new Location(id, identifier);
-            Locations[id].IdMapping[generation_id] = gameIndex;
-        }
-
-        var gen2LocationMapping = Read<Dictionary<int, int>>(@"Mappings/location_index_gen2.json") ?? [];
-        foreach (var pair in gen2LocationMapping)
-        {
-            if (Locations.ContainsKey(pair.Value)) Locations[pair.Value].IdMapping[2] = pair.Key;
-        }
-
-        var gen3LocationMapping = Read<Dictionary<int, int>>(@"Mappings/location_index_gen3.json") ?? [];
-        foreach (var pair in gen3LocationMapping)
-        {
-            if (Locations.ContainsKey(pair.Value)) Locations[pair.Value].IdMapping[3] = pair.Key;
-        }
-
-        Languages = Read<Dictionary<int, string>>(@"Mappings/language_index.json") ?? [];
-        CatchBallIndexGen3 = Read<Dictionary<int, string>>(@"Mappings/catch_ball_index_gen3.json") ?? [];
+                dec_value=@DecValue AND 
+                generation=@Generation AND 
+                lang_csv LIKE '%' || @Language || '%' 
+                AND special_character=@SpecialCharacter
+            """, "supplement", parameters);
+        return c;
     }
 
-    public static T? Read<T>(string filePath)
+    public static string GetIdentiferById(string tableName, int id, string connectionString="veekun")
     {
-        string text = File.ReadAllText(filePath);
-        return JsonSerializer.Deserialize<T>(text);
+        List<SqliteParameter> parameters = [
+            new SqliteParameter("Id", SqliteType.Integer) { Value = id }
+        ];
+
+        string value = (string)DbInterface.RetrieveScalar($"SELECT identifer FROM {tableName} WHERE id=@Id", connectionString, parameters);
+        return value;
     }
 
-    public static ushort GetItemIdByIndex(int generation, int gameIndex)
+    public static byte GetCatchBallByGameIndex(int gameIndex)
     {
-        if (gameIndex != 0)
-        {
-            foreach (var item in Items.Values)
-            {
-                if (item.IdMapping.ContainsKey(generation) && item.IdMapping[generation] == gameIndex) return (ushort)item.Id;
-            }
-        }
-        return 0;
+        List<SqliteParameter> parameters = [
+            new SqliteParameter("Id", SqliteType.Integer) { Value = gameIndex }
+        ];
+
+        byte index = (byte)DbInterface.RetrieveScalar("SELECT item_index FROM catch_ball_game_index WHERE game_index=@Id", "supplement", parameters);
+        return index;
     }
 
-    public static string GetItemName(ushort id)
+    public static string GetEncounterTypeGameIndex(int gameIndex)
     {
-        if (id == 0) return "";
-        return Items.TryGetValue(id, out var item) ? item.Name : "???";
+        List<SqliteParameter> parameters = [
+            new SqliteParameter("Id", SqliteType.Integer) { Value = gameIndex }
+        ];
+
+        string value = (string)DbInterface.RetrieveScalar("SELECT identifier FROM encounter_types_game_index WHERE game_index=@Id", "supplement", parameters);
+        return value;
     }
 
-    public static ushort GetSpeciesIdByIndex(int generation, int gameIndex)
+    public static byte GetVersionIdByGameIndex(int gameIndex)
     {
-        return generation switch
-        {
-            1 => (ushort)PokemonGen1Index.GetValueOrDefault(gameIndex, 0),
-            3 => (ushort)PokemonGen3Index.GetValueOrDefault(gameIndex, 0),
-            4 => (ushort)PokemonGen4Index.GetValueOrDefault(gameIndex, 0),
-            _ => (ushort)gameIndex
-        };
+        List<SqliteParameter> parameters = [
+            new SqliteParameter("Id", SqliteType.Integer) { Value = gameIndex }
+        ];
+
+        byte index = (byte)DbInterface.RetrieveScalar("SELECT version_id FROM game_origin_game_index WHERE game_index=@Id", "supplement", parameters);
+        return index;
     }
 
-    public static string GetSpeciesName(int id)
+    public static ushort GetItemIdByGameIndex(int generation, int gameIndex)
     {
-        return Pokemon.GetValueOrDefault(id, "???");
+        List<SqliteParameter> parameters = [
+            new SqliteParameter("GameIndex", SqliteType.Integer) { Value = gameIndex },
+            new SqliteParameter("Generation", SqliteType.Integer) { Value = generation },
+        ];
+
+        ushort index = (ushort)DbInterface.RetrieveScalar("SELECT item_id FROM item_game_index WHERE game_index=@GameIndex AND generation=@Generation", "supplement", parameters);
+        return index;
+    }
+
+    public static int GetLanguageIdByGameIndex(int gameIndex)
+    {
+        List<SqliteParameter> parameters = [
+            new SqliteParameter("Id", SqliteType.Integer) { Value = gameIndex }
+        ];
+
+        int value = (int)DbInterface.RetrieveScalar("SELECT language_index FROM language_game_index WHERE game_index=@Id", "supplement", parameters);
+        return value;
+    }
+
+    public static ushort GetLocationIdByGameIndex(int generation, int gameIndex)
+    {
+        List<SqliteParameter> parameters = [
+            new SqliteParameter("GameIndex", SqliteType.Integer) { Value = gameIndex },
+            new SqliteParameter("Generation", SqliteType.Integer) { Value = generation },
+        ];
+
+        ushort index = (ushort)DbInterface.RetrieveScalar("SELECT location_id FROM location_game_index WHERE game_index=@GameIndex AND generation=@Generation", "supplement", parameters);
+        return index;
     }
 
     public static int GetGenderThreshold(int speciesId)
@@ -253,95 +190,162 @@ public class Lookup
         };
 
         // key/8 chance of being female
-        var genderRate = GetGenderRate(speciesId);
+        var genderRate = GetGenderRateBySpeciesId(speciesId);
         return threshold.GetValueOrDefault(genderRate, 255);
     }
 
-    public static int GetGenderRate(int speciesId)
+    public static int GetGenderRateBySpeciesId(int speciesId)
     {
-        return GenderRates.GetValueOrDefault(speciesId, -1);
+        List<SqliteParameter> parameters = [
+            new SqliteParameter("Id", SqliteType.Integer) { Value = speciesId },
+        ];
+
+        int value = (int)DbInterface.RetrieveScalar("SELECT gender_rate FROM pokemon_species WHERE id=@Id", "veekun", parameters);
+        return value;
     }
             
 
-    public static byte GetBaseHappiness(uint speciesId)
+    public static byte GetBaseHappinessBySpeciesId(uint speciesId)
     {
-        return (byte)BaseHappiness.GetValueOrDefault((int)speciesId, 0);
+        List<SqliteParameter> parameters = [
+            new SqliteParameter("Id", SqliteType.Integer) { Value = speciesId },
+        ];
+
+        byte value = (byte)DbInterface.RetrieveScalar("SELECT base_happiness FROM pokemon_species WHERE id=@Id", "veekun", parameters);
+        return value;
     }
         
 
-    public static (int first, int second) GetAbilities(int speciesId)
+    public static AbilityMapping GetAbilitiesByPokemonId(int pokemonId)
     {
-        return AbilityMapping.TryGetValue(speciesId, out var mapping) ? mapping.GetAbilities() : (0,0);
-    }
+        List<SqliteParameter> parameters = [
+            new SqliteParameter("Id", SqliteType.Integer) { Value = pokemonId },
+        ];
 
-    public static string GetAbilityName(int abilityId)
-    {
-        return Abilities.GetValueOrDefault(abilityId, "???");
-    }
-        
+        DataTable abilityMappingDataTable = DbInterface.RetrieveTable("""
+            SELECT 
+                ps.id AS species_id, 
+                pa.ability_id, 
+                pa.slot, 
+                pa.is_hidden 
+            FROM 
+                pokemon p 
+                LEFT JOIN pokemon_species ps ON p.species_id = ps.id 
+                LEFT JOIN pokemon_abilities pa ON p.id=pa.pokemon_id 
+            WHERE p.id=@Id
+        """, "veekun", parameters);
 
-    public static string GetNatureName(int natureId)
-    {
-        return Natures.GetValueOrDefault(natureId, "???");
-    }
-        
-
-    public static int GetNatureIdByIndex(int index)
-    {
-        return NatureMapping.GetValueOrDefault(index, 0);
-    }
-
-    public static string GetLanguageById(int languageId)
-    {
-        return Languages.GetValueOrDefault(languageId, string.Empty);
-    }
-
-    public static string GetLocationNameById(int locationId)
-    {
-        Location? location = Locations.GetValueOrDefault(locationId);
-        if (location != null)
+        AbilityMapping abilityMapping = new();
+        foreach (DataRow row in abilityMappingDataTable.Rows)
         {
-            return location.Name;
+            int abilityId = row.Field<int>("ability_id");
+            int slot = row.Field<int>("slot");
+            bool isHidden = Convert.ToBoolean(row.Field<Int64>("is_hidden"));
+
+            abilityMapping.Assign(abilityId, slot, isHidden);
         }
-        return "???";
+
+        return abilityMapping;
     }
 
-    public static int GetLocationIdByIndex(int generation, int gameIndex)
+    public static Nature GetNatureByGameIndex(int index)
     {
-        if (gameIndex != 0)
+        List<SqliteParameter> parameters = [
+            new SqliteParameter("Id", SqliteType.Integer) { Value = index },
+        ];
+
+        DataTable table = DbInterface.RetrieveTable("SELECT * FROM natures WHERE game_index=@Id", "veekun", parameters);
+
+        Nature nature = new();
+        foreach (DataRow row in table.Rows)
         {
-            foreach (var location in Locations.Values)
-            {
-                if (location.IdMapping.ContainsKey(generation) && location.IdMapping[generation] == gameIndex)
-                {
-                    return location.Id;
-                }
-            }
+            nature.Id = row.Field<int>("id");
+            nature.Identifier = row.Field<string>("identifier") ?? "???";
+            nature.GameIndex = row.Field<int>("game_index");
+            nature.DecreaseId = row.Field<int>("decreased_stat_id");
+            nature.IncreaseId = row.Field<int>("increased_stat_id");
         }
-        return 0;
+        return nature;
     }
 
-    public static string GetCatchBallById(int generationId, int index)
+    public PokemonIdentity GetPokemonByFormId(int formId, int languageId)
     {
-        return generationId switch
+        List<SqliteParameter> parameters = [
+            new SqliteParameter("Id", SqliteType.Integer) { Value = formId },
+            new SqliteParameter("Lang", SqliteType.Integer) { Value = languageId }
+        ];
+
+        DataTable table = DbInterface.RetrieveTable(""" 
+            SELECT 
+                p.id AS PokemonId,
+                p.identifier AS PokemonIdenfier,
+                pf.id AS FormId,
+                pf.form_identifier AS FormIdentifier,
+                pfn.form_name AS FormName,
+                ps.id AS SpeciesId,
+                ps.identifier AS SpeciesIdentifier,
+                psn.name AS SpeciesName
+            FROM 
+                pokemon p  
+                LEFT JOIN pokemon_forms pf ON p.id=pf.pokemon_id 
+                LEFT JOIN pokemon_form_names pfn ON pf.id=pfn.pokemon_form_id 
+                LEFT JOIN pokemon_species ps ON p.species_id=ps.id
+                LEFT JOIN pokemon_species_names psn ON ps.id=psn.pokemon_species_id 
+            WHERE
+                (pfn.local_language_id = @Lang OR pfn.local_language_id IS NULL) AND
+                (psn.local_language_id = @Lang OR psn.local_language_id IS NULL) AND
+                pf.id = @Id
+            ORDER BY p."order", pf."order" 
+        """, "veekun", parameters);
+
+        PokemonIdentity pokemon = new();
+        foreach (DataRow row in table.Rows)
         {
-            _ => CatchBallIndexGen3.GetValueOrDefault(index, "???"),
-        };
+            pokemon.FormId = row.Field<int>("FormId");
+            pokemon.PokemonId = row.Field<int>("PokemonId");
+            pokemon.SpeciesId = row.Field<int>("SpeciesId");
+            pokemon.SpeciesIdentifier = row.Field<string>("SpeciesIdentifer") ?? "???";
+            pokemon.FormIdentifier = row.Field<string>("FormIdentifier") ?? "";
+        }
+        return pokemon;
     }
 
-    public static int GetGameOfOrigin(int generationId, int index)
+    public static Game GetGameByName(string inputName)
     {
-        return generationId switch
+        List<SqliteParameter> parameters = [
+            new SqliteParameter("Name", SqliteType.Text) { Value = inputName }
+        ];
+
+        // Get basic game ids and names
+        DataTable gameDataTable = DbInterface.RetrieveTable("""
+            SELECT 
+                v.id,
+                v.version_group_id,
+                vg.generation_id,
+                vn.name
+            FROM
+                versions v 
+                LEFT JOIN version_groups vg ON vg.id = v.version_group_id 
+                LEFT JOIN version_names vn ON v.id = vn.version_id 
+            WHERE 
+                vn.name LIKE @Name
+        """, "veekun", parameters);
+
+        Game game = new();
+        foreach (DataRow row in gameDataTable.Rows)
         {
-            3 => GameGen3Index.GetValueOrDefault(index, 19),
-            _ => 1
-        };
+            game.GameId = row.Field<int>("id");
+            game.VersionId = row.Field<int>("version_group_id");
+            game.GenerationId = row.Field<int>("generation_id");
+            game.GameName = row.Field<string>("name") ?? "";
+        }
+        return game;
     }
 
     public static StatHextuple GetBaseStats(int speciesId)
     {
-        List<MySqlParameter> parameters = [
-            new MySqlParameter("Id", MySqlDbType.Int16) { Value = speciesId }
+        List<SqliteParameter> parameters = [
+            new SqliteParameter("Id", SqliteType.Integer) { Value = speciesId }
         ];
 
         DataTable statDataTable = DbInterface.RetrieveTable("""
@@ -359,7 +363,7 @@ public class Lookup
                     LEFT JOIN pokemon_stats ps2 ON ps2.pokemon_id=p.id
                 WHERE p.id < 10000 AND ps.id = @Id
                 GROUP BY ps.id
-            """, parameters);
+            """, "veekun", parameters);
 
         foreach (DataRow row in statDataTable.Rows)
         {
@@ -375,42 +379,11 @@ public class Lookup
         return new StatHextuple();
     }
 
-    public static (int increased, int decreased) GetNatureStats(int natureId)
-    {
-        List<MySqlParameter> parameters = [
-            new MySqlParameter("Id", MySqlDbType.Int16) { Value = natureId }
-        ];
-        DataTable statDataTable = DbInterface.RetrieveTable("SELECT increased_stat_id, decreased_stat_id FROM natures WHERE id = @Id", parameters);
-
-        foreach (DataRow row in statDataTable.Rows)
-        {
-            return (
-                row.Field<int>("increased_stat_id"),
-                row.Field<int>("decreased_stat_id")
-            );
-        }
-        return (0, 0);
-    }
-
-    public static int GetGrowthRateId(int speciesId)
-    {
-        List<MySqlParameter> parameters = [
-            new MySqlParameter("Id", MySqlDbType.Int16) { Value = speciesId }
-        ];
-        DataTable statDataTable = DbInterface.RetrieveTable("SELECT growth_rate_id FROM pokemon_species WHERE id=@Id", parameters);
-
-        foreach (DataRow row in statDataTable.Rows)
-        {
-            return row.Field<int>("growth_rate_id");
-        }
-        return 0;
-    }
-
     public static byte GetLevelFromExperience(uint speciesId, uint experience)
     {
-        List<MySqlParameter> parameters = [
-            new MySqlParameter("Id", MySqlDbType.Int16) { Value = speciesId },
-            new MySqlParameter("Experience", MySqlDbType.Int32) { Value = experience }
+        List<SqliteParameter> parameters = [
+            new SqliteParameter("Id", SqliteType.Integer) { Value = speciesId },
+            new SqliteParameter("Experience", SqliteType.Integer) { Value = experience }
         ];
 
         DataTable statDataTable = DbInterface.RetrieveTable("""
@@ -426,7 +399,7 @@ public class Lookup
                     ps.id = @Id AND
                     e.experience > @Experience
                 ORDER BY ps.id, `level` 
-        """, parameters);
+        """, "veekun", parameters);
 
         foreach (DataRow row in statDataTable.Rows)
         {
@@ -441,3 +414,5 @@ public class Lookup
         return 0;
     }
 }
+
+#endregion

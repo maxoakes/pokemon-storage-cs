@@ -3,7 +3,7 @@
     "Language": "en",
     "Mode": "read",
     "ReadOutput": "file",
-    "GameId": 2,
+    "VersionName": "Platinum",
     "SaveFilePath": "/path/to/save/file.sav"
   },
   "ConnectionStrings": {

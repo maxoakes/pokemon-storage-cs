@@ -21,7 +21,7 @@ public class PartyPokemon
     public Origin Origin { get; set; }
     public Trainer OriginalTrainer { get; set; }
     public ushort AbilityId { get; set; }
-    public string AbilityIdentifier { get { return Lookup.GetAbilityName(AbilityId); } }
+    public string AbilityIdentifier { get { return Lookup.GetAbilityNameById(AbilityId); } }
     
 
     // Nickname
@@ -139,7 +139,7 @@ public class PartyPokemon
         SpeciesId = Lookup.GetSpeciesIdByIndex(1, Utility.GetByte(content, 0x00));
         ExperiencePoints = Utility.GetUnsignedNumber<uint>(content, 0x0E, 3, true);
         HasNickname = NicknameExists();
-        Friendship = Lookup.GetBaseHappiness(SpeciesId);
+        Friendship = Lookup.GetBaseHappinessBySpeciesId(SpeciesId);
 
         // Get Moves
         (int moveIndexOffset, int movePpOffset)[] moveDataOffsets = [
@@ -824,7 +824,7 @@ public class PartyPokemon
 
     private int GetAbilityFromPersonalityValue()
     {
-        var (first, second) = Lookup.GetAbilities(SpeciesId);
+        var (first, second) = Lookup.GetAbilitiesBySpeciesId(SpeciesId);
         List<int> abilities = [];
         if (first != 0) abilities.Add(first);
         if (second != 0) abilities.Add(second);
@@ -847,7 +847,7 @@ public class PartyPokemon
 
     private Gender GetGenderByAttackIv()
     {
-        int ratio = Lookup.GetGenderRate(SpeciesId);
+        int ratio = Lookup.GetGenderRateBySpeciesId(SpeciesId);
         switch (ratio)
         {
             case 0:

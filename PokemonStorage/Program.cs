@@ -40,32 +40,16 @@ public class Program
         string language = config.GetValue<string>("Settings:Language") ?? "";
         string mode = config.GetValue<string>("Settings:Mode") ?? "";
         string readOutput = config.GetValue<string>("Settings:ReadOutput") ?? "";
-        int gameId = config.GetValue<int>("Settings:GameId");
+        string gameName = config.GetValue<string>("Settings:GameName") ?? "";
         SaveFilePath = config.GetValue<string>("Settings:SaveFilePath") ?? "";
 
-        if (string.IsNullOrWhiteSpace(language) || string.IsNullOrWhiteSpace(mode) || gameId == 0 || string.IsNullOrWhiteSpace(SaveFilePath))
+        if (string.IsNullOrWhiteSpace(language) || string.IsNullOrWhiteSpace(mode) || string.IsNullOrWhiteSpace(gameName) || string.IsNullOrWhiteSpace(SaveFilePath))
         {
             throw new ConfigurationErrorsException("appsettings.json is not configured correctly");
         }
 
-        Console.WriteLine($"Settings: ({language})({gameId}) {Utility.ProperCapitalizeString(mode)} from [{SaveFilePath}]");
-
-        Lookup.Initialize();
-
-        Game game;
-        try
-        {
-            game = Lookup.Games[gameId];
-        }
-        catch (KeyNotFoundException)
-        {
-            Console.WriteLine($"Game not valid. Choose from one of the following:");
-            foreach (Game availableGame in Lookup.Games.Values.OrderBy(x => x.GameId))
-            {
-                Console.WriteLine($"\t{availableGame.GameId}: {availableGame.GameName}");
-            }
-            return;
-        }
+        Console.WriteLine($"Settings: ({language})({gameName}) {Utility.ProperCapitalizeString(mode)} from [{SaveFilePath}]");
+        Game game = Lookup.GetGameByName(gameName);
 
         byte[] originalSaveData;
         try

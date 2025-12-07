@@ -16,18 +16,10 @@
     <Content Include="appsettings.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="Mappings\*.json">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
     <Compile Remove="Mappings/CharacterEncoding.cs" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.10" />
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="9.0.10" />  
     <PackageReference Include="MySql.Data" Version="9.5.0" />  
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
   </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Mappings/" CopyToOutputDirectory="PreserveNewest" />
-  </ItemGroup>
-
 </Project>

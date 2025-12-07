@@ -5,16 +5,16 @@ namespace PokemonStorage.DatabaseIO
 {
     public static class DbInterface
     {
-        #region Sqlite Database
+        #region Private Methods
 
         /// <summary>
         /// Get an SqliteCommand based on a query.
         /// </summary>
         /// <param name="query">Raw Sqlite statement</param>
         /// <returns></returns>
-        public static SqliteCommand PrepareSqlCommand(string query, string connectionString)
+        private static SqliteCommand PrepareSqlCommand(string query, string connectionString)
         {
-            if (string.IsNullOrWhiteSpace(Program.ConnectionString)) throw new Exception("No connection string specified");
+            if (string.IsNullOrWhiteSpace(connectionString)) throw new Exception("No connection string specified");
 
             SqliteConnection connection = new(connectionString);
             SqliteCommand command = new(query, connection);
@@ -28,7 +28,7 @@ namespace PokemonStorage.DatabaseIO
         /// </summary>
         /// <param name="input">Unconformed SqliteParameter</param>
         /// <returns>SqlParameter ready for Sqlite statement</returns>
-        public static object PrepareParameterValue(SqliteParameter input)
+        private static object PrepareParameterValue(SqliteParameter input)
         {
             if (input.Value == null)
             {
@@ -47,6 +47,48 @@ namespace PokemonStorage.DatabaseIO
                 }
             }
             return input.Value;
+        }
+
+        /// <summary>
+        /// Execute a command in the Sqlite database that returns a scalar value.
+        /// </summary>
+        /// <param name="command">Fully created SqliteCommand that includes the Sqlite command, parameters, and connection string.</param>
+        /// <returns>Result from the Sqlite scalar command</returns>
+        private static object ExecuteScalar(SqliteCommand command)
+        {
+            object? result = null;
+            try
+            {
+                using (command.Connection)
+                {
+                    command.Connection.Open();
+                    result = command.ExecuteScalar();
+                }
+            }
+            catch { throw; }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Execute a command in the Sqlite database that does not return a value.
+        /// </summary>
+        /// <param name="command">Fully created SqliteCommand that includes the Sqlite command, parameters, and connection string.</param>
+        /// <returns>Number of rows affected by the Sqlite command</returns>
+        private static int ExecuteNonQuery(SqliteCommand command)
+        {
+            int result = -1;
+            try
+            {
+                using (command.Connection)
+                {
+                    command.Connection.Open();
+                    result = command.ExecuteNonQuery();
+                }
+            }
+            catch { throw; }
+
+            return result;
         }
 
         #endregion
@@ -131,48 +173,6 @@ namespace PokemonStorage.DatabaseIO
         #endregion
 
         #region Write Database
-
-        /// <summary>
-        /// Execute a command in the Sqlite database that returns a scalar value.
-        /// </summary>
-        /// <param name="command">Fully created SqliteCommand that includes the Sqlite command, parameters, and connection string.</param>
-        /// <returns>Result from the Sqlite scalar command</returns>
-        public static object ExecuteScalar(SqliteCommand command)
-        {
-            object? result = null;
-            try
-            {
-                using (command.Connection)
-                {
-                    command.Connection.Open();
-                    result = command.ExecuteScalar();
-                }
-            }
-            catch { throw; }
-
-            return result;
-        }
-
-        /// <summary>
-        /// Execute a command in the Sqlite database that does not return a value.
-        /// </summary>
-        /// <param name="command">Fully created SqliteCommand that includes the Sqlite command, parameters, and connection string.</param>
-        /// <returns>Number of rows affected by the Sqlite command</returns>
-        public static int ExecuteNonQuery(SqliteCommand command)
-        {
-            int result = -1;
-            try
-            {
-                using (command.Connection)
-                {
-                    command.Connection.Open();
-                    result = command.ExecuteNonQuery();
-                }
-            }
-            catch { throw; }
-
-            return result;
-        }
 
         /// <summary>
         /// Execute an Sqlite scalar command given a statement and list of parameters

@@ -216,7 +216,7 @@ public static class Utility
 
             foreach (var b in data)
             {
-                string c = GetEncodedCharacter(b, version);
+                string c = Lookup.GetEncodedCharacterByGameIndex(b, version, lang);
                 if (!nullTerminators.Contains(b))
                     result.Append(c);
                 else
@@ -230,7 +230,7 @@ public static class Utility
                 if (i % 2 == 0)
                 {
                     ushort charBytes = GetUnsignedNumber<ushort>(data, i, 2);
-                    string ch = GetEncodedCharacter(charBytes, version);
+                    string ch = Lookup.GetEncodedCharacterByGameIndex(charBytes, version, lang);
                     if (charBytes != 0xFFFF)
                         result.Append(ch);
                     else
@@ -240,29 +240,6 @@ public static class Utility
         }
 
         return result.ToString();
-    }
-
-    public static string GetEncodedCharacter(ushort character, int generation)
-    {
-        switch (generation)
-        {
-            case 1:
-            case 2:
-                return CharacterEncoding.EN_GEN1.GetValueOrDefault(character, "");
-            case 3:
-            case 4:
-                return CharacterEncoding.EN_GEN2.GetValueOrDefault(character, "");
-            case 5:
-            case 6:
-            case 7:
-                return CharacterEncoding.WEST_GEN3.GetValueOrDefault(character, "");
-            case 8:
-            case 9:
-            case 10:
-                return CharacterEncoding.WEST_GEN4.GetValueOrDefault(character, "");
-            default:
-                return "?";
-        }
     }
 
     #endregion
