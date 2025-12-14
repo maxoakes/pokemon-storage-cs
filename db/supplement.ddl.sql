@@ -1702,7 +1702,7 @@ INSERT INTO location_game_index (generation, game_index, location_id) VALUES
 (3, 255, 258);
 
 INSERT INTO location_game_index (generation, game_index, location_id) VALUES 
-(4, 0, 264),
+(4, 0, 267),
 (4, 1, 58),
 (4, 2, 163),
 (4, 3, 164),
@@ -2104,12 +2104,24 @@ CREATE TABLE IF NOT EXISTS game_origin_game_index(
 );
 
 INSERT INTO game_origin_game_index (game_index, version_id) VALUES
-(2, 7),
 (1, 8),
+(2, 7),
 (3, 9),
 (4, 10),
 (5, 11),
-(15, 1);
+(7, 15),
+(8, 16),
+(10, 12),
+(11, 13),
+(12, 14),
+(15, 19),
+(35, 1),
+(36, 2),
+(37, 2),
+(38, 3),
+(39, 4),
+(40, 5),
+(41, 6);
 
 CREATE TABLE IF NOT EXISTS item_game_index(
     id INTEGER PRIMARY KEY AUTOINCREMENT,

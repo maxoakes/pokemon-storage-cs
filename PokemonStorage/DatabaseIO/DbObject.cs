@@ -1,4 +1,4 @@
-﻿using MySql.Data.MySqlClient;
+﻿using Microsoft.Data.Sqlite;
 using PokemonStorage.DatabaseIO;
 
 namespace PokemonStorage;
@@ -116,7 +116,7 @@ public abstract class DbObject
 
     #region SQL
 
-    public abstract List<MySqlParameter> GetSqlParameters();
+    public abstract List<SqliteParameter> GetSqlParameters();
 
     /// <summary>
     /// Using SqlTableName, SqlPrimaryKeyName and GetSqlParameters(), build an SQL INSERT statement used to insert this object into the database
@@ -176,7 +176,7 @@ public abstract class DbObject
     /// <returns>Primary key of the newly inserted row</returns>
     public object InsertIntoDatabase(bool isPrimaryKeyAssignedByDatabase = true)
     {
-        return DbInterface.InsertAndGetPrimaryKey(GetInsertStatement(isPrimaryKeyAssignedByDatabase), GetSqlParameters());
+        return DbInterface.InsertAndGetPrimaryKey(GetInsertStatement(isPrimaryKeyAssignedByDatabase), GetSqlParameters(), "storage");
     }
 
     /// <summary>
@@ -199,7 +199,7 @@ public abstract class DbObject
     /// <returns>Number of rows affected</returns>
     public int UpdateToDatabase()
     {
-        return DbInterface.UpdateAndGetResult(GetUpdateStatement(), GetSqlParameters());
+        return DbInterface.UpdateAndGetResult(GetUpdateStatement(), GetSqlParameters(), "storage");
     }
 
     /// <summary>
@@ -220,7 +220,7 @@ public abstract class DbObject
     /// <returns>Number of rows affected</returns>
     public int DeleteFromDatabase()
     {
-        return DbInterface.UpdateAndGetResult(GetDeleteStatement(), GetSqlParameters());
+        return DbInterface.UpdateAndGetResult(GetDeleteStatement(), GetSqlParameters(), "storage");
     }
 
     #endregion

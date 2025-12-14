@@ -5,6 +5,7 @@
     "ReadOutput": "file",
     "VersionName": "Platinum",
     "SaveFilePath": "/path/to/save/file.sav"
+    "FileOutputPath": "/path/to/output"
   },
   "ConnectionStrings": {
     "Database": "Server=___;Uid=___;Pwd=___;Database=pokemon;"

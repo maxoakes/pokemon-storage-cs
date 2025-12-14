@@ -193,14 +193,14 @@ public static class Utility
             return result;
     }
 
-    public static string GetEncodedString(byte[] data, int version, string lang)
+    public static string GetEncodedString(byte[] data, Game game, string lang)
     {
         StringBuilder result = new StringBuilder();
 
-        if (version is >= 1 and <= 7)
+        if (game.VersionId is >= 1 and <= 7)
         {
             List<byte> nullTerminators;
-            switch (version)
+            switch (game.VersionId)
             {
                 case 1:
                 case 2:
@@ -216,21 +216,21 @@ public static class Utility
 
             foreach (var b in data)
             {
-                string c = Lookup.GetEncodedCharacterByGameIndex(b, version, lang);
+                string c = Lookup.GetEncodedCharacterByGameIndex(b, game.GenerationId, lang);
                 if (!nullTerminators.Contains(b))
                     result.Append(c);
                 else
                     break;
             }
         }
-        else if (version is >= 8 and <= 10)
+        else if (game.VersionId is >= 8 and <= 10)
         {
             for (int i = 0; i < data.Length; i++)
             {
                 if (i % 2 == 0)
                 {
                     ushort charBytes = GetUnsignedNumber<ushort>(data, i, 2);
-                    string ch = Lookup.GetEncodedCharacterByGameIndex(charBytes, version, lang);
+                    string ch = Lookup.GetEncodedCharacterByGameIndex(charBytes, game.GenerationId, lang);
                     if (charBytes != 0xFFFF)
                         result.Append(ch);
                     else

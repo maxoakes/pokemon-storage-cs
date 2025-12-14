@@ -37,19 +37,20 @@ public class Program
         ConnectionStrings["veekun"] = config.GetConnectionString("veekun") ?? "";
         ConnectionStrings["supplement"] = config.GetConnectionString("supplement") ?? "";
         ConnectionStrings["storage"] = config.GetConnectionString("storage") ?? "";
+        SaveFilePath = config.GetValue<string>("Settings:SaveFilePath") ?? "";
         string language = config.GetValue<string>("Settings:Language") ?? "";
         string mode = config.GetValue<string>("Settings:Mode") ?? "";
         string readOutput = config.GetValue<string>("Settings:ReadOutput") ?? "";
-        string gameName = config.GetValue<string>("Settings:GameName") ?? "";
-        SaveFilePath = config.GetValue<string>("Settings:SaveFilePath") ?? "";
+        string versionName = config.GetValue<string>("Settings:VersionName") ?? "";
+        string fileOutputPath = config.GetValue<string>("Settings:FileOutputPath") ?? "";
 
-        if (string.IsNullOrWhiteSpace(language) || string.IsNullOrWhiteSpace(mode) || string.IsNullOrWhiteSpace(gameName) || string.IsNullOrWhiteSpace(SaveFilePath))
+        if (string.IsNullOrWhiteSpace(language) || string.IsNullOrWhiteSpace(mode) || string.IsNullOrWhiteSpace(versionName) || string.IsNullOrWhiteSpace(SaveFilePath))
         {
             throw new ConfigurationErrorsException("appsettings.json is not configured correctly");
         }
 
-        Console.WriteLine($"Settings: ({language})({gameName}) {Utility.ProperCapitalizeString(mode)} from [{SaveFilePath}]");
-        Game game = Lookup.GetGameByName(gameName);
+        Console.WriteLine($"Settings: ({language})({versionName}) {Utility.ProperCapitalizeString(mode)} from [{SaveFilePath}]");
+        Game game = Lookup.GetGameByName(versionName);
 
         byte[] originalSaveData;
         try
@@ -89,7 +90,7 @@ public class Program
                 }
             }
 
-            File.WriteAllText($"{SaveFilePath.Split('/').Last()}.json", Program.SerializeObject(pokemonStorageDictionary));
+            File.WriteAllText($"{fileOutputPath}/{game.GameName}.{DateTime.Now:s}.json", Program.SerializeObject(pokemonStorageDictionary));
             
         }
         else if (readOutput.ToLower() == "console")

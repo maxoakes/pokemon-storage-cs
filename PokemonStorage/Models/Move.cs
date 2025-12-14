@@ -5,7 +5,7 @@ namespace PokemonStorage.Models;
     public class Move
     {
         public ushort Id { get; set; }
-        public string Identifier { get { return Lookup.Moves.TryGetValue(Id, out var name) ? name : string.Empty; } }
+        public string Identifier { get { return Lookup.GetIdentifierById("moves", Id); } }
         public byte Pp { get; set; }
         public byte TimesIncreased { get; set; }
 

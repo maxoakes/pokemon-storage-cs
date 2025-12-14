@@ -111,8 +111,8 @@ CREATE TABLE IF NOT EXISTS pokemon (
     markings_mask INTEGER NOT NULL DEFAULT 0,
     shiny_leaves INTEGER NOT NULL DEFAULT 0,
     gen3_misc INTEGER NOT NULL DEFAULT 0,
-    fk_ribbon INTEGER REFERENCES ribbon ON DELETE CASCASE,
-    fk_origin INTEGER REFERENCES origin ON DELETE CASCASE,
+    fk_ribbon INTEGER REFERENCES ribbon,
+    fk_origin INTEGER REFERENCES origin,
     fk_original_trainer INTEGER REFERENCES original_trainer,
     created TEXT DEFAULT CURRENT_TIMESTAMP,
     tag TEXT DEFAULT NULL,
@@ -121,7 +121,7 @@ CREATE TABLE IF NOT EXISTS pokemon (
 
 CREATE TABLE IF NOT EXISTS move_set (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    pokemon_id INTEGER REFERENCES pokemon ON DELETE CASCASE,
+    pokemon_id INTEGER REFERENCES pokemon,
     move_id INTEGER NOT NULL,
     move_pp INTEGER NOT NULL,
     times_increased INTEGER NOT NULL DEFAULT 0,

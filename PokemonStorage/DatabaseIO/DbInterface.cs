@@ -15,8 +15,8 @@ namespace PokemonStorage.DatabaseIO
         private static SqliteCommand PrepareSqlCommand(string query, string connectionString)
         {
             if (string.IsNullOrWhiteSpace(connectionString)) throw new Exception("No connection string specified");
-
-            SqliteConnection connection = new(connectionString);
+            
+            SqliteConnection connection = new(Program.ConnectionStrings[connectionString]);
             SqliteCommand command = new(query, connection);
             return command;
         }
@@ -61,7 +61,7 @@ namespace PokemonStorage.DatabaseIO
             {
                 using (command.Connection)
                 {
-                    command.Connection.Open();
+                    command.Connection?.Open();
                     result = command.ExecuteScalar();
                 }
             }
@@ -82,7 +82,7 @@ namespace PokemonStorage.DatabaseIO
             {
                 using (command.Connection)
                 {
-                    command.Connection.Open();
+                    command.Connection?.Open();
                     result = command.ExecuteNonQuery();
                 }
             }
@@ -117,18 +117,20 @@ namespace PokemonStorage.DatabaseIO
             }
             
             DataTable dataTable;
-            using (SqliteDataReader dr = command.ExecuteReader())
+            using (command.Connection)
             {
+                command.Connection.Open();
+                using SqliteDataReader dataReader = command.ExecuteReader();
                 do
                 {
                     dataTable = new DataTable();
                     dataTable.BeginLoadData();
-                    dataTable.Load(dr);
+                    dataTable.Load(dataReader);
                     dataTable.EndLoadData();
 
-                } while (!dr.IsClosed && dr.NextResult());
+                } while (!dataReader.IsClosed && dataReader.NextResult());
             }
-
+            
             return dataTable;
         }
 

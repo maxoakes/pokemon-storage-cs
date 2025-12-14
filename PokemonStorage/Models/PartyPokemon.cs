@@ -9,11 +9,11 @@ public class PartyPokemon
 {
     // Game
     public int Generation { get; set; }
-    public string Language { get; set; }
+    public int LanguageId { get; set; }
 
     // Overview
     public ushort SpeciesId { get; set; }
-    public string SpeciesIdentifier { get { return Lookup.GetSpeciesName(SpeciesId); } }
+    public string SpeciesIdentifier { get { return Lookup.GetIdentifierById("pokemon_species", SpeciesId); } }
     public ushort AlternateFormId { get; set; }
     public uint PersonalityValue { get; set; }
     public Gender Gender { get; set; }
@@ -21,7 +21,7 @@ public class PartyPokemon
     public Origin Origin { get; set; }
     public Trainer OriginalTrainer { get; set; }
     public ushort AbilityId { get; set; }
-    public string AbilityIdentifier { get { return Lookup.GetAbilityNameById(AbilityId); } }
+    public string AbilityIdentifier { get { return Lookup.GetIdentifierById("abilities", AbilityId); } }
     
 
     // Nickname
@@ -32,7 +32,7 @@ public class PartyPokemon
     public byte Level { get { return Lookup.GetLevelFromExperience(SpeciesId, ExperiencePoints); } }
     public uint ExperiencePoints { get; set; }
     public ushort HeldItemId { get; set; }
-    public string HeldItemIdentifier { get { return Lookup.GetItemName(HeldItemId); } }
+    public string HeldItemIdentifier { get { return Lookup.GetIdentifierById("items", HeldItemId); } }
     public byte Friendship { get; set; }
     public byte WalkingMood { get; set; }
     public bool IsShinyPersonalityValue { get {return GetShinyFromPersonalityValue(); } }
@@ -70,7 +70,7 @@ public class PartyPokemon
     {
         // Game
         Generation = generation;
-        Language = "EN";
+        LanguageId = Lookup.GetLanguageIdByIdentifier("en");
 
         // Overview
         OriginalTrainer = new Trainer("???", 0, 0, 0);
@@ -127,16 +127,18 @@ public class PartyPokemon
 
     #region Gen 1
     // https://bulbapedia.bulbagarden.net/wiki/Pok%C3%A9mon_data_structure_(Generation_I)
-    public void LoadFromGen1Bytes(byte[] content, int version, string nickname, string trainerName)
+    public void LoadFromGen1Bytes(byte[] content, Game game, string nickname, string trainerName, string language)
     {
         Origin = new Origin
         {
-            OriginGameId = version
+            VerionId = game.VersionId
         };
-
+        LanguageId = Lookup.GetLanguageIdByIdentifier(language);
         Nickname = nickname;
+
         OriginalTrainer = new Trainer(trainerName, 0, Utility.GetUnsignedNumber<ushort>(content, 0x0C, 2, true), 0);
-        SpeciesId = Lookup.GetSpeciesIdByIndex(1, Utility.GetByte(content, 0x00));
+        PokemonIdentity pokemonIdentity = Lookup.GetPokemonByFormId(Lookup.GetPokemonFormIdByGameIndex(1, Utility.GetByte(content, 0x00)), LanguageId); 
+        SpeciesId = pokemonIdentity.SpeciesId;
         ExperiencePoints = Utility.GetUnsignedNumber<uint>(content, 0x0E, 3, true);
         HasNickname = NicknameExists();
         Friendship = Lookup.GetBaseHappinessBySpeciesId(SpeciesId);
@@ -198,17 +200,19 @@ public class PartyPokemon
 
     #region Gen 2
     // https://bulbapedia.bulbagarden.net/wiki/Pok%C3%A9mon_data_structure_(Generation_II)
-    public void LoadFromGen2Bytes(byte[] content, int version, string nickname, string trainerName)
+    public void LoadFromGen2Bytes(byte[] content, Game game, string nickname, string trainerName, string language)
     {
         Origin = new Origin
         {
-            OriginGameId = version
+            VerionId = game.VersionId
         };
+        LanguageId = Lookup.GetLanguageIdByIdentifier(language);
 
         Nickname = nickname;
         HasNickname = NicknameExists();
-        SpeciesId = Utility.GetByte(content, 0x00);
-        HeldItemId = Lookup.GetItemIdByIndex(2, Utility.GetUnsignedNumber<byte>(content, 0x01, 1, true));
+        PokemonIdentity pokemonIdentity = Lookup.GetPokemonByFormId(Lookup.GetPokemonFormIdByGameIndex(2, Utility.GetByte(content, 0x00)), LanguageId); 
+        SpeciesId = pokemonIdentity.SpeciesId;
+        HeldItemId = Lookup.GetItemIdByGameIndex(2, Utility.GetUnsignedNumber<byte>(content, 0x01, 1, true));
         OriginalTrainer = new Trainer(trainerName, 0, Utility.GetUnsignedNumber<ushort>(content, 0x06, 2, true), 0);
         ExperiencePoints = Utility.GetUnsignedNumber<uint>(content, 0x08, 3, true);
         Friendship = Utility.GetUnsignedNumber<byte>(content, 0x1B, 1, true);
@@ -289,7 +293,7 @@ public class PartyPokemon
         }
         Origin.MetLevel = Convert.ToByte(caughtBinary.Substring(2, 6), 2);
         OriginalTrainer.Gender = Convert.ToByte(caughtBinary.Substring(8, 1), 2) == 1 ? Gender.FEMALE : Gender.MALE;
-        Origin.MetLocationId = Lookup.GetLocationIdByIndex(2, Convert.ToUInt16(caughtBinary.Substring(9, 7), 2));
+        Origin.MetLocationId = Lookup.GetLocationIdByGameIndex(2, Convert.ToUInt16(caughtBinary.Substring(9, 7), 2));
 
         // Calculations
         Gender = GetGenderByAttackIv();
@@ -299,25 +303,25 @@ public class PartyPokemon
 
     #region Gen 3
     // https://bulbapedia.bulbagarden.net/wiki/Pok%C3%A9mon_data_structure_(Generation_III)
-    public void LoadFromGen3Bytes(byte[] content, int version, string language)
+    public void LoadFromGen3Bytes(byte[] content, Game game, string language)
     {
         Origin = new Origin
         {
-            OriginGameId = version
+            VerionId = game.VersionId
         };
 
         PersonalityValue = Utility.GetUnsignedNumber<uint>(content, 0x00, 4);
         uint otId = Utility.GetUnsignedNumber<uint>(content, 0x04, 4);
         OriginalTrainer = new Trainer(
-            Utility.GetEncodedString(Utility.GetBytes(content, 0x14, 7), version, language),
+            Utility.GetEncodedString(Utility.GetBytes(content, 0x14, 7), game, language),
             0,
             Utility.GetUnsignedNumber<ushort>(content, 0x04, 2),
             Utility.GetUnsignedNumber<ushort>(content, 0x06, 2)
         );
 
-        Nickname = Utility.GetEncodedString(Utility.GetBytes(content, 0x08, 10), version, language);
+        Nickname = Utility.GetEncodedString(Utility.GetBytes(content, 0x08, 10), game, language);
         HasNickname = NicknameExists();
-        Language = Lookup.GetLanguageById(Utility.GetUnsignedNumber<byte>(content, 0x12, 1));
+        LanguageId = Lookup.GetLanguageIdByIdentifier(language);
         Gen3Misc = Utility.GetUnsignedNumber<byte>(content, 0x13, 1);
         Markings = new Markings(3, Utility.GetUnsignedNumber<byte>(content, 0x1B, 1));
 
@@ -368,8 +372,9 @@ public class PartyPokemon
             switch (c)
             {
                 case 'G':
-                    SpeciesId = Lookup.GetSpeciesIdByIndex(3, Utility.GetUnsignedNumber<ushort>(substructureBytes, 0x00, 2));
-                    HeldItemId = Lookup.GetItemIdByIndex(3, Utility.GetUnsignedNumber<ushort>(substructureBytes, 0x02, 2));
+                    PokemonIdentity pokemonIdentity = Lookup.GetPokemonByFormId(Lookup.GetPokemonFormIdByGameIndex(3, Utility.GetUnsignedNumber<ushort>(substructureBytes, 0x00, 2)), LanguageId); 
+                    SpeciesId = pokemonIdentity.SpeciesId;
+                    HeldItemId = Lookup.GetItemIdByGameIndex(3, Utility.GetUnsignedNumber<ushort>(substructureBytes, 0x02, 2));
                     ExperiencePoints = Utility.GetUnsignedNumber<uint>(substructureBytes, 0x04, 4);
 
                     byte ppBonuses = Utility.GetUnsignedNumber<byte>(substructureBytes, 0x08, 1);
@@ -422,7 +427,7 @@ public class PartyPokemon
                     PokerusDaysRemaining = Convert.ToByte(pokerusBinary.Substring(4, 4), 2);
 
                     // Origin
-                    Origin.MetLocationId = Lookup.GetLocationIdByIndex(3, Utility.GetUnsignedNumber<ushort>(substructureBytes, 0x01, 1));
+                    Origin.MetLocationId = Lookup.GetLocationIdByGameIndex(3, Utility.GetUnsignedNumber<ushort>(substructureBytes, 0x01, 1));
                     ushort originData = Utility.GetUnsignedNumber<ushort>(substructureBytes, 0x02, 2);
                     string originBinary = Convert.ToString(originData, 2).PadLeft(16, '0');
 
@@ -432,7 +437,7 @@ public class PartyPokemon
 
                     OriginalTrainer.Gender = originBinary[0] == '1' ? Gender.FEMALE : Gender.MALE;
                     Origin.PokeballId = Convert.ToByte(originBinary.Substring(1, 4), 2);
-                    Origin.OriginGameId = Lookup.GetGameOfOrigin(3, Convert.ToUInt16(originBinary.Substring(5, 4), 2));
+                    Origin.VerionId = Lookup.GetVersionIdByGameIndex(Convert.ToUInt16(originBinary.Substring(5, 4), 2));
                     Origin.MetLevel = Convert.ToByte(originBinary.Substring(9, 7), 2);
 
                     // IVs, Egg, Ability
@@ -484,6 +489,7 @@ public class PartyPokemon
         }
 
         // Calculations
+        Program.Logger.LogInformation($"Done reading: {SpeciesIdentifier}");
         Gender = GetGenderByPersonalityValue();
         AssignStatValues();
     }
@@ -491,7 +497,7 @@ public class PartyPokemon
 
     #region Gen 4
     // https://bulbapedia.bulbagarden.net/wiki/Pok%C3%A9mon_data_structure_(Generation_IV)
-    public void LoadFromGen4Bytes(byte[] content, int versionId, string language)
+    public void LoadFromGen4Bytes(byte[] content, Game game, string language)
     {
         // Root date
         DateTime ORIGIN_DATE = DateTime.ParseExact("2000/01/01 00:00:00", "yyyy/MM/dd HH:mm:ss", null);
@@ -572,15 +578,16 @@ public class PartyPokemon
             switch (c)
             {
                 case 'A':
-                    SpeciesId = Lookup.GetSpeciesIdByIndex(4, Utility.GetUnsignedNumber<ushort>(blockBytes, 0x00, 2));
-                    HeldItemId = Utility.GetUnsignedNumber<ushort>(blockBytes, 0x02, 2);
+                    PokemonIdentity pokemonIdentity = Lookup.GetPokemonByFormId(Lookup.GetPokemonFormIdByGameIndex(4, Utility.GetUnsignedNumber<ushort>(blockBytes, 0x00, 2)), LanguageId); 
+                    SpeciesId = pokemonIdentity.SpeciesId;
+                    HeldItemId = Lookup.GetItemIdByGameIndex(4, Utility.GetUnsignedNumber<ushort>(blockBytes, 0x02, 2));
                     OriginalTrainer.PublicId = Utility.GetUnsignedNumber<ushort>(blockBytes, 0x04, 2);
                     OriginalTrainer.SecretId = Utility.GetUnsignedNumber<ushort>(blockBytes, 0x06, 2);
                     ExperiencePoints = Utility.GetUnsignedNumber<uint>(blockBytes, 0x08, 4);
                     Friendship = Utility.GetUnsignedNumber<byte>(blockBytes, 0x0C, 1);
                     AbilityId = Utility.GetUnsignedNumber<byte>(blockBytes, 0x0D, 1);
                     Markings = new(4, Utility.GetUnsignedNumber<byte>(blockBytes, 0x0E, 1));
-                    Language = Lookup.GetLanguageById(Utility.GetUnsignedNumber<byte>(blockBytes, 0x0F, 1));
+                    LanguageId = Lookup.GetLanguageIdByGameIndex(Utility.GetUnsignedNumber<byte>(blockBytes, 0x0F, 1));
                     HP.Ev = Utility.GetUnsignedNumber<byte>(blockBytes, 0x10, 1);
                     Attack.Ev = Utility.GetUnsignedNumber<byte>(blockBytes, 0x11, 1);
                     Defense.Ev = Utility.GetUnsignedNumber<byte>(blockBytes, 0x12, 1);
@@ -640,23 +647,23 @@ public class PartyPokemon
                     AlternateFormId = (ushort)Convert.ToInt16(Utility.ReverseString(flagsBinary.Substring(3, 5)), 2);
                     ShinyLeaves = Utility.GetUnsignedNumber<byte>(blockBytes, 0x19, 1);
 
-                    if (versionId == 9 || versionId == 10)
+                    if (game.VersionId == 14 || game.VersionId == 15 || game.VersionId == 16)
                     {
-                        Origin.MetLocationId = Utility.GetUnsignedNumber<ushort>(blockBytes, 0x1C, 2);
-                        Origin.EggHatchLocationId = Utility.GetUnsignedNumber<ushort>(blockBytes, 0x1E, 2);
+                        Origin.MetLocationId = Lookup.GetLocationIdByGameIndex(4, Utility.GetUnsignedNumber<ushort>(blockBytes, 0x1C, 2));
+                        Origin.EggHatchLocationId = Lookup.GetLocationIdByGameIndex(4, Utility.GetUnsignedNumber<ushort>(blockBytes, 0x1E, 2));
                     }
                     break;
 
                 case 'C':
                     byte[] nicknameBytes = Utility.GetBytes(blockBytes, 0x0, 20);
-                    Nickname = Utility.GetEncodedString(nicknameBytes, versionId, language);
-                    Origin.OriginGameId = Utility.GetUnsignedNumber<byte>(blockBytes, 0x17, 1);
+                    Nickname = Utility.GetEncodedString(nicknameBytes, game, language);
+                    Origin.VerionId = Utility.GetUnsignedNumber<byte>(blockBytes, 0x17, 1);
                     Ribbons.ParseRibbonSet(2, Utility.GetBytes(blockBytes, 0x18, 4));
                     break;
 
                 case 'D':
                     byte[] otNameBytes = Utility.GetBytes(blockBytes, 0x0, 16);
-                    OriginalTrainer.Name = Utility.GetEncodedString(otNameBytes, versionId, language);
+                    OriginalTrainer.Name = Utility.GetEncodedString(otNameBytes, game, language);
                     
                     byte eggYear = Utility.GetUnsignedNumber<byte>(blockBytes, 0x10, 1);
                     byte eggMonth = Utility.GetUnsignedNumber<byte>(blockBytes, 0x11, 1);
@@ -681,11 +688,10 @@ public class PartyPokemon
                         Origin.MetDateTime = ORIGIN_DATE;
                     }
                     
-                    if (versionId == 8)
+                    if (game.VersionId == 12 || game.VersionId == 13)
                     {
-                        Origin.EggHatchLocationId = Utility.GetUnsignedNumber<ushort>(blockBytes, 0x16, 2);
-                        Origin.MetLocationId = Utility.GetUnsignedNumber<ushort>(blockBytes, 0x18, 2);
-                        
+                        Origin.EggHatchLocationId = Lookup.GetLocationIdByGameIndex(4, Utility.GetUnsignedNumber<ushort>(blockBytes, 0x16, 2));
+                        Origin.MetLocationId = Lookup.GetLocationIdByGameIndex(4, Utility.GetUnsignedNumber<ushort>(blockBytes, 0x18, 2));
                     }
 
                     byte pokerusData = Utility.GetUnsignedNumber<byte>(blockBytes, 0x1A, 1);
@@ -701,7 +707,7 @@ public class PartyPokemon
                     OriginalTrainer.Gender = originBinary[7] == '1' ? Gender.FEMALE : Gender.MALE;
                     Origin.EncounterTypeId = Utility.GetUnsignedNumber<byte>(blockBytes, 0x1D, 1);
 
-                    if (versionId == 10)
+                    if (game.VersionId == 15 || game.VersionId == 16)
                     {
                         Origin.PokeballId = Utility.GetUnsignedNumber<byte>(blockBytes, 0x1E, 1);
                         WalkingMood = Utility.GetUnsignedNumber<byte>(blockBytes, 0x1F, 1);
@@ -713,6 +719,13 @@ public class PartyPokemon
             }
         }
 
+        // Hardcoded game logic
+        if (Origin.VerionId == 4 || Origin.VerionId == 5 || Origin.VerionId == 35 || Origin.VerionId == 36 || Origin.VerionId == 37 || Origin.VerionId == 38) Origin.MetLocationId = 256; //Heonn
+        if (Origin.VerionId == 39 || Origin.VerionId == 40 || Origin.VerionId == 41) Origin.MetLocationId = 256; //Johto
+        if (Origin.VerionId == 1 || Origin.VerionId == 2 || Origin.VerionId == 3) Origin.MetLocationId = 258; //Heonn
+
+        // Calculations
+        Program.Logger.LogInformation($"Done reading: {SpeciesIdentifier}");
         AssignStatValues();
     }
     #endregion
@@ -726,14 +739,14 @@ public class PartyPokemon
 
         if (generation > 2)
         {
-            var (increased, decreased) = Lookup.GetNatureStats(GetNatureFromPersonalityValue());
+            var nature = Lookup.GetNatureByGameIndex(GetNatureFromPersonalityValue().GameIndex);
             double modifiedAttack = 1;
             double modifiedDefense = 1;
             double modifiedSpecialAttack = 1;
             double modifiedSpecialDefense = 1;
             double modifiedSpeed = 1;
 
-            switch (increased)
+            switch (nature.IncreaseId)
             {
                 case 2:
                     modifiedAttack = 1.1;
@@ -754,7 +767,7 @@ public class PartyPokemon
                     break;
             }
 
-            switch (decreased)
+            switch (nature.DecreaseId)
             {
                 case 2:
                     modifiedAttack = 0.9;
@@ -816,25 +829,20 @@ public class PartyPokemon
         return shinyValue < 8;
     }
 
-    private int GetNatureFromPersonalityValue()
+    private Nature GetNatureFromPersonalityValue()
     {
         int pNature = (int)(PersonalityValue % 25);
-        return Lookup.GetNatureIdByIndex(pNature);
+        return Lookup.GetNatureByGameIndex(pNature);
     }
 
     private int GetAbilityFromPersonalityValue()
     {
-        var (first, second) = Lookup.GetAbilitiesBySpeciesId(SpeciesId);
-        List<int> abilities = [];
-        if (first != 0) abilities.Add(first);
-        if (second != 0) abilities.Add(second);
-
-        if (abilities.Count == 1) return abilities.First();
-        else if (abilities.Count == 0) return 0;
+        var speciesAbilities = Lookup.GetAbilitiesByPokemonId(SpeciesId);
+        if (speciesAbilities.Second == 0) return speciesAbilities.First;
         else
         {
             int choice = (int)(PersonalityValue % 1);
-            return abilities[choice];
+            return choice == 0 ? speciesAbilities.First : speciesAbilities.Second;
         }
     }
 
@@ -859,8 +867,8 @@ public class PartyPokemon
             default:
                 return Attack.Iv <= ratio ? Gender.FEMALE : Gender.MALE;
         }
-
     }
+
     private Gender GetGenderByPersonalityValue()
     {
         int pGender = (int)(PersonalityValue % 256);
@@ -882,7 +890,8 @@ public class PartyPokemon
 
     private bool NicknameExists()
     {
-        return !string.Equals(Regex.Replace(Nickname.ToLower().Replace(" ", "-"), @"[^0-9a-zA-Z\w]+", ""), Lookup.GetSpeciesName(SpeciesId).ToLower());
+        string speciesName = Lookup.GetPokemonBySpeciesId(SpeciesId, LanguageId).SpeciesName;
+        return !string.Equals(speciesName.ToLower(), Nickname.ToLower());
     }
 
     #endregion
