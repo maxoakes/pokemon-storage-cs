@@ -22,6 +22,7 @@ public class PartyPokemon
     public Trainer OriginalTrainer { get; set; }
     public ushort AbilityId { get; set; }
     public string AbilityIdentifier { get { return Lookup.GetIdentifierById("abilities", AbilityId); } }
+    public Nature Nature {get { return GetNatureFromPersonalityValue(); } }
     
 
     // Nickname
@@ -131,7 +132,7 @@ public class PartyPokemon
     {
         Origin = new Origin
         {
-            VerionId = game.VersionId
+            VersionId = game.VersionId
         };
         LanguageId = Lookup.GetLanguageIdByIdentifier(language);
         Nickname = nickname;
@@ -204,7 +205,7 @@ public class PartyPokemon
     {
         Origin = new Origin
         {
-            VerionId = game.VersionId
+            VersionId = game.VersionId
         };
         LanguageId = Lookup.GetLanguageIdByIdentifier(language);
 
@@ -307,7 +308,7 @@ public class PartyPokemon
     {
         Origin = new Origin
         {
-            VerionId = game.VersionId
+            VersionId = game.VersionId
         };
 
         PersonalityValue = Utility.GetUnsignedNumber<uint>(content, 0x00, 4);
@@ -320,7 +321,6 @@ public class PartyPokemon
         );
 
         Nickname = Utility.GetEncodedString(Utility.GetBytes(content, 0x08, 10), game, language);
-        HasNickname = NicknameExists();
         LanguageId = Lookup.GetLanguageIdByIdentifier(language);
         Gen3Misc = Utility.GetUnsignedNumber<byte>(content, 0x13, 1);
         Markings = new Markings(3, Utility.GetUnsignedNumber<byte>(content, 0x1B, 1));
@@ -364,6 +364,7 @@ public class PartyPokemon
             throw new Exception($"Bad checksum result. Expected {checksum & 0xffff} and got {calculated & 0xffff}");
         }
 
+        int abilitySlotId = 0;
         foreach ((char c, int i) in orderString.Select((c, i) => (c, i)))
         {
             int offset = i * 12;
@@ -437,7 +438,7 @@ public class PartyPokemon
 
                     OriginalTrainer.Gender = originBinary[0] == '1' ? Gender.FEMALE : Gender.MALE;
                     Origin.PokeballId = Convert.ToByte(originBinary.Substring(1, 4), 2);
-                    Origin.VerionId = Lookup.GetVersionIdByGameIndex(Convert.ToUInt16(originBinary.Substring(5, 4), 2));
+                    Origin.VersionId = Lookup.GetVersionIdByGameIndex(Convert.ToUInt16(originBinary.Substring(5, 4), 2));
                     Origin.MetLevel = Convert.ToByte(originBinary.Substring(9, 7), 2);
 
                     // IVs, Egg, Ability
@@ -448,7 +449,7 @@ public class PartyPokemon
                     // 0 0 00000 00000 00000 00000 00000 00000
                     Program.Logger.LogInformation($"Misc Data: {miscBinary}");
 
-                    AbilityId = Convert.ToByte(miscBinary[0]);
+                    abilitySlotId = Int32.Parse(miscBinary[0].ToString());
                     IsEgg = miscBinary[1] == '1';
                     SpecialDefense.Iv = Convert.ToByte(miscBinary.Substring(2, 5), 2);
                     SpecialAttack.Iv = Convert.ToByte(miscBinary.Substring(7, 5), 2);
@@ -491,6 +492,8 @@ public class PartyPokemon
         // Calculations
         Program.Logger.LogInformation($"Done reading: {SpeciesIdentifier}");
         Gender = GetGenderByPersonalityValue();
+        AbilityId = GetAbilityFromSlotId(abilitySlotId);
+        HasNickname = NicknameExists();
         AssignStatValues();
     }
     #endregion
@@ -569,6 +572,8 @@ public class PartyPokemon
         string shuffledOrder = shuffle[s];
         // Program.Logger.LogInformation($"Decryption Order: {s}:{shuffledOrder}");
 
+        int metLocationGameId = 0;
+        int eggLocationGameId = 0;
         for (int i = 0; i < shuffledOrder.Length; i++)
         {
             int thisOffset = i * 0x20;
@@ -647,17 +652,17 @@ public class PartyPokemon
                     AlternateFormId = (ushort)Convert.ToInt16(Utility.ReverseString(flagsBinary.Substring(3, 5)), 2);
                     ShinyLeaves = Utility.GetUnsignedNumber<byte>(blockBytes, 0x19, 1);
 
-                    if (game.VersionId == 14 || game.VersionId == 15 || game.VersionId == 16)
-                    {
-                        Origin.MetLocationId = Lookup.GetLocationIdByGameIndex(4, Utility.GetUnsignedNumber<ushort>(blockBytes, 0x1C, 2));
-                        Origin.EggHatchLocationId = Lookup.GetLocationIdByGameIndex(4, Utility.GetUnsignedNumber<ushort>(blockBytes, 0x1E, 2));
-                    }
+                    
+                    int platinumEggLocation = Utility.GetUnsignedNumber<ushort>(blockBytes, 0x1C, 2);
+                    int platinumMetLocation = Utility.GetUnsignedNumber<ushort>(blockBytes, 0x1E, 2);
+                    if (platinumEggLocation > 0) eggLocationGameId = platinumEggLocation;
+                    if (platinumMetLocation > 0) metLocationGameId = platinumMetLocation;
                     break;
 
                 case 'C':
                     byte[] nicknameBytes = Utility.GetBytes(blockBytes, 0x0, 20);
                     Nickname = Utility.GetEncodedString(nicknameBytes, game, language);
-                    Origin.VerionId = Utility.GetUnsignedNumber<byte>(blockBytes, 0x17, 1);
+                    Origin.VersionId = Lookup.GetVersionIdByGameIndex(Utility.GetUnsignedNumber<byte>(blockBytes, 0x17, 1));
                     Ribbons.ParseRibbonSet(2, Utility.GetBytes(blockBytes, 0x18, 4));
                     break;
 
@@ -668,31 +673,25 @@ public class PartyPokemon
                     byte eggYear = Utility.GetUnsignedNumber<byte>(blockBytes, 0x10, 1);
                     byte eggMonth = Utility.GetUnsignedNumber<byte>(blockBytes, 0x11, 1);
                     byte eggDay = Utility.GetUnsignedNumber<byte>(blockBytes, 0x12, 1);
-                    Origin.EggReceiveDate = (eggDay == 0) ? null : new DateTime(eggYear + 2000, eggMonth, eggDay);
+                    Program.Logger.LogInformation($"Egg:{eggYear}/{eggMonth}/{eggDay}");
+                    if (eggDay > 0)
+                    {
+                        Origin.EggReceiveDate = new DateTime(eggYear + 2000, eggMonth, eggDay);
+                    }
+
                     byte metYear = Utility.GetUnsignedNumber<byte>(blockBytes, 0x13, 1);
                     byte metMonth = Utility.GetUnsignedNumber<byte>(blockBytes, 0x14, 1);
                     byte metDay = Utility.GetUnsignedNumber<byte>(blockBytes, 0x15, 1);
-                    if (metDay != 0)
+                    Program.Logger.LogInformation($"Egg:{metYear}/{metMonth}/{metDay}");
+                    if (metDay > 0)
                     {
-                        if (Origin.EggReceiveDate.HasValue)
-                        {
-                            Origin.MetDateTime = Origin.EggReceiveDate.Value;
-                        }
-                        else
-                        {
-                            Origin.MetDateTime = Origin.MetDateTime = new DateTime(metYear + 2000, metMonth, metDay);
-                        }
-                    }
-                    else
-                    {
-                        Origin.MetDateTime = ORIGIN_DATE;
+                        Origin.MetDateTime = new DateTime(metYear + 2000, metMonth, metDay);
                     }
                     
-                    if (game.VersionId == 12 || game.VersionId == 13)
-                    {
-                        Origin.EggHatchLocationId = Lookup.GetLocationIdByGameIndex(4, Utility.GetUnsignedNumber<ushort>(blockBytes, 0x16, 2));
-                        Origin.MetLocationId = Lookup.GetLocationIdByGameIndex(4, Utility.GetUnsignedNumber<ushort>(blockBytes, 0x18, 2));
-                    }
+                    int diamondPearlEggLocation = Utility.GetUnsignedNumber<ushort>(blockBytes, 0x16, 2);
+                    int diamondPearlMetLocation = Utility.GetUnsignedNumber<ushort>(blockBytes, 0x18, 2);
+                    if (diamondPearlEggLocation > 0) eggLocationGameId = diamondPearlEggLocation;
+                    if (diamondPearlMetLocation > 0) metLocationGameId = diamondPearlMetLocation;
 
                     byte pokerusData = Utility.GetUnsignedNumber<byte>(blockBytes, 0x1A, 1);
                     string pokerusBinary = Convert.ToString(pokerusData, 2).PadLeft(8, '0');
@@ -709,22 +708,22 @@ public class PartyPokemon
 
                     if (game.VersionId == 15 || game.VersionId == 16)
                     {
-                        Origin.PokeballId = Utility.GetUnsignedNumber<byte>(blockBytes, 0x1E, 1);
+                        if (Origin.PokeballId == 0)
+                        {
+                            Origin.PokeballId = Utility.GetUnsignedNumber<byte>(blockBytes, 0x1E, 1);
+                        }
                         WalkingMood = Utility.GetUnsignedNumber<byte>(blockBytes, 0x1F, 1);
                     }
                     break;
-
                 default:
                     break;
             }
         }
 
-        // Hardcoded game logic
-        if (Origin.VerionId == 4 || Origin.VerionId == 5 || Origin.VerionId == 35 || Origin.VerionId == 36 || Origin.VerionId == 37 || Origin.VerionId == 38) Origin.MetLocationId = 256; //Heonn
-        if (Origin.VerionId == 39 || Origin.VerionId == 40 || Origin.VerionId == 41) Origin.MetLocationId = 256; //Johto
-        if (Origin.VerionId == 1 || Origin.VerionId == 2 || Origin.VerionId == 3) Origin.MetLocationId = 258; //Heonn
-
         // Calculations
+        Program.Logger.LogInformation($"Met:{metLocationGameId}, Egg:{eggLocationGameId}");
+        Origin.MetLocationId = Lookup.GetLocationIdByGameIndex(4, metLocationGameId);
+        Origin.EggHatchLocationId = Lookup.GetLocationIdByGameIndex(4, eggLocationGameId);
         Program.Logger.LogInformation($"Done reading: {SpeciesIdentifier}");
         AssignStatValues();
     }
@@ -835,15 +834,11 @@ public class PartyPokemon
         return Lookup.GetNatureByGameIndex(pNature);
     }
 
-    private int GetAbilityFromPersonalityValue()
+    private ushort GetAbilityFromSlotId(int slotId)
     {
-        var speciesAbilities = Lookup.GetAbilitiesByPokemonId(SpeciesId);
-        if (speciesAbilities.Second == 0) return speciesAbilities.First;
-        else
-        {
-            int choice = (int)(PersonalityValue % 1);
-            return choice == 0 ? speciesAbilities.First : speciesAbilities.Second;
-        }
+        var speciesAbilities = Lookup.GetAbilitiesByPokemonId(Lookup.GetPokemonBySpeciesId(SpeciesId, LanguageId).PokemonId);
+        Program.Logger.LogInformation($"{speciesAbilities.First} {speciesAbilities.Second} {speciesAbilities.Hidden} -> {slotId}");
+        return slotId == 0 ? speciesAbilities.First : speciesAbilities.Second;
     }
 
     private string GetPersonalityString()

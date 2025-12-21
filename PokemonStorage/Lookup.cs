@@ -1,8 +1,6 @@
 using System.Data;
-using System.Text.Json;
 using Microsoft.Data.Sqlite;
 using PokemonStorage.DatabaseIO;
-using PokemonStorage.Models;
 
 namespace PokemonStorage;
 
@@ -30,9 +28,9 @@ public struct Game
 
 public struct AbilityMapping
 {
-    public int First;
-    public int Second;
-    public int Hidden;
+    public ushort First;
+    public ushort Second;
+    public ushort Hidden;
 
     public AbilityMapping()
     {
@@ -41,7 +39,7 @@ public struct AbilityMapping
         Hidden = 0;
     }
 
-    public void Assign(int value, int slot, bool isHidden)
+    public void Assign(ushort value, ushort slot, bool isHidden)
     {
         if (isHidden) Hidden = value;
         else
