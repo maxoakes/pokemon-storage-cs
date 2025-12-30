@@ -115,11 +115,49 @@ public class GameState
                 pokemon.LoadFromGen3Bytes(pokemonBytes, Game, language);
                 Party[i] = pokemon;
             }
+
+            List<byte> boxByteList = [];
+            for (int i = 0; i < 14; i++)
+            {
+                if (i >= 5 && i <= 13) boxByteList.AddRange(sections[i].Take(3968));
+            }
+
+            byte[] boxBytes = [.. boxByteList];
+            for (int i = 0; i < 14; i++)
+            {
+                byte[] thisBoxBytes = Utility.GetBytes(boxBytes, 0x4 + (i * 2400), 2400);
+                string thisBoxName = Utility.GetEncodedString(Utility.GetBytes(boxBytes, 0x8344 + (i * 9), 9), Game, language);
+                if (!BoxList.ContainsKey(thisBoxName)) BoxList.Add(thisBoxName, []);
+
+                for (int j = 0; j < 30; j++)
+                {
+                    Program.Logger.LogInformation($"Looking at {thisBoxName}:{j}");
+                    byte[] pokemonBytes = Utility.GetBytes(thisBoxBytes, j * 80, 80);
+                    uint thisPv = Utility.GetUnsignedNumber<uint>(pokemonBytes, 0x0, 4);
+                    ushort thisCs = Utility.GetUnsignedNumber<ushort>(pokemonBytes, 0x1C, 2);
+                    if (thisPv == 0 && thisCs == 0)
+                    {
+                        Program.Logger.LogInformation("No Pokemon");
+                        continue;
+                    }
+                    
+                    PartyPokemon pokemon = new(3);
+                    pokemon.LoadFromGen3Bytes(pokemonBytes, Game, language);
+                    BoxList[thisBoxName][j] = pokemon;
+                }
+            }
         }
         else if (Game.VersionId == 8 || Game.VersionId == 9 || Game.VersionId == 10)
         {
             (int start, int end) littleBlockOffsets = (0x00000, 0x00000);
             (int start, int end) bigBlockOffsets = (0x00000, 0x00000);
+            int trainerNameOffset = Game.VersionId == 10 ? 0x64 : 0x68;
+            int trainerPublicIdOffset = Game.VersionId == 10 ? 0x74 : 0x78;
+            int trainerSecretIdOffset = Game.VersionId == 10 ? 0x76 : 0x7A;
+            int trainerGenderOffset = Game.VersionId == 10 ? 0x7C : 0x80;
+            int partySizeOffset = Game.VersionId == 10 ? 0x94 : 0x9C;
+            int partyOffset = Game.VersionId == 10 ? 0x98 : 0xA0;
+
             if (Game.VersionId == 8)
             {
                 littleBlockOffsets = (0x0000, 0x0C0FF);
@@ -140,14 +178,14 @@ public class GameState
             byte[] bigBlockBytes = Utility.GetBytes(Content, bigBlockOffsets.start, bigBlockOffsets.end - bigBlockOffsets.start);
 
             Trainer = new(
-                Utility.GetEncodedString(Utility.GetBytes(littleBlockBytes, 0x68, 16), Game, language),
-                Utility.GetUnsignedNumber<byte>(littleBlockBytes, 0x80, 1),
-                Utility.GetUnsignedNumber<ushort>(littleBlockBytes, 0x78, 2),
-                Utility.GetUnsignedNumber<ushort>(littleBlockBytes, 0x7A, 2)
+                Utility.GetEncodedString(Utility.GetBytes(littleBlockBytes, trainerNameOffset, 16), Game, language),
+                Utility.GetUnsignedNumber<byte>(littleBlockBytes, trainerPublicIdOffset, 1),
+                Utility.GetUnsignedNumber<ushort>(littleBlockBytes, trainerSecretIdOffset, 2),
+                Utility.GetUnsignedNumber<ushort>(littleBlockBytes, trainerGenderOffset, 2)
             );
 
-            int partySize = Utility.GetUnsignedNumber<byte>(littleBlockBytes, 0x9C, 1);
-            byte[] partyBytes = Utility.GetBytes(littleBlockBytes, 0xA0, 1416);
+            int partySize = Utility.GetUnsignedNumber<byte>(littleBlockBytes, partySizeOffset, 1);
+            byte[] partyBytes = Utility.GetBytes(littleBlockBytes, partyOffset, 1416);
 
             for (int i = 0; i < partySize; i++)
             {
@@ -185,7 +223,6 @@ public class GameState
                     pokemon.LoadFromGen4Bytes(pokemonBytes, Game, language);
                     BoxList[boxName][j] = pokemon;
                 }
-
             }
         }
         else

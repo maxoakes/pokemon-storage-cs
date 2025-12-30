@@ -1,7 +1,9 @@
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Logging;
+using PokemonStorage.DatabaseIO;
 
 namespace PokemonStorage.Models;
 
@@ -132,7 +134,7 @@ public class PartyPokemon
     {
         Origin = new Origin
         {
-            VersionId = game.VersionId
+            GameVersionId = game.GameId
         };
         LanguageId = Lookup.GetLanguageIdByIdentifier(language);
         Nickname = nickname;
@@ -141,7 +143,6 @@ public class PartyPokemon
         PokemonIdentity pokemonIdentity = Lookup.GetPokemonByFormId(Lookup.GetPokemonFormIdByGameIndex(1, Utility.GetByte(content, 0x00)), LanguageId); 
         SpeciesId = pokemonIdentity.SpeciesId;
         ExperiencePoints = Utility.GetUnsignedNumber<uint>(content, 0x0E, 3, true);
-        HasNickname = NicknameExists();
         Friendship = Lookup.GetBaseHappinessBySpeciesId(SpeciesId);
 
         // Get Moves
@@ -195,6 +196,8 @@ public class PartyPokemon
 
         // Calculations
         Gender = GetGenderByAttackIv();
+        HasNickname = NicknameExists();
+        ConformToModernStatSystem();
         AssignStatValues();
     }
     #endregion
@@ -205,12 +208,11 @@ public class PartyPokemon
     {
         Origin = new Origin
         {
-            VersionId = game.VersionId
+            GameVersionId = game.GameId
         };
         LanguageId = Lookup.GetLanguageIdByIdentifier(language);
 
         Nickname = nickname;
-        HasNickname = NicknameExists();
         PokemonIdentity pokemonIdentity = Lookup.GetPokemonByFormId(Lookup.GetPokemonFormIdByGameIndex(2, Utility.GetByte(content, 0x00)), LanguageId); 
         SpeciesId = pokemonIdentity.SpeciesId;
         HeldItemId = Lookup.GetItemIdByGameIndex(2, Utility.GetUnsignedNumber<byte>(content, 0x01, 1, true));
@@ -298,6 +300,8 @@ public class PartyPokemon
 
         // Calculations
         Gender = GetGenderByAttackIv();
+        HasNickname = NicknameExists();
+        ConformToModernStatSystem();
         AssignStatValues();
     }
     #endregion
@@ -308,7 +312,7 @@ public class PartyPokemon
     {
         Origin = new Origin
         {
-            VersionId = game.VersionId
+            GameVersionId = game.GameId
         };
 
         PersonalityValue = Utility.GetUnsignedNumber<uint>(content, 0x00, 4);
@@ -438,7 +442,7 @@ public class PartyPokemon
 
                     OriginalTrainer.Gender = originBinary[0] == '1' ? Gender.FEMALE : Gender.MALE;
                     Origin.PokeballId = Convert.ToByte(originBinary.Substring(1, 4), 2);
-                    Origin.VersionId = Lookup.GetVersionIdByGameIndex(Convert.ToUInt16(originBinary.Substring(5, 4), 2));
+                    Origin.GameVersionId = Lookup.GetVersionIdByGameIndex(Convert.ToUInt16(originBinary.Substring(5, 4), 2));
                     Origin.MetLevel = Convert.ToByte(originBinary.Substring(9, 7), 2);
 
                     // IVs, Egg, Ability
@@ -501,10 +505,7 @@ public class PartyPokemon
     #region Gen 4
     // https://bulbapedia.bulbagarden.net/wiki/Pok%C3%A9mon_data_structure_(Generation_IV)
     public void LoadFromGen4Bytes(byte[] content, Game game, string language)
-    {
-        // Root date
-        DateTime ORIGIN_DATE = DateTime.ParseExact("2000/01/01 00:00:00", "yyyy/MM/dd HH:mm:ss", null);
-        
+    {        
         // decryption
         const int WORD_SIZE = 2;
         const uint DECRYPTION_FACTOR = 0x41C64E6D;
@@ -572,8 +573,6 @@ public class PartyPokemon
         string shuffledOrder = shuffle[s];
         // Program.Logger.LogInformation($"Decryption Order: {s}:{shuffledOrder}");
 
-        int metLocationGameId = 0;
-        int eggLocationGameId = 0;
         for (int i = 0; i < shuffledOrder.Length; i++)
         {
             int thisOffset = i * 0x20;
@@ -652,17 +651,14 @@ public class PartyPokemon
                     AlternateFormId = (ushort)Convert.ToInt16(Utility.ReverseString(flagsBinary.Substring(3, 5)), 2);
                     ShinyLeaves = Utility.GetUnsignedNumber<byte>(blockBytes, 0x19, 1);
 
-                    
-                    int platinumEggLocation = Utility.GetUnsignedNumber<ushort>(blockBytes, 0x1C, 2);
-                    int platinumMetLocation = Utility.GetUnsignedNumber<ushort>(blockBytes, 0x1E, 2);
-                    if (platinumEggLocation > 0) eggLocationGameId = platinumEggLocation;
-                    if (platinumMetLocation > 0) metLocationGameId = platinumMetLocation;
+                    Origin.EggHatchLocationPlatinumId = Lookup.GetLocationIdByGameIndex(4, Utility.GetUnsignedNumber<ushort>(blockBytes, 0x1C, 2));
+                    Origin.MetLocationPlatinumId = Lookup.GetLocationIdByGameIndex(4, Utility.GetUnsignedNumber<ushort>(blockBytes, 0x1E, 2));
                     break;
 
                 case 'C':
                     byte[] nicknameBytes = Utility.GetBytes(blockBytes, 0x0, 20);
                     Nickname = Utility.GetEncodedString(nicknameBytes, game, language);
-                    Origin.VersionId = Lookup.GetVersionIdByGameIndex(Utility.GetUnsignedNumber<byte>(blockBytes, 0x17, 1));
+                    Origin.GameVersionId = Lookup.GetVersionIdByGameIndex(Utility.GetUnsignedNumber<byte>(blockBytes, 0x17, 1));
                     Ribbons.ParseRibbonSet(2, Utility.GetBytes(blockBytes, 0x18, 4));
                     break;
 
@@ -688,10 +684,8 @@ public class PartyPokemon
                         Origin.MetDateTime = new DateTime(metYear + 2000, metMonth, metDay);
                     }
                     
-                    int diamondPearlEggLocation = Utility.GetUnsignedNumber<ushort>(blockBytes, 0x16, 2);
-                    int diamondPearlMetLocation = Utility.GetUnsignedNumber<ushort>(blockBytes, 0x18, 2);
-                    if (diamondPearlEggLocation > 0) eggLocationGameId = diamondPearlEggLocation;
-                    if (diamondPearlMetLocation > 0) metLocationGameId = diamondPearlMetLocation;
+                    Origin.EggHatchLocationId = Lookup.GetLocationIdByGameIndex(4, Utility.GetUnsignedNumber<ushort>(blockBytes, 0x16, 2));
+                    Origin.MetLocationId = Lookup.GetLocationIdByGameIndex(4, Utility.GetUnsignedNumber<ushort>(blockBytes, 0x18, 2));
 
                     byte pokerusData = Utility.GetUnsignedNumber<byte>(blockBytes, 0x1A, 1);
                     string pokerusBinary = Convert.ToString(pokerusData, 2).PadLeft(8, '0');
@@ -720,10 +714,7 @@ public class PartyPokemon
             }
         }
 
-        // Calculations
-        Program.Logger.LogInformation($"Met:{metLocationGameId}, Egg:{eggLocationGameId}");
-        Origin.MetLocationId = Lookup.GetLocationIdByGameIndex(4, metLocationGameId);
-        Origin.EggHatchLocationId = Lookup.GetLocationIdByGameIndex(4, eggLocationGameId);
+        // Calculations        
         Program.Logger.LogInformation($"Done reading: {SpeciesIdentifier}");
         AssignStatValues();
     }
@@ -910,6 +901,134 @@ public class PartyPokemon
         Speed.Value = calcualtedStats.Speed;
         SpecialAttack.Value = calcualtedStats.SpecialAttack;
         SpecialDefense.Value = calcualtedStats.SpecialDefense;
+    }
+
+    public void ConformToModernStatSystem()
+    {
+        Program.Logger.LogInformation($"Ori EV:{Attack.Ev}/{Defense.Ev}/{Speed.Ev}/{SpecialAttack.Ev}/{SpecialDefense.Ev}");
+
+        HP.Ev /= 66;
+        Attack.Ev /= 70;
+        Defense.Ev /= 69;
+        Speed.Ev /= 66;
+        SpecialAttack.Ev /= 66;
+        SpecialDefense.Ev /= 68;
+        Program.Logger.LogInformation($"New EV:{HP.Ev}/{Attack.Ev}/{Defense.Ev}/{Speed.Ev}/{SpecialAttack.Ev}/{SpecialDefense.Ev}");
+
+        int sum = HP.Ev + Attack.Ev + Defense.Ev + Speed.Ev + SpecialAttack.Ev + SpecialDefense.Ev;
+        Program.Logger.LogInformation($"Sum={sum}");
+
+        if (sum > 510)
+        {
+            Program.Logger.LogInformation($"EV Overflow: {sum}/510");
+            float decreaseFactor = sum / 510f;
+            Program.Logger.LogInformation($"Decrease Factor={decreaseFactor}");
+            float newHp = HP.Ev / decreaseFactor;
+            float newAttack = Attack.Ev / decreaseFactor;
+            float newDefense = Defense.Ev / decreaseFactor;
+            float newSpeed = Speed.Ev / decreaseFactor;
+            float newSpecialAttack = SpecialAttack.Ev / decreaseFactor;
+            float newSpecialDefense = SpecialDefense.Ev / decreaseFactor;
+            Program.Logger.LogInformation($"New Normalized EV:{newHp}/{newAttack}/{newDefense}/{newSpeed}/{newSpecialAttack}/{newSpecialDefense}");
+
+            HP.Ev = (ushort)Math.Floor(newHp);
+            Attack.Ev = (ushort)Math.Floor(newAttack);
+            Defense.Ev = (ushort)Math.Floor(newDefense);
+            Speed.Ev = (ushort)Math.Floor(newSpeed);
+            SpecialAttack.Ev = (ushort)Math.Floor(newSpecialAttack);
+            SpecialDefense.Ev = (ushort)Math.Floor(newSpecialDefense);
+
+            sum = HP.Ev + Attack.Ev + Defense.Ev + Speed.Ev + SpecialAttack.Ev + SpecialDefense.Ev;
+            Program.Logger.LogInformation($"New Sum={sum}");
+        }
+
+        HP.Iv = (byte)((HP.Iv * 2) + 1);
+        Attack.Iv = (byte)((Attack.Iv * 2) + 1);
+        Defense.Iv = (byte)((Defense.Iv * 2) + 1);
+        Speed.Iv = (byte)((Speed.Iv * 2) + 1);
+        SpecialAttack.Iv = (byte)((SpecialAttack.Iv * 2) + 1);
+        SpecialDefense.Iv = (byte)((SpecialDefense.Iv * 2) + 1);
+    }
+
+    public void ConvertToOldStatSystem()
+    {
+        Program.Logger.LogInformation($"Ori EV:{Attack.Ev}/{Defense.Ev}/{Speed.Ev}/{SpecialAttack.Ev}/{SpecialDefense.Ev}");
+
+        HP.Ev *= 66;
+        Attack.Ev *= 70;
+        Defense.Ev *= 69;
+        Speed.Ev *= 66;
+        SpecialAttack.Ev *= 66;
+        SpecialDefense.Ev *= 68;
+        Program.Logger.LogInformation($"New EV:{HP.Ev}/{Attack.Ev}/{Defense.Ev}/{Speed.Ev}/{SpecialAttack.Ev}/{SpecialDefense.Ev}");
+
+        HP.Iv = (byte)(HP.Iv >> 1);
+        Attack.Iv = (byte)(Attack.Iv >> 1);
+        Defense.Iv = (byte)(Defense.Iv >> 1);
+        Speed.Iv = (byte)(Speed.Iv >> 1);
+        SpecialAttack.Iv = (byte)(SpecialAttack.Iv >> 1);
+        SpecialDefense.Iv = (byte)(SpecialDefense.Iv >> 1);
+    }
+    #endregion
+
+    #region Database
+
+    public int InsertIntoDatabase()
+    {
+        List<SqliteParameter> parameters = [
+            new SqliteParameter("LanguageId", SqliteType.Integer) { Value = LanguageId },
+            new SqliteParameter("SpeciesId", SqliteType.Integer) { Value = SpeciesId },
+            new SqliteParameter("FormId", SqliteType.Integer) { Value = AlternateFormId },
+            new SqliteParameter("GenerationId", SqliteType.Integer) { Value = Generation },
+            new SqliteParameter("PersonalityValue", SqliteType.Integer) { Value = PersonalityValue },
+            new SqliteParameter("Gender", SqliteType.Integer) { Value = (int)Gender },
+            new SqliteParameter("IsEgg", SqliteType.Integer) { Value = IsEgg ? 1 : 0 },
+            new SqliteParameter("ExperiencePoints", SqliteType.Integer) { Value = ExperiencePoints },
+            new SqliteParameter("Nickname", SqliteType.Text) { Value = Nickname },
+            new SqliteParameter("HasNickname", SqliteType.Integer) { Value = HasNickname ? 1 : 0 },
+            new SqliteParameter("HeldItemId", SqliteType.Integer) { Value = HeldItemId },
+            new SqliteParameter("AbilityId", SqliteType.Integer) { Value = AbilityId },
+            new SqliteParameter("Friendship", SqliteType.Integer) { Value = Friendship },
+            new SqliteParameter("WalkingMood", SqliteType.Integer) { Value = WalkingMood },
+            new SqliteParameter("ShinyLeaves", SqliteType.Integer) { Value = ShinyLeaves },
+            new SqliteParameter("PokerusStrain", SqliteType.Integer) { Value = PokerusStrain },
+            new SqliteParameter("PokerusDaysRemaining", SqliteType.Integer) { Value = PokerusDaysRemaining },
+            new SqliteParameter("HP_Iv", SqliteType.Integer) { Value = HP.Iv },
+            new SqliteParameter("HP_Ev", SqliteType.Integer) { Value = HP.Ev },
+            new SqliteParameter("Attack_Iv", SqliteType.Integer) { Value = Attack.Iv },
+            new SqliteParameter("Attack_Ev", SqliteType.Integer) { Value = Attack.Ev },
+            new SqliteParameter("Defense_Iv", SqliteType.Integer) { Value = Defense.Iv },
+            new SqliteParameter("Defense_Ev", SqliteType.Integer) { Value = Defense.Ev },
+            new SqliteParameter("Speed_Iv", SqliteType.Integer) { Value = Speed.Iv },
+            new SqliteParameter("Speed_Ev", SqliteType.Integer) { Value = Speed.Ev },
+            new SqliteParameter("SpecialAttack_Iv", SqliteType.Integer) { Value = SpecialAttack.Iv },
+            new SqliteParameter("SpecialAttack_Ev", SqliteType.Integer) { Value = SpecialAttack.Ev },
+            new SqliteParameter("SpecialDefense_Iv", SqliteType.Integer) { Value = SpecialDefense.Iv },
+            new SqliteParameter("SpecialDefense_Ev", SqliteType.Integer) { Value = SpecialDefense.Ev },
+            new SqliteParameter("Coolness", SqliteType.Integer) { Value = Coolness },
+            new SqliteParameter("Beauty", SqliteType.Integer) { Value = Beauty },
+            new SqliteParameter("Cuteness", SqliteType.Integer) { Value = Cuteness },
+            new SqliteParameter("Smartness", SqliteType.Integer) { Value = Smartness },
+            new SqliteParameter("Toughness", SqliteType.Integer) { Value = Toughness },
+            new SqliteParameter("Sheen", SqliteType.Integer) { Value = Sheen },
+            new SqliteParameter("Obedience", SqliteType.Integer) { Value = Obedience ? 1 : 0 },
+            new SqliteParameter("Markings", SqliteType.Integer) { Value = Markings.Bits },
+            new SqliteParameter("Gen3MiscData", SqliteType.Integer) { Value = Gen3Misc },
+        ];
+
+        Int64 formId = (Int64)DbInterface.RetrieveScalar(""" 
+            SELECT 
+                pf.id
+            FROM 
+                pokemon p  
+                LEFT JOIN pokemon_forms pf ON p.id=pf.pokemon_id 
+                LEFT JOIN pokemon_species ps ON p.species_id=ps.id
+            WHERE ps.id = @Id
+            ORDER BY ps."order", pf."order" 
+        """, "veekun", parameters);
+
+        PokemonIdentity pokemon = GetPokemonByFormId((ushort)formId, languageId);
+        return pokemon;
     }
 
     #endregion

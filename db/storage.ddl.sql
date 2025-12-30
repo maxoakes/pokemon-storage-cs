@@ -9,13 +9,16 @@ CREATE TABLE IF NOT EXISTS original_trainer (
 CREATE TABLE IF NOT EXISTS origin (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     fateful_encounter INTEGER NOT NULL DEFAULT 0,
+    encounter_type_id INTEGER NOT NULL,
     catch_ball_id INTEGER NOT NULL DEFAULT 0,
     origin_game_id INTEGER NOT NULL DEFAULT 0,
     egg_receive_date TEXT,
     egg_hatch_location_id INTEGER NOT NULL DEFAULT 0,
+    egg_hatch_location_platinum_id INTEGER NOT NULL DEFAULT 0,
     met_level INTEGER NOT NULL DEFAULT 0,
     met_date TEXT,
-    met_location_id INTEGER NOT NULL DEFAULT 0, 
+    met_location_id INTEGER NOT NULL DEFAULT 0,
+    met_location_platinum_id INTEGER NOT NULL DEFAULT 0
 )
 
 CREATE TABLE IF NOT EXISTS ribbon (
@@ -74,10 +77,11 @@ CREATE TABLE IF NOT EXISTS ribbon (
 
 CREATE TABLE IF NOT EXISTS pokemon (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    lang TEXT DEFAULT 'en',
+    language_id INTEGER NOT NULL,
+    generation_id INTEGER NOT NULL,
     species_id INTEGER NOT NULL,
     alt_form_id INTEGER NOT NULL DEFAULT 0,
-    pv INTEGER NOT NULL 0,
+    pv INTEGER NOT NULL DEFAULT 0,
     gender INTEGER NOT NULL,
     egg INTEGER NOT NULL DEFAULT 0,
     ability_id INTEGER NOT NULL DEFAULT 0,
@@ -116,7 +120,7 @@ CREATE TABLE IF NOT EXISTS pokemon (
     fk_original_trainer INTEGER REFERENCES original_trainer,
     created TEXT DEFAULT CURRENT_TIMESTAMP,
     tag TEXT DEFAULT NULL,
-    deleted INTEGER NOT NULL DEFAULT 0,
+    deleted INTEGER NOT NULL DEFAULT 0
 );
 
 CREATE TABLE IF NOT EXISTS move_set (
@@ -124,5 +128,5 @@ CREATE TABLE IF NOT EXISTS move_set (
     pokemon_id INTEGER REFERENCES pokemon,
     move_id INTEGER NOT NULL,
     move_pp INTEGER NOT NULL,
-    times_increased INTEGER NOT NULL DEFAULT 0,
+    times_increased INTEGER NOT NULL DEFAULT 0
 )

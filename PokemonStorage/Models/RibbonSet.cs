@@ -1,5 +1,7 @@
 using System;
 using System.Reflection;
+using Microsoft.Data.Sqlite;
+using PokemonStorage.DatabaseIO;
 
 namespace PokemonStorage.Models;
 
@@ -133,6 +135,125 @@ public class RibbonSet
             default:
                 break;
         }
+    }
+
+    public List<SqliteParameter> GetSqliteParameters()
+    {
+        var parameters = new List<SqliteParameter>();
+        foreach (PropertyInfo prop in typeof(RibbonSet).GetProperties())
+        {
+            parameters.Add(new SqliteParameter(prop.Name, SqliteType.Integer) { Value = prop.GetValue(this) });
+        }
+        return parameters;
+    }
+
+    public int InsertIntoDatabase()
+    {
+        return (int)DbInterface.RetrieveScalar("""
+        INSERT INTO ribbon (
+            sinnoh_champ,
+            ability,
+            great_ability,
+            double_ability,
+            multi_ability,
+            pair_ability,
+            world_ability,
+            alert,
+            shock,
+            downcast,
+            careless,
+            relax,
+            snooze,
+            smile,
+            gorgeous,
+            royal,
+            gorgeous_royal,
+            footprint,
+            record,
+            history,
+            legend,
+            red,
+            green,
+            blue,
+            festival,
+            carnival,
+            classic,
+            premier,
+            sinnoh_cool,
+            sinnoh_beauty,
+            sinnoh_cute,
+            sinnoh_smart,
+            sinnoh_tough,
+            heonn_cool,
+            heonn_beauty,
+            heonn_cute,
+            heonn_smart,
+            heonn_tough,
+            champion,
+            winning,
+            victory,
+            artist,
+            effort,
+            marine,
+            land,
+            sky,
+            country,
+            national,
+            earth,
+            world
+        ) VALUES (
+            @SinnohChamp
+            @Ability
+            @GreatAbility
+            @DoubleAbility
+            @MultiAbility
+            @PairAbility
+            @WorldAbility
+            @Alert
+            @Shock
+            @Downcast
+            @Careless
+            @Relax
+            @Snooze
+            @Smile
+            @Gorgeous
+            @Royal
+            @GorgeousRoyal
+            @Footprint
+            @Record
+            @History
+            @Legend
+            @Red
+            @Green
+            @Blue
+            @Festival
+            @Carnival
+            @Classic
+            @Premier
+            @SinnohCool
+            @SinnohBeauty
+            @SinnohCute
+            @SinnohSmart
+            @SinnohTough
+            @HeonnCool
+            @HeonnBeauty
+            @HeonnCute
+            @HeonnSmart
+            @HeonnTough
+            @Champion
+            @Winning
+            @Victory
+            @Artist
+            @Effort
+            @Marine
+            @Land
+            @Sky
+            @Country
+            @National
+            @Earth
+            @World
+        ); SELECT last_insert_rowid();
+        """, "storage", GetSqliteParameters());
     }
 
     public override string ToString()

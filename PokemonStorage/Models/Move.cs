@@ -1,4 +1,5 @@
 using System;
+using Microsoft.Data.Sqlite;
 
 namespace PokemonStorage.Models;
 
@@ -14,6 +15,16 @@ namespace PokemonStorage.Models;
             Id = id;
             Pp = pp;
             TimesIncreased = timesIncreased;
+        }
+
+        public List<SqliteParameter> GetSqliteParameters()
+        {
+            return new List<SqliteParameter>
+            {
+                new SqliteParameter("MoveId", SqliteType.Integer) { Value = Id },
+                new SqliteParameter("Pp", SqliteType.Integer) { Value = Pp },
+                new SqliteParameter("TimesIncreased", SqliteType.Integer) { Value = TimesIncreased }
+            };
         }
 
         public override string ToString()

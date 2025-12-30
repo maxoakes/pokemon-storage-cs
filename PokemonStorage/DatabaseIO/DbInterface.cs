@@ -12,11 +12,11 @@ namespace PokemonStorage.DatabaseIO
         /// </summary>
         /// <param name="query">Raw Sqlite statement</param>
         /// <returns></returns>
-        private static SqliteCommand PrepareSqlCommand(string query, string connectionString)
+        private static SqliteCommand PrepareSqlCommand(string query, string connectionName)
         {
-            if (string.IsNullOrWhiteSpace(connectionString)) throw new Exception("No connection string specified");
+            if (string.IsNullOrWhiteSpace(connectionName)) throw new Exception("No connection string specified");
             
-            SqliteConnection connection = new(Program.ConnectionStrings[connectionString]);
+            SqliteConnection connection = new(Program.ConnectionStrings[connectionName]);
             SqliteCommand command = new(query, connection);
             return command;
         }
@@ -103,9 +103,9 @@ namespace PokemonStorage.DatabaseIO
         /// <param name="isStoredProcedure">True if the query parameter is the name of a table-returning stored procedure, 
         /// false if it is a whole select statement string</param>
         /// <returns></returns>
-        public static DataTable RetrieveTable(string query, string connectionString, List<SqliteParameter>? parameters = null, bool isStoredProcedure = false)
+        public static DataTable RetrieveTable(string query, string connectionName, List<SqliteParameter>? parameters = null, bool isStoredProcedure = false)
         {
-            SqliteCommand command = PrepareSqlCommand(query, connectionString);
+            SqliteCommand command = PrepareSqlCommand(query, connectionName);
             if (isStoredProcedure)
             {
                 command.CommandType = CommandType.StoredProcedure;
@@ -165,45 +165,11 @@ namespace PokemonStorage.DatabaseIO
         /// <param name="table">Name of the Sqlite table.</param>
         /// <param name="column">Name of the column in the Sqlite table.</param>
         /// <returns></returns>
-        public static int GetNextHighestNumber(string table, string column, string connectionString)
+        public static int GetNextHighestNumber(string table, string column, string connectionName)
         {
-            SqliteCommand command = PrepareSqlCommand($"SELECT MAX({column}) FROM {table}", connectionString);
+            SqliteCommand command = PrepareSqlCommand($"SELECT MAX({column}) FROM {table}", connectionName);
             int result = (int)ExecuteScalar(command);
             return result + 1;
-        }
-
-        #endregion
-
-        #region Write Database
-
-        /// <summary>
-        /// Execute an Sqlite scalar command given a statement and list of parameters
-        /// </summary>
-        /// <param name="statement">SQL statement</param>
-        /// <param name="parameters">Raw Sqlite parameters</param>
-        /// <returns></returns>
-        public static object InsertAndGetPrimaryKey(string statement, List<SqliteParameter> parameters, string connectionString)
-        {
-            SqliteCommand command = PrepareSqlCommand(statement, connectionString);
-            parameters.ForEach(e => e.Value = PrepareParameterValue(e));
-            command.Parameters.AddRange(parameters.ToArray());
-
-            return ExecuteScalar(command);
-        }
-
-        /// <summary>
-        /// Execute an Sqlite command given a statement and list of parameters.
-        /// </summary>
-        /// <param name="statement">SQL statement</param>
-        /// <param name="parameters">Raw Sqlite parameters</param>
-        /// <returns>Number of rows affected</returns>
-        public static int UpdateAndGetResult(string statement, List<SqliteParameter> parameters, string connectionString)
-        {
-            SqliteCommand command = PrepareSqlCommand(statement, connectionString);
-            parameters.ForEach(e => e.Value = PrepareParameterValue(e));
-            command.Parameters.AddRange(parameters.ToArray());
-
-            return ExecuteNonQuery(command);
         }
 
         #endregion
