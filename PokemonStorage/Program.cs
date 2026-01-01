@@ -66,7 +66,7 @@ public class Program
         Console.WriteLine($"Loaded {game} with {originalSaveData.Length} bytes.");
         GameState gameState = new(originalSaveData, game, language);
 
-        if (readOutput.ToLower() == "file")
+        if (readOutput.Equals("file", StringComparison.CurrentCultureIgnoreCase))
         {
             var pokemonStorageDictionary = new Dictionary<string, Dictionary<string, PartyPokemon>>();
             foreach ((int index, PartyPokemon pokemon) in gameState.Party)
@@ -93,7 +93,7 @@ public class Program
             File.WriteAllText($"{fileOutputPath}/{game.GameName}.{DateTime.Now:s}.json", Program.SerializeObject(pokemonStorageDictionary));
             
         }
-        else if (readOutput.ToLower() == "console")
+        else if (readOutput.Equals("console", StringComparison.CurrentCultureIgnoreCase))
         {
             Console.WriteLine("Party:");
             foreach ((int slot, PartyPokemon pokemon) in gameState.Party)
@@ -108,7 +108,49 @@ public class Program
                     Console.WriteLine($"{slot}: {SerializeObject(pokemon)}");
                 }
             }
-        }        
+        }
+        else if (readOutput.Equals("database", StringComparison.CurrentCultureIgnoreCase))
+        {
+            Console.Write("Choose all of the following slot numbers to add to the database as a comma-separated list: ");
+            Console.WriteLine("Party:");
+            foreach ((int slot, PartyPokemon pokemon) in gameState.Party)
+            {
+                Console.WriteLine($"\t{slot}: {pokemon.GetSummaryString()}");
+            }
+            string partyInput = Console.ReadLine() ?? "";
+            var partySlots = partyInput.Split(',').Select(s => s.Trim()).Where(s => int.TryParse(s, out _)).Select(int.Parse).ToHashSet();
+            foreach ((int slot, PartyPokemon pokemon) in gameState.Party)
+            {
+                if (partySlots.Contains(slot))
+                {
+                    int pk = pokemon.InsertIntoDatabase();
+                    Console.WriteLine($"Inserted {pokemon.Nickname} as {pk}");
+                }
+            }
+
+            foreach ((string box, var boxList) in gameState.BoxList)
+            {
+                if (boxList.Count == 0) continue;
+
+                Console.Write("Choose all of the following slot numbers to add to the database as a comma-separated list: ");
+                Console.WriteLine($"Box {box}:");
+                foreach ((int slot, PartyPokemon pokemon) in boxList)
+                {
+                    if (pokemon.PokemonIdentity.SpeciesId == 0) continue;
+                    Console.WriteLine($"\t{slot}: {pokemon.GetSummaryString()}");
+                }
+                string boxInput = Console.ReadLine() ?? "";
+                var boxSlots = boxInput.Split(',').Select(s => s.Trim()).Where(s => int.TryParse(s, out _)).Select(int.Parse).ToHashSet();
+                foreach ((int slot, PartyPokemon pokemon) in boxList)
+                {
+                    if (boxSlots.Contains(slot))
+                    {
+                        int pk = pokemon.InsertIntoDatabase();
+                        Console.WriteLine($"Inserted {pokemon.Nickname} as {pk}");
+                    }
+                }
+            }
+        }
     }
 
     public static string SerializeObject(object obj)

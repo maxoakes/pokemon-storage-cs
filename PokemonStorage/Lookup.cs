@@ -1,6 +1,5 @@
 using System.Data;
 using Microsoft.Data.Sqlite;
-using PokemonStorage.DatabaseIO;
 
 namespace PokemonStorage;
 

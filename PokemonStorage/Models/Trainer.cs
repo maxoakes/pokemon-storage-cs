@@ -1,6 +1,4 @@
-using System;
 using Microsoft.Data.Sqlite;
-using PokemonStorage.DatabaseIO;
 
 namespace PokemonStorage.Models;
 
@@ -19,27 +17,50 @@ public class Trainer
         SecretId = secretId;
     }
 
-    public List<SqliteParameter> GetSqliteParameters()
+    public int InsertIntoDatabase()
     {
-        return new List<SqliteParameter>
-        {
-            new SqliteParameter("Name", SqliteType.Text) { Value = Name, Size = 12 },
-            new SqliteParameter("Gender", SqliteType.Integer) { Value = (int)Gender },
-            new SqliteParameter("PublicId", SqliteType.Integer) { Value = PublicId },
-            new SqliteParameter("SecretId", SqliteType.Integer) { Value = SecretId }
-        };
+        List<SqliteParameterPair> parameterPairs =
+        [
+            new SqliteParameterPair("name", SqliteType.Text, Name),
+            new SqliteParameterPair("gender", SqliteType.Integer, (int)Gender),
+            new SqliteParameterPair("public_id", SqliteType.Integer, PublicId),
+            new SqliteParameterPair("secret_id", SqliteType.Integer, SecretId)
+        ];
+
+        return DbInterface.InsertIntoDatabase("original_trainer", parameterPairs, "storage");
     }
 
-    public int GetDatabasePrimaryKey()
+    public int GetDatabasePrimaryKeyIfExists()
     {
-        object primaryKey = DbInterface.RetrieveScalar("SELECT id FROM original_trainer WHERE PublicId = @PublicId AND SecretId = @SecretId", "storage",GetSqliteParameters());
+        List<SqliteParameterPair> parameterPairs =
+        [
+            new SqliteParameterPair("name", SqliteType.Text, Name),
+            new SqliteParameterPair("gender", SqliteType.Integer, (int)Gender),
+            new SqliteParameterPair("public_id", SqliteType.Integer, PublicId),
+            new SqliteParameterPair("secret_id", SqliteType.Integer, SecretId)
+        ];
+
+        object primaryKey = DbInterface.RetrieveScalar("SELECT id FROM original_trainer WHERE public_id = @public_id AND secret_id = @secret_id", "storage", parameterPairs.Select(x => x.SqliteParameter).ToList());
         if (primaryKey == null || primaryKey == DBNull.Value)
         {
-            return (int)DbInterface.RetrieveScalar("INSERT INTO original_trainer (Name, Gender, PublicId, SecretId) VALUES (@Name, @Gender, @PublicId, @SecretId); SELECT last_insert_rowid();", "storage", GetSqliteParameters());
+            return -1;
         }
         else
         {
             return Convert.ToInt32(primaryKey);
+        }
+    }
+
+    public int GetDatabasePrimaryKey()
+    {
+        int primaryKey = GetDatabasePrimaryKeyIfExists();
+        if (primaryKey < 0)
+        {
+            return (int)InsertIntoDatabase();
+        }
+        else
+        {
+            return primaryKey;
         }
     }
 

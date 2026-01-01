@@ -1,7 +1,4 @@
-using System;
-using System.Reflection;
 using Microsoft.Data.Sqlite;
-using PokemonStorage.DatabaseIO;
 
 namespace PokemonStorage.Models;
 
@@ -137,123 +134,63 @@ public class RibbonSet
         }
     }
 
-    public List<SqliteParameter> GetSqliteParameters()
-    {
-        var parameters = new List<SqliteParameter>();
-        foreach (PropertyInfo prop in typeof(RibbonSet).GetProperties())
-        {
-            parameters.Add(new SqliteParameter(prop.Name, SqliteType.Integer) { Value = prop.GetValue(this) });
-        }
-        return parameters;
-    }
-
     public int InsertIntoDatabase()
     {
-        return (int)DbInterface.RetrieveScalar("""
-        INSERT INTO ribbon (
-            sinnoh_champ,
-            ability,
-            great_ability,
-            double_ability,
-            multi_ability,
-            pair_ability,
-            world_ability,
-            alert,
-            shock,
-            downcast,
-            careless,
-            relax,
-            snooze,
-            smile,
-            gorgeous,
-            royal,
-            gorgeous_royal,
-            footprint,
-            record,
-            history,
-            legend,
-            red,
-            green,
-            blue,
-            festival,
-            carnival,
-            classic,
-            premier,
-            sinnoh_cool,
-            sinnoh_beauty,
-            sinnoh_cute,
-            sinnoh_smart,
-            sinnoh_tough,
-            heonn_cool,
-            heonn_beauty,
-            heonn_cute,
-            heonn_smart,
-            heonn_tough,
-            champion,
-            winning,
-            victory,
-            artist,
-            effort,
-            marine,
-            land,
-            sky,
-            country,
-            national,
-            earth,
-            world
-        ) VALUES (
-            @SinnohChamp
-            @Ability
-            @GreatAbility
-            @DoubleAbility
-            @MultiAbility
-            @PairAbility
-            @WorldAbility
-            @Alert
-            @Shock
-            @Downcast
-            @Careless
-            @Relax
-            @Snooze
-            @Smile
-            @Gorgeous
-            @Royal
-            @GorgeousRoyal
-            @Footprint
-            @Record
-            @History
-            @Legend
-            @Red
-            @Green
-            @Blue
-            @Festival
-            @Carnival
-            @Classic
-            @Premier
-            @SinnohCool
-            @SinnohBeauty
-            @SinnohCute
-            @SinnohSmart
-            @SinnohTough
-            @HeonnCool
-            @HeonnBeauty
-            @HeonnCute
-            @HeonnSmart
-            @HeonnTough
-            @Champion
-            @Winning
-            @Victory
-            @Artist
-            @Effort
-            @Marine
-            @Land
-            @Sky
-            @Country
-            @National
-            @Earth
-            @World
-        ); SELECT last_insert_rowid();
-        """, "storage", GetSqliteParameters());
+        List<SqliteParameterPair> parameterPairs =
+        [
+            new SqliteParameterPair("sinnoh_champ", SqliteType.Integer, SinnohChamp),
+            new SqliteParameterPair("ability", SqliteType.Integer, Ability),
+            new SqliteParameterPair("great_ability", SqliteType.Integer, GreatAbility),
+            new SqliteParameterPair("double_ability", SqliteType.Integer, DoubleAbility),
+            new SqliteParameterPair("multi_ability", SqliteType.Integer, MultiAbility),
+            new SqliteParameterPair("pair_ability", SqliteType.Integer, PairAbility),
+            new SqliteParameterPair("world_ability", SqliteType.Integer, WorldAbility),
+            new SqliteParameterPair("alert", SqliteType.Integer, Alert),
+            new SqliteParameterPair("shock", SqliteType.Integer, Shock),
+            new SqliteParameterPair("downcast", SqliteType.Integer, Downcast),
+            new SqliteParameterPair("careless", SqliteType.Integer, Careless),
+            new SqliteParameterPair("relax", SqliteType.Integer, Relax),
+            new SqliteParameterPair("snooze", SqliteType.Integer, Snooze),
+            new SqliteParameterPair("smile", SqliteType.Integer, Smile),
+            new SqliteParameterPair("gorgeous", SqliteType.Integer, Gorgeous),
+            new SqliteParameterPair("royal", SqliteType.Integer, Royal),
+            new SqliteParameterPair("gorgeous_royal", SqliteType.Integer, GorgeousRoyal),
+            new SqliteParameterPair("footprint", SqliteType.Integer, Footprint),
+            new SqliteParameterPair("record", SqliteType.Integer, Record),
+            new SqliteParameterPair("history", SqliteType.Integer, History),
+            new SqliteParameterPair("legend", SqliteType.Integer, Legend),
+            new SqliteParameterPair("red", SqliteType.Integer, Red),
+            new SqliteParameterPair("green", SqliteType.Integer, Green),
+            new SqliteParameterPair("blue", SqliteType.Integer, Blue),
+            new SqliteParameterPair("festival", SqliteType.Integer, Festival),
+            new SqliteParameterPair("carnival", SqliteType.Integer, Carnival),
+            new SqliteParameterPair("classic", SqliteType.Integer, Classic),
+            new SqliteParameterPair("premier", SqliteType.Integer, Premier),
+            new SqliteParameterPair("sinnoh_cool", SqliteType.Integer, SinnohCool),
+            new SqliteParameterPair("sinnoh_beauty", SqliteType.Integer, SinnohBeauty),
+            new SqliteParameterPair("sinnoh_cute", SqliteType.Integer, SinnohCute),
+            new SqliteParameterPair("sinnoh_smart", SqliteType.Integer, SinnohSmart),
+            new SqliteParameterPair("sinnoh_tough", SqliteType.Integer, SinnohTough),
+            new SqliteParameterPair("heonn_cool", SqliteType.Integer, HeonnCool),
+            new SqliteParameterPair("heonn_beauty", SqliteType.Integer, HeonnBeauty),
+            new SqliteParameterPair("heonn_cute", SqliteType.Integer, HeonnCute),
+            new SqliteParameterPair("heonn_smart", SqliteType.Integer, HeonnSmart),
+            new SqliteParameterPair("heonn_tough", SqliteType.Integer, HeonnTough),
+            new SqliteParameterPair("champion", SqliteType.Integer, Champion),
+            new SqliteParameterPair("winning", SqliteType.Integer, Winning),
+            new SqliteParameterPair("victory", SqliteType.Integer, Victory),
+            new SqliteParameterPair("artist", SqliteType.Integer, Artist),
+            new SqliteParameterPair("effort", SqliteType.Integer, Effort),
+            new SqliteParameterPair("marine", SqliteType.Integer, Marine),
+            new SqliteParameterPair("land", SqliteType.Integer, Land),
+            new SqliteParameterPair("sky", SqliteType.Integer, Sky),
+            new SqliteParameterPair("country", SqliteType.Integer, Country),
+            new SqliteParameterPair("national", SqliteType.Integer, National),
+            new SqliteParameterPair("earth", SqliteType.Integer, Earth),
+            new SqliteParameterPair("world", SqliteType.Integer, World)
+        ];
+
+        return DbInterface.InsertIntoDatabase("ribbon", parameterPairs, "storage");
     }
 
     public override string ToString()

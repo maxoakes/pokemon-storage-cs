@@ -1,4 +1,3 @@
-using System;
 using Microsoft.Data.Sqlite;
 
 namespace PokemonStorage.Models;
@@ -45,22 +44,24 @@ public class Origin
         MetDateTime = null;
     }
 
-    public List<SqliteParameter> GetSqliteParameters()
+    public int InsertIntoDatabase()
     {
-        return new List<SqliteParameter>
-        {
-            new SqliteParameter("FatefulEncounter", SqliteType.Integer) { Value = FatefulEncounter ? 1 : 0 },
-            new SqliteParameter("EncounterTypeId", SqliteType.Integer) { Value = EncounterTypeId },
-            new SqliteParameter("PokeballId", SqliteType.Integer) { Value = PokeballId },
-            new SqliteParameter("GameVersionId", SqliteType.Integer) { Value = GameVersionId },
-            new SqliteParameter("EggReceiveDate", SqliteType.Text) { Value = EggReceiveDate?.ToString("yyyy-MM-dd HH:mm:ss") ?? "" },
-            new SqliteParameter("EggHatchLocationId", SqliteType.Integer) { Value = EggHatchLocationId },
-            new SqliteParameter("EggHatchLocationPlatinumId", SqliteType.Integer) { Value = EggHatchLocationPlatinumId },
-            new SqliteParameter("MetLevel", SqliteType.Integer) { Value = MetLevel },
-            new SqliteParameter("MetDateTime", SqliteType.Text) { Value = MetDateTime?.ToString("yyyy-MM-dd HH:mm:ss") ?? "" },
-            new SqliteParameter("MetLocationId", SqliteType.Integer) { Value = MetLocationId },
-            new SqliteParameter("MetLocationPlatinumId", SqliteType.Integer) { Value = MetLocationPlatinumId }
-        };
+        List<SqliteParameterPair> parameterPairs =
+        [
+            new SqliteParameterPair("fateful_encounter_id", SqliteType.Integer, FatefulEncounter ? 1 : 0),
+            new SqliteParameterPair("encounter_type_id", SqliteType.Integer, EncounterTypeId),
+            new SqliteParameterPair("catch_ball_item_id", SqliteType.Integer, PokeballId),
+            new SqliteParameterPair("origin_version_id", SqliteType.Integer, GameVersionId),
+            new SqliteParameterPair("egg_receive_datetime", SqliteType.Text, EggReceiveDate?.ToString("yyyy-MM-dd HH:mm:ss")),
+            new SqliteParameterPair("egg_hatch_location_id", SqliteType.Integer, EggHatchLocationId),
+            new SqliteParameterPair("egg_hatch_location_platinum_id", SqliteType.Integer, EggHatchLocationPlatinumId),
+            new SqliteParameterPair("met_level", SqliteType.Integer, MetLevel),
+            new SqliteParameterPair("met_datetime", SqliteType.Text, MetDateTime?.ToString("yyyy-MM-dd HH:mm:ss")),
+            new SqliteParameterPair("met_location_id", SqliteType.Integer, MetLocationId),
+            new SqliteParameterPair("met_location_platinum_id", SqliteType.Integer, MetLocationPlatinumId)
+        ];
+
+        return DbInterface.InsertIntoDatabase("origin", parameterPairs, "storage");
     }
 
     public override string ToString()

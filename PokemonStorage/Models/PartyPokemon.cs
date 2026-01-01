@@ -1,9 +1,5 @@
-using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Logging;
-using PokemonStorage.DatabaseIO;
 
 namespace PokemonStorage.Models;
 
@@ -14,8 +10,7 @@ public class PartyPokemon
     public int LanguageId { get; set; }
 
     // Overview
-    public ushort SpeciesId { get; set; }
-    public string SpeciesIdentifier { get { return Lookup.GetIdentifierById("pokemon_species", SpeciesId); } }
+    public PokemonIdentity PokemonIdentity { get; set; }
     public ushort AlternateFormId { get; set; }
     public uint PersonalityValue { get; set; }
     public Gender Gender { get; set; }
@@ -32,7 +27,7 @@ public class PartyPokemon
     public string Nickname { get; set; }
 
     // Status
-    public byte Level { get { return Lookup.GetLevelFromExperience(SpeciesId, ExperiencePoints); } }
+    public byte Level { get { return Lookup.GetLevelFromExperience(PokemonIdentity.SpeciesId, ExperiencePoints); } }
     public uint ExperiencePoints { get; set; }
     public ushort HeldItemId { get; set; }
     public string HeldItemIdentifier { get { return Lookup.GetIdentifierById("items", HeldItemId); } }
@@ -77,7 +72,7 @@ public class PartyPokemon
 
         // Overview
         OriginalTrainer = new Trainer("???", 0, 0, 0);
-        SpeciesId = 0;
+        PokemonIdentity = new PokemonIdentity();
         AlternateFormId = 0;
         PersonalityValue = 0;
         IsEgg = false;
@@ -140,10 +135,9 @@ public class PartyPokemon
         Nickname = nickname;
 
         OriginalTrainer = new Trainer(trainerName, 0, Utility.GetUnsignedNumber<ushort>(content, 0x0C, 2, true), 0);
-        PokemonIdentity pokemonIdentity = Lookup.GetPokemonByFormId(Lookup.GetPokemonFormIdByGameIndex(1, Utility.GetByte(content, 0x00)), LanguageId); 
-        SpeciesId = pokemonIdentity.SpeciesId;
+        PokemonIdentity = Lookup.GetPokemonByFormId(Lookup.GetPokemonFormIdByGameIndex(1, Utility.GetByte(content, 0x00)), LanguageId); 
         ExperiencePoints = Utility.GetUnsignedNumber<uint>(content, 0x0E, 3, true);
-        Friendship = Lookup.GetBaseHappinessBySpeciesId(SpeciesId);
+        Friendship = Lookup.GetBaseHappinessBySpeciesId(PokemonIdentity.SpeciesId);
 
         // Get Moves
         (int moveIndexOffset, int movePpOffset)[] moveDataOffsets = [
@@ -213,8 +207,7 @@ public class PartyPokemon
         LanguageId = Lookup.GetLanguageIdByIdentifier(language);
 
         Nickname = nickname;
-        PokemonIdentity pokemonIdentity = Lookup.GetPokemonByFormId(Lookup.GetPokemonFormIdByGameIndex(2, Utility.GetByte(content, 0x00)), LanguageId); 
-        SpeciesId = pokemonIdentity.SpeciesId;
+        PokemonIdentity = Lookup.GetPokemonByFormId(Lookup.GetPokemonFormIdByGameIndex(2, Utility.GetByte(content, 0x00)), LanguageId);
         HeldItemId = Lookup.GetItemIdByGameIndex(2, Utility.GetUnsignedNumber<byte>(content, 0x01, 1, true));
         OriginalTrainer = new Trainer(trainerName, 0, Utility.GetUnsignedNumber<ushort>(content, 0x06, 2, true), 0);
         ExperiencePoints = Utility.GetUnsignedNumber<uint>(content, 0x08, 3, true);
@@ -377,8 +370,7 @@ public class PartyPokemon
             switch (c)
             {
                 case 'G':
-                    PokemonIdentity pokemonIdentity = Lookup.GetPokemonByFormId(Lookup.GetPokemonFormIdByGameIndex(3, Utility.GetUnsignedNumber<ushort>(substructureBytes, 0x00, 2)), LanguageId); 
-                    SpeciesId = pokemonIdentity.SpeciesId;
+                    PokemonIdentity = Lookup.GetPokemonByFormId(Lookup.GetPokemonFormIdByGameIndex(3, Utility.GetUnsignedNumber<ushort>(substructureBytes, 0x00, 2)), LanguageId); 
                     HeldItemId = Lookup.GetItemIdByGameIndex(3, Utility.GetUnsignedNumber<ushort>(substructureBytes, 0x02, 2));
                     ExperiencePoints = Utility.GetUnsignedNumber<uint>(substructureBytes, 0x04, 4);
 
@@ -494,7 +486,7 @@ public class PartyPokemon
         }
 
         // Calculations
-        Program.Logger.LogInformation($"Done reading: {SpeciesIdentifier}");
+        Program.Logger.LogInformation($"Done reading: {PokemonIdentity.SpeciesIdentifier}");
         Gender = GetGenderByPersonalityValue();
         AbilityId = GetAbilityFromSlotId(abilitySlotId);
         HasNickname = NicknameExists();
@@ -583,7 +575,6 @@ public class PartyPokemon
             {
                 case 'A':
                     PokemonIdentity pokemonIdentity = Lookup.GetPokemonByFormId(Lookup.GetPokemonFormIdByGameIndex(4, Utility.GetUnsignedNumber<ushort>(blockBytes, 0x00, 2)), LanguageId); 
-                    SpeciesId = pokemonIdentity.SpeciesId;
                     HeldItemId = Lookup.GetItemIdByGameIndex(4, Utility.GetUnsignedNumber<ushort>(blockBytes, 0x02, 2));
                     OriginalTrainer.PublicId = Utility.GetUnsignedNumber<ushort>(blockBytes, 0x04, 2);
                     OriginalTrainer.SecretId = Utility.GetUnsignedNumber<ushort>(blockBytes, 0x06, 2);
@@ -715,7 +706,7 @@ public class PartyPokemon
         }
 
         // Calculations        
-        Program.Logger.LogInformation($"Done reading: {SpeciesIdentifier}");
+        Program.Logger.LogInformation($"Done reading: {PokemonIdentity.SpeciesIdentifier}");
         AssignStatValues();
     }
     #endregion
@@ -725,7 +716,7 @@ public class PartyPokemon
     #region Getters
     private StatHextuple GetCalculatedStats(int generation)
     {
-        StatHextuple baseStats = Lookup.GetBaseStats(SpeciesId);
+        StatHextuple baseStats = Lookup.GetBaseStats(PokemonIdentity.SpeciesId);
 
         if (generation > 2)
         {
@@ -799,8 +790,6 @@ public class PartyPokemon
                 Math.Floor(((baseStats.Speed + Speed.Iv) * 2 + Math.Floor(Math.Ceiling(Math.Sqrt(Speed.Ev)) / 4)) * Level / 100) + 5
             );
         }
-
-
     }
 
     private bool GetShinyByIv()
@@ -827,7 +816,7 @@ public class PartyPokemon
 
     private ushort GetAbilityFromSlotId(int slotId)
     {
-        var speciesAbilities = Lookup.GetAbilitiesByPokemonId(Lookup.GetPokemonBySpeciesId(SpeciesId, LanguageId).PokemonId);
+        var speciesAbilities = Lookup.GetAbilitiesByPokemonId(PokemonIdentity.PokemonId);
         Program.Logger.LogInformation($"{speciesAbilities.First} {speciesAbilities.Second} {speciesAbilities.Hidden} -> {slotId}");
         return slotId == 0 ? speciesAbilities.First : speciesAbilities.Second;
     }
@@ -841,7 +830,7 @@ public class PartyPokemon
 
     private Gender GetGenderByAttackIv()
     {
-        int ratio = Lookup.GetGenderRateBySpeciesId(SpeciesId);
+        int ratio = Lookup.GetGenderRateBySpeciesId(PokemonIdentity.SpeciesId);
         switch (ratio)
         {
             case 0:
@@ -858,7 +847,7 @@ public class PartyPokemon
     private Gender GetGenderByPersonalityValue()
     {
         int pGender = (int)(PersonalityValue % 256);
-        int threshold = Lookup.GetGenderThreshold(SpeciesId);
+        int threshold = Lookup.GetGenderThreshold(PokemonIdentity.SpeciesId);
         if (threshold == 0)
             return Gender.MALE;
         else if (threshold == 254)
@@ -876,8 +865,7 @@ public class PartyPokemon
 
     private bool NicknameExists()
     {
-        string speciesName = Lookup.GetPokemonBySpeciesId(SpeciesId, LanguageId).SpeciesName;
-        return !string.Equals(speciesName.ToLower(), Nickname.ToLower());
+        return !string.Equals(PokemonIdentity.SpeciesName.ToLower(), Nickname.ToLower());
     }
 
     #endregion
@@ -971,64 +959,71 @@ public class PartyPokemon
     }
     #endregion
 
+    #region Print
+
+    public string GetSummaryString()
+    {
+        return $"{PokemonIdentity.SpeciesName}: Lv.{Level} ({Gender}) ({Nickname}) Nature: {Nature.Identifier}, Item: {HeldItemIdentifier}";
+    }
+
+    #endregion
+    
     #region Database
 
     public int InsertIntoDatabase()
     {
-        List<SqliteParameter> parameters = [
-            new SqliteParameter("LanguageId", SqliteType.Integer) { Value = LanguageId },
-            new SqliteParameter("SpeciesId", SqliteType.Integer) { Value = SpeciesId },
-            new SqliteParameter("FormId", SqliteType.Integer) { Value = AlternateFormId },
-            new SqliteParameter("GenerationId", SqliteType.Integer) { Value = Generation },
-            new SqliteParameter("PersonalityValue", SqliteType.Integer) { Value = PersonalityValue },
-            new SqliteParameter("Gender", SqliteType.Integer) { Value = (int)Gender },
-            new SqliteParameter("IsEgg", SqliteType.Integer) { Value = IsEgg ? 1 : 0 },
-            new SqliteParameter("ExperiencePoints", SqliteType.Integer) { Value = ExperiencePoints },
-            new SqliteParameter("Nickname", SqliteType.Text) { Value = Nickname },
-            new SqliteParameter("HasNickname", SqliteType.Integer) { Value = HasNickname ? 1 : 0 },
-            new SqliteParameter("HeldItemId", SqliteType.Integer) { Value = HeldItemId },
-            new SqliteParameter("AbilityId", SqliteType.Integer) { Value = AbilityId },
-            new SqliteParameter("Friendship", SqliteType.Integer) { Value = Friendship },
-            new SqliteParameter("WalkingMood", SqliteType.Integer) { Value = WalkingMood },
-            new SqliteParameter("ShinyLeaves", SqliteType.Integer) { Value = ShinyLeaves },
-            new SqliteParameter("PokerusStrain", SqliteType.Integer) { Value = PokerusStrain },
-            new SqliteParameter("PokerusDaysRemaining", SqliteType.Integer) { Value = PokerusDaysRemaining },
-            new SqliteParameter("HP_Iv", SqliteType.Integer) { Value = HP.Iv },
-            new SqliteParameter("HP_Ev", SqliteType.Integer) { Value = HP.Ev },
-            new SqliteParameter("Attack_Iv", SqliteType.Integer) { Value = Attack.Iv },
-            new SqliteParameter("Attack_Ev", SqliteType.Integer) { Value = Attack.Ev },
-            new SqliteParameter("Defense_Iv", SqliteType.Integer) { Value = Defense.Iv },
-            new SqliteParameter("Defense_Ev", SqliteType.Integer) { Value = Defense.Ev },
-            new SqliteParameter("Speed_Iv", SqliteType.Integer) { Value = Speed.Iv },
-            new SqliteParameter("Speed_Ev", SqliteType.Integer) { Value = Speed.Ev },
-            new SqliteParameter("SpecialAttack_Iv", SqliteType.Integer) { Value = SpecialAttack.Iv },
-            new SqliteParameter("SpecialAttack_Ev", SqliteType.Integer) { Value = SpecialAttack.Ev },
-            new SqliteParameter("SpecialDefense_Iv", SqliteType.Integer) { Value = SpecialDefense.Iv },
-            new SqliteParameter("SpecialDefense_Ev", SqliteType.Integer) { Value = SpecialDefense.Ev },
-            new SqliteParameter("Coolness", SqliteType.Integer) { Value = Coolness },
-            new SqliteParameter("Beauty", SqliteType.Integer) { Value = Beauty },
-            new SqliteParameter("Cuteness", SqliteType.Integer) { Value = Cuteness },
-            new SqliteParameter("Smartness", SqliteType.Integer) { Value = Smartness },
-            new SqliteParameter("Toughness", SqliteType.Integer) { Value = Toughness },
-            new SqliteParameter("Sheen", SqliteType.Integer) { Value = Sheen },
-            new SqliteParameter("Obedience", SqliteType.Integer) { Value = Obedience ? 1 : 0 },
-            new SqliteParameter("Markings", SqliteType.Integer) { Value = Markings.Bits },
-            new SqliteParameter("Gen3MiscData", SqliteType.Integer) { Value = Gen3Misc },
+        List<SqliteParameterPair> parameters = 
+        [
+            new SqliteParameterPair("language_id", SqliteType.Integer, LanguageId),
+            new SqliteParameterPair("generation_id", SqliteType.Integer, Generation),
+            new SqliteParameterPair("species_id", SqliteType.Integer, PokemonIdentity.SpeciesId),
+            new SqliteParameterPair("form_id", SqliteType.Integer, AlternateFormId),
+            new SqliteParameterPair("pv", SqliteType.Integer, PersonalityValue),
+            new SqliteParameterPair("gender", SqliteType.Integer, (int)Gender),
+            new SqliteParameterPair("is_egg", SqliteType.Integer, IsEgg ? 1 : 0),
+            new SqliteParameterPair("ability_id", SqliteType.Integer, AbilityId),
+            new SqliteParameterPair("nickname", SqliteType.Text, Nickname),
+            new SqliteParameterPair("has_nickname", SqliteType.Integer, HasNickname ? 1 : 0),
+            new SqliteParameterPair("experience", SqliteType.Integer, ExperiencePoints),
+            new SqliteParameterPair("held_item_id", SqliteType.Integer, HeldItemId),
+            new SqliteParameterPair("friendship", SqliteType.Integer, Friendship),
+            new SqliteParameterPair("walking_mood", SqliteType.Integer, WalkingMood),
+            new SqliteParameterPair("pokerus_strain", SqliteType.Integer, PokerusStrain),
+            new SqliteParameterPair("pokerus_days_remaining", SqliteType.Integer, PokerusDaysRemaining),
+            new SqliteParameterPair("hp_iv", SqliteType.Integer, HP.Iv),
+            new SqliteParameterPair("hp_ev", SqliteType.Integer, HP.Ev),
+            new SqliteParameterPair("att_iv", SqliteType.Integer, Attack.Iv),
+            new SqliteParameterPair("att_ev", SqliteType.Integer, Attack.Ev),
+            new SqliteParameterPair("def_iv", SqliteType.Integer, Defense.Iv),
+            new SqliteParameterPair("def_ev", SqliteType.Integer, Defense.Ev),
+            new SqliteParameterPair("spe_iv", SqliteType.Integer, Speed.Iv),
+            new SqliteParameterPair("spe_ev", SqliteType.Integer, Speed.Ev),
+            new SqliteParameterPair("spa_iv", SqliteType.Integer, SpecialAttack.Iv),
+            new SqliteParameterPair("spa_ev", SqliteType.Integer, SpecialAttack.Ev),
+            new SqliteParameterPair("spd_iv", SqliteType.Integer, SpecialDefense.Iv),
+            new SqliteParameterPair("spd_ev", SqliteType.Integer, SpecialDefense.Ev),
+            new SqliteParameterPair("coolness", SqliteType.Integer, Coolness),
+            new SqliteParameterPair("beauty", SqliteType.Integer, Beauty),
+            new SqliteParameterPair("cuteness", SqliteType.Integer, Cuteness),
+            new SqliteParameterPair("smartness", SqliteType.Integer, Smartness),
+            new SqliteParameterPair("toughness", SqliteType.Integer, Toughness),
+            new SqliteParameterPair("sheen", SqliteType.Integer, Sheen),
+            new SqliteParameterPair("obedience", SqliteType.Integer, Obedience ? 1 : 0),
+            new SqliteParameterPair("markings_mask", SqliteType.Integer, Markings.Bits),
+            new SqliteParameterPair("shiny_leaves", SqliteType.Integer, ShinyLeaves),
+            new SqliteParameterPair("gen3_misc", SqliteType.Integer, Gen3Misc),
+            new SqliteParameterPair("fk_ribbon", SqliteType.Integer, Ribbons.InsertIntoDatabase()),
+            new SqliteParameterPair("fk_origin", SqliteType.Integer, Origin.InsertIntoDatabase()),
+            new SqliteParameterPair("fk_original_trainer", SqliteType.Integer, OriginalTrainer.GetDatabasePrimaryKey()),          
         ];
 
-        Int64 formId = (Int64)DbInterface.RetrieveScalar(""" 
-            SELECT 
-                pf.id
-            FROM 
-                pokemon p  
-                LEFT JOIN pokemon_forms pf ON p.id=pf.pokemon_id 
-                LEFT JOIN pokemon_species ps ON p.species_id=ps.id
-            WHERE ps.id = @Id
-            ORDER BY ps."order", pf."order" 
-        """, "veekun", parameters);
+        int primaryKey = DbInterface.InsertIntoDatabase("pokemon", parameters, "storage");
 
-        PokemonIdentity pokemon = GetPokemonByFormId((ushort)formId, languageId);
-        return pokemon;
+        foreach (var move in Moves)
+        {
+            move.Value.InsertIntoDatabase(primaryKey, move.Key);
+        }
+        return primaryKey;
     }
 
     #endregion
