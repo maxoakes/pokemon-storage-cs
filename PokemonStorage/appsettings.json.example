@@ -1,11 +1,13 @@
 {
   "Settings": {
     "Language": "en",
+    "VersionName": "Blue",
+    "SaveFilePath": "/path/to/.sav/file",
     "Mode": "read",
-    "ReadOutput": "file",
-    "VersionName": "Platinum",
-    "SaveFilePath": "/path/to/save/file.sav"
-    "FileOutputPath": "/path/to/output"
+    "OutputToConsole": true,
+    "OutputToFile": true,
+    "OutputToDatabase": true,
+    "OutputFilePath": "/path/to/pokemon-storage-cs/output"
   },
   "ConnectionStrings": {
     "Database": "Server=___;Uid=___;Pwd=___;Database=pokemon;"

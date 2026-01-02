@@ -1,3 +1,4 @@
+using System.Data;
 using Microsoft.Data.Sqlite;
 
 namespace PokemonStorage.Models;
@@ -56,11 +57,32 @@ public class Trainer
         int primaryKey = GetDatabasePrimaryKeyIfExists();
         if (primaryKey < 0)
         {
-            return (int)InsertIntoDatabase();
+            return InsertIntoDatabase();
         }
         else
         {
             return primaryKey;
+        }
+    }
+
+    public void LoadFromDatabase(int primaryKey)
+    {
+        List<SqliteParameter> parameters = [
+            new SqliteParameter("Id", SqliteType.Integer) { Value = primaryKey }
+        ];
+
+        DataTable dataTable = DbInterface.RetrieveTable($"SELECT * FROM original_trainer WHERE id = @Id", "storage", parameters);
+        if (dataTable.Rows.Count == 0)
+        {
+            throw new Exception($"No Original Trainer found with primary key {primaryKey}");
+        }
+
+        foreach (DataRow row in dataTable.Rows)
+        {
+            Name = row.Field<string>("name") ?? "???";
+            Gender = (Gender)row.Field<Int64>("gender");
+            PublicId = (ushort)row.Field<Int64>("public_id");
+            SecretId = (ushort)row.Field<Int64>("secret_id");
         }
     }
 

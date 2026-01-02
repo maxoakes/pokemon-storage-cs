@@ -3,16 +3,60 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using PokemonStorage.Models;
 using System.Configuration;
-using System.Text.Json;
 
 namespace PokemonStorage;
+
+public enum Mode
+{
+    NONE = 0,
+    READ = 1,
+    WRITE = 2,
+}
+
+public struct Settings()
+{
+    public string Language { get; set; } = "";
+    public string VersionName { get; set; } = "";
+    public string SaveFilePath { get; set; } = "";
+    public Mode Mode { get; set; } = Mode.NONE;
+    public bool OutputToConsole { get; set; } = false;
+    public bool OutputToFile { get; set; } = false;
+    public bool OutputToDatabase { get; set; } = false;
+    public string OutputFilePath { get; set; } = "";
+
+    public Settings(IConfiguration config) : this()
+    {
+        Language = config.GetValue<string>("Settings:Language") ?? "";
+        VersionName = config.GetValue<string>("Settings:VersionName") ?? "";
+        SaveFilePath = config.GetValue<string>("Settings:SaveFilePath") ?? "";
+        Mode = (config.GetValue<string>("Settings:Mode") ?? "").ToUpper() switch
+        {
+            "READ" => Mode.READ,
+            "WRITE" => Mode.WRITE,
+            _ => Mode.NONE,
+        };
+        OutputToConsole = config.GetValue<bool>("Settings:OutputToConsole");
+        OutputToFile = config.GetValue<bool>("Settings:OutputToFile");
+        OutputToDatabase = config.GetValue<bool>("Settings:OutputToDatabase");
+        OutputFilePath = config.GetValue<string>("Settings:OutputFilePath") ?? "";
+    }
+
+    public bool AreSettingsValid()
+    {
+        return !string.IsNullOrWhiteSpace(Language) &&
+               !string.IsNullOrWhiteSpace(VersionName) &&
+               !string.IsNullOrWhiteSpace(SaveFilePath) &&
+               Mode != Mode.NONE;
+    }
+}
 
 public class Program
 {
     public static ILogger? Logger;
     public static Dictionary<string, string> ConnectionStrings = [];
-    public static string SaveFilePath = "";
-    public static Trainer ManagerTrainer = new("OAK", (int)Gender.MALE, 1, 0);
+    private static Settings Settings = new();
+    private static string OutputFileName = "";
+    private static GameState? GameState;
 
     public static void Main()
     {
@@ -37,25 +81,17 @@ public class Program
         ConnectionStrings["veekun"] = config.GetConnectionString("veekun") ?? "";
         ConnectionStrings["supplement"] = config.GetConnectionString("supplement") ?? "";
         ConnectionStrings["storage"] = config.GetConnectionString("storage") ?? "";
-        SaveFilePath = config.GetValue<string>("Settings:SaveFilePath") ?? "";
-        string language = config.GetValue<string>("Settings:Language") ?? "";
-        string mode = config.GetValue<string>("Settings:Mode") ?? "";
-        string readOutput = config.GetValue<string>("Settings:ReadOutput") ?? "";
-        string versionName = config.GetValue<string>("Settings:VersionName") ?? "";
-        string fileOutputPath = config.GetValue<string>("Settings:FileOutputPath") ?? "";
+        Settings = new Settings(config);
 
-        if (string.IsNullOrWhiteSpace(language) || string.IsNullOrWhiteSpace(mode) || string.IsNullOrWhiteSpace(versionName) || string.IsNullOrWhiteSpace(SaveFilePath))
+        if (!Settings.AreSettingsValid())
         {
             throw new ConfigurationErrorsException("appsettings.json is not configured correctly");
         }
 
-        Console.WriteLine($"Settings: ({language})({versionName}) {Utility.ProperCapitalizeString(mode)} from [{SaveFilePath}]");
-        Game game = Lookup.GetGameByName(versionName);
-
         byte[] originalSaveData;
         try
         {
-            originalSaveData = File.ReadAllBytes(SaveFilePath);
+            originalSaveData = File.ReadAllBytes(Settings.SaveFilePath);
         }
         catch (Exception ex)
         {
@@ -63,91 +99,71 @@ public class Program
             return;
         }
 
-        Console.WriteLine($"Loaded {game} with {originalSaveData.Length} bytes.");
-        GameState gameState = new(originalSaveData, game, language);
+        GameState = new(originalSaveData, Lookup.GetGameByName(Settings.VersionName), Settings.Language);
+        GameState.ParseOriginalTrainer();
+        Console.WriteLine($"Loaded {GameState.Game} with {originalSaveData.Length} bytes as trainer {GameState.Trainer}");
+        OutputFileName = $"{Settings.OutputFilePath}/{GameState.Game.GameName}.{DateTime.Now:s}.json";
 
-        if (readOutput.Equals("file", StringComparison.CurrentCultureIgnoreCase))
+        switch (Settings.Mode)
         {
-            var pokemonStorageDictionary = new Dictionary<string, Dictionary<string, PartyPokemon>>();
-            foreach ((int index, PartyPokemon pokemon) in gameState.Party)
-            {
-                if (!pokemonStorageDictionary.ContainsKey("Party"))
-                    pokemonStorageDictionary["Party"] = new Dictionary<string, PartyPokemon>();
+            case Mode.READ:
+                GameState.ParsePartyPokemon();
+                Console.WriteLine($"Party");
+                if (Settings.OutputToDatabase) ReviewPokemonDictionaryForDatabaseWrite(GameState.Party);
 
-                pokemonStorageDictionary["Party"].Add(index.ToString(), pokemon);
-            }
-
-            foreach ((string box, Dictionary<int, PartyPokemon> boxDictionary) in gameState.BoxList)
-            {
-                if (!pokemonStorageDictionary.ContainsKey(box))
-                    pokemonStorageDictionary[box] = new Dictionary<string, PartyPokemon>();
-
-                foreach ((int slot, PartyPokemon pokemon) in boxDictionary)
+                GameState.ParseBoxPokemon();
+                foreach ((string box, Dictionary<int, PartyPokemon> boxDictionary) in GameState.BoxList)
                 {
-                    string slotId = slot.ToString();
-                    if (!pokemonStorageDictionary[box].ContainsKey(slotId.ToString()))
-                        pokemonStorageDictionary[box].Add(slotId.ToString(), pokemon);
+                    Console.WriteLine($"Box [{box}]");
+                    if (boxDictionary.Count == 0) continue;
+                    if (Settings.OutputToDatabase) ReviewPokemonDictionaryForDatabaseWrite(boxDictionary);
                 }
-            }
 
-            File.WriteAllText($"{fileOutputPath}/{game.GameName}.{DateTime.Now:s}.json", Program.SerializeObject(pokemonStorageDictionary));
-            
-        }
-        else if (readOutput.Equals("console", StringComparison.CurrentCultureIgnoreCase))
-        {
-            Console.WriteLine("Party:");
-            foreach ((int slot, PartyPokemon pokemon) in gameState.Party)
-            {
-                Console.WriteLine($"{slot}: {SerializeObject(pokemon)}");
-            }
-            foreach ((string box, var boxList) in gameState.BoxList)
-            {
-                Console.WriteLine($"Box {box}");
-                foreach ((int slot, PartyPokemon pokemon) in boxList)
+                if (Settings.OutputToConsole) Console.WriteLine(SerializeObject(GameState.GetEntireStorageObject()));
+                if (Settings.OutputToFile) File.WriteAllText(OutputFileName, SerializeObject(GameState.GetEntireStorageObject()));
+                break;
+            case Mode.WRITE:
+                Console.Write("Enter the primary keys of the database Pokemon to write to first available PC box slots. Separate with commas: ");
+                string? input = Console.ReadLine();
+                if (string.IsNullOrWhiteSpace(input)) break;
+                List<int> primaryKeys = [.. input.Split(',').Select(x => int.Parse(x.Trim()))];
+                List<PartyPokemon> pokemonToStore = [];
+                foreach (int pk in primaryKeys)
                 {
-                    Console.WriteLine($"{slot}: {SerializeObject(pokemon)}");
+                    PartyPokemon pokemon = new(GameState.Game.GenerationId);
+                    pokemon.LoadFromDatabase(pk);
+                    pokemonToStore.Add(pokemon);
+                    Console.WriteLine($"Loaded from database {pk}:\t{pokemon.GetSummaryString()}");
+                    Console.WriteLine(SerializeObject(pokemon));
                 }
-            }
+                break;
+            default:
+                Logger.LogError("No valid mode selected");
+                break;
         }
-        else if (readOutput.Equals("database", StringComparison.CurrentCultureIgnoreCase))
+    }
+
+    private static void ReviewPokemonDictionaryForDatabaseWrite(Dictionary<int, PartyPokemon> pokemonDictionary)
+    {
+        bool checkEachPokemonForDatabaseOutput = false;
+        if (Settings.OutputToDatabase)
         {
-            Console.Write("Choose all of the following slot numbers to add to the database as a comma-separated list: ");
-            Console.WriteLine("Party:");
-            foreach ((int slot, PartyPokemon pokemon) in gameState.Party)
+            Console.Write("Review each Pokemon for database insert? (y/n): ");
+            string input = Console.ReadLine() ?? "n";
+            checkEachPokemonForDatabaseOutput = input.ToLower() == "y";
+        }
+
+        foreach ((int slot, PartyPokemon pokemon) in pokemonDictionary)
+        {
+            if (Settings.OutputToDatabase && checkEachPokemonForDatabaseOutput)
             {
-                Console.WriteLine($"\t{slot}: {pokemon.GetSummaryString()}");
-            }
-            string partyInput = Console.ReadLine() ?? "";
-            var partySlots = partyInput.Split(',').Select(s => s.Trim()).Where(s => int.TryParse(s, out _)).Select(int.Parse).ToHashSet();
-            foreach ((int slot, PartyPokemon pokemon) in gameState.Party)
-            {
-                if (partySlots.Contains(slot))
+                if (pokemon.PokemonIdentity.SpeciesId == 0) continue;
+                Console.Write($"{slot}: {pokemon.GetSummaryString()}");
+                string input = Console.ReadLine() ?? "n";
+                if (input.ToLower() == "y")
                 {
                     int pk = pokemon.InsertIntoDatabase();
                     Console.WriteLine($"Inserted {pokemon.Nickname} as {pk}");
-                }
-            }
-
-            foreach ((string box, var boxList) in gameState.BoxList)
-            {
-                if (boxList.Count == 0) continue;
-
-                Console.Write("Choose all of the following slot numbers to add to the database as a comma-separated list: ");
-                Console.WriteLine($"Box {box}:");
-                foreach ((int slot, PartyPokemon pokemon) in boxList)
-                {
-                    if (pokemon.PokemonIdentity.SpeciesId == 0) continue;
-                    Console.WriteLine($"\t{slot}: {pokemon.GetSummaryString()}");
-                }
-                string boxInput = Console.ReadLine() ?? "";
-                var boxSlots = boxInput.Split(',').Select(s => s.Trim()).Where(s => int.TryParse(s, out _)).Select(int.Parse).ToHashSet();
-                foreach ((int slot, PartyPokemon pokemon) in boxList)
-                {
-                    if (boxSlots.Contains(slot))
-                    {
-                        int pk = pokemon.InsertIntoDatabase();
-                        Console.WriteLine($"Inserted {pokemon.Nickname} as {pk}");
-                    }
                 }
             }
         }

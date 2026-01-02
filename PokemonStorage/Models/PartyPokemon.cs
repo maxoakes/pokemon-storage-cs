@@ -1,3 +1,4 @@
+using System.Data;
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Logging;
 
@@ -6,8 +7,8 @@ namespace PokemonStorage.Models;
 public class PartyPokemon
 {
     // Game
-    public int Generation { get; set; }
-    public int LanguageId { get; set; }
+    public byte Generation { get; set; }
+    public byte LanguageId { get; set; }
 
     // Overview
     public PokemonIdentity PokemonIdentity { get; set; }
@@ -61,10 +62,10 @@ public class PartyPokemon
 
     public byte ShinyLeaves { get; set; }
 
-    public int Gen3Misc { get; set; }
+    public byte Gen3Misc { get; set; }
 
 
-    public PartyPokemon(int generation)
+    public PartyPokemon(byte generation)
     {
         // Game
         Generation = generation;
@@ -98,7 +99,7 @@ public class PartyPokemon
         Moves = [];
         for (int i = 0; i < 4; i++)
         {
-            Moves[i] = new Move(0, 0, 0);
+            Moves[i] = new Move(0, 0, 0, (byte)i);
         }
 
         PokerusDaysRemaining = 0;
@@ -158,6 +159,7 @@ public class PartyPokemon
             Moves[i].TimesIncreased = Convert.ToByte(ppBinary.Substring(0, 2), 2);
             Moves[i].Pp = Convert.ToByte(ppBinary.Substring(2, 6), 2);
             Moves[i].Id = Utility.GetUnsignedNumber<byte>(content, moveIndexOffset, 1, true);
+            Moves[i].SlotId = (byte)i;
         }
 
         // Get Stats
@@ -232,6 +234,7 @@ public class PartyPokemon
             Moves[i].Id = Utility.GetUnsignedNumber<byte>(content, moveIndexOffset, 1, true);
             Moves[i].Pp = Convert.ToByte(ppBinary.Substring(2, 6), 2);
             Moves[i].TimesIncreased = Convert.ToByte(ppBinary.Substring(0, 2), 2);
+            Moves[i].SlotId = (byte)i;
         }
 
         // Get Stats
@@ -388,6 +391,7 @@ public class PartyPokemon
                     for (int j = 0; j < 4; j++)
                     {
                         Moves[j].Id = Utility.GetUnsignedNumber<ushort>(substructureBytes, j * 2, 2);
+                        Moves[j].SlotId = (byte)j;
                     }
 
                     for (int j = 0; j < 4; j++)
@@ -574,7 +578,7 @@ public class PartyPokemon
             switch (c)
             {
                 case 'A':
-                    PokemonIdentity pokemonIdentity = Lookup.GetPokemonByFormId(Lookup.GetPokemonFormIdByGameIndex(4, Utility.GetUnsignedNumber<ushort>(blockBytes, 0x00, 2)), LanguageId); 
+                    PokemonIdentity = Lookup.GetPokemonByFormId(Lookup.GetPokemonFormIdByGameIndex(4, Utility.GetUnsignedNumber<ushort>(blockBytes, 0x00, 2)), LanguageId); 
                     HeldItemId = Lookup.GetItemIdByGameIndex(4, Utility.GetUnsignedNumber<ushort>(blockBytes, 0x02, 2));
                     OriginalTrainer.PublicId = Utility.GetUnsignedNumber<ushort>(blockBytes, 0x04, 2);
                     OriginalTrainer.SecretId = Utility.GetUnsignedNumber<ushort>(blockBytes, 0x06, 2);
@@ -612,6 +616,10 @@ public class PartyPokemon
                     Moves[1].TimesIncreased = Utility.GetUnsignedNumber<byte>(blockBytes, 0xD, 1);
                     Moves[2].TimesIncreased = Utility.GetUnsignedNumber<byte>(blockBytes, 0xE, 1);
                     Moves[3].TimesIncreased = Utility.GetUnsignedNumber<byte>(blockBytes, 0xF, 1);
+                    Moves[0].SlotId = 0;
+                    Moves[1].SlotId = 1;
+                    Moves[2].SlotId = 2;
+                    Moves[3].SlotId = 3;
 
                     // IVs and more
                     uint ivData = Utility.GetUnsignedNumber<uint>(blockBytes, 0x10, 4);
@@ -687,7 +695,7 @@ public class PartyPokemon
 
                     int originData = Utility.GetUnsignedNumber<byte>(blockBytes, 0x1C, 1);
                     string originBinary = Utility.ReverseString(Convert.ToString(originData, 2).PadLeft(8, '0'));
-                    Origin.MetLevel = Convert.ToInt32(Utility.ReverseString(originBinary.Substring(0, 6)), 2);
+                    Origin.MetLevel = Convert.ToByte(Utility.ReverseString(originBinary.Substring(0, 6)), 2);
                     OriginalTrainer.Gender = originBinary[7] == '1' ? Gender.FEMALE : Gender.MALE;
                     Origin.EncounterTypeId = Utility.GetUnsignedNumber<byte>(blockBytes, 0x1D, 1);
 
@@ -714,7 +722,7 @@ public class PartyPokemon
     #endregion
 
     #region Getters
-    private StatHextuple GetCalculatedStats(int generation)
+    private StatHextuple GetCalculatedStatValues(int generation)
     {
         StatHextuple baseStats = Lookup.GetBaseStats(PokemonIdentity.SpeciesId);
 
@@ -882,7 +890,7 @@ public class PartyPokemon
     {
         int calculationGeneration = (generation == 0) ? Generation : generation;
 
-        var calcualtedStats = GetCalculatedStats(calculationGeneration);
+        var calcualtedStats = GetCalculatedStatValues(calculationGeneration);
         HP.Value = calcualtedStats.HP;
         Attack.Value = calcualtedStats.Attack;
         Defense.Value = calcualtedStats.Defense;
@@ -1021,9 +1029,81 @@ public class PartyPokemon
 
         foreach (var move in Moves)
         {
-            move.Value.InsertIntoDatabase(primaryKey, move.Key);
+            move.Value.InsertIntoDatabase(primaryKey);
         }
         return primaryKey;
+    }
+
+    public void LoadFromDatabase(int primaryKey)
+    {
+        List<SqliteParameter> parameters = 
+        [
+            new SqliteParameter("PrimaryKey", SqliteType.Integer) { Value = primaryKey }
+        ];
+
+        DataTable dataTable = DbInterface.RetrieveTable($"SELECT * FROM pokemon WHERE id = @PrimaryKey", "storage", parameters);
+        if (dataTable.Rows.Count == 0)
+        {
+            throw new Exception($"No Pokemon found with primary key {primaryKey}");
+        }
+
+        foreach (DataRow row in dataTable.Rows)
+        {
+            LanguageId = (byte)row.Field<Int64>("language_id");
+            Generation = (byte)row.Field<Int64>("generation_id");
+            PokemonIdentity = Lookup.GetPokemonByFormId((ushort)row.Field<Int64>("species_id"), LanguageId);
+            AlternateFormId = (ushort)row.Field<Int64>("form_id");
+            PersonalityValue = (uint)row.Field<Int64>("pv");
+            Gender = (Gender)row.Field<Int64>("gender");
+            IsEgg = row.Field<Int64>("is_egg") == 1;
+            AbilityId = (ushort)row.Field<Int64>("ability_id");
+            Nickname = row.Field<string>("nickname") ?? PokemonIdentity.SpeciesName;
+            HasNickname = row.Field<Int64>("has_nickname") == 1;
+            ExperiencePoints = (uint)row.Field<Int64>("experience");
+            HeldItemId = (ushort)row.Field<Int64>("held_item_id");
+            Friendship = (byte)row.Field<Int64>("friendship");
+            WalkingMood = (byte)row.Field<Int64>("walking_mood");
+            PokerusStrain = (byte)row.Field<Int64>("pokerus_strain");
+            PokerusDaysRemaining = (byte)row.Field<Int64>("pokerus_days_remaining");
+            HP = new Stat(0, (ushort)row.Field<Int64>("hp_ev"), (ushort)row.Field<Int64>("hp_iv"));
+            Attack = new Stat(0, (ushort)row.Field<Int64>("att_ev"), (ushort)row.Field<Int64>("att_iv"));
+            Defense = new Stat(0, (ushort)row.Field<Int64>("def_ev"), (ushort)row.Field<Int64>("def_iv"));
+            Speed = new Stat(0, (ushort)row.Field<Int64>("spe_ev"), (ushort)row.Field<Int64>("spe_iv"));
+            SpecialAttack = new Stat(0, (ushort)row.Field<Int64>("spa_ev"), (ushort)row.Field<Int64>("spa_iv"));
+            SpecialDefense = new Stat(0, (ushort)row.Field<Int64>("spd_ev"), (ushort)row.Field<Int64>("spd_iv"));
+            Coolness = (byte)row.Field<Int64>("coolness");
+            Beauty = (byte)row.Field<Int64>("beauty");
+            Cuteness = (byte)row.Field<Int64>("cuteness");
+            Smartness = (byte)row.Field<Int64>("smartness");
+            Toughness = (byte)row.Field<Int64>("toughness");
+            Sheen = (byte)row.Field<Int64>("sheen");
+            Obedience = row.Field<Int64>("obedience") == 1;
+            Markings = new(4, 0)
+            {
+                Bits = (byte)row.Field<Int64>("markings_mask")
+            };
+            ShinyLeaves = (byte)row.Field<Int64>("shiny_leaves");
+            Gen3Misc = (byte)row.Field<Int64>("gen3_misc");
+            Ribbons.LoadFromDatabase((int)row.Field<Int64>("fk_ribbon"));
+            Origin.LoadFromDatabase((int)row.Field<Int64>("fk_origin"));
+            OriginalTrainer.LoadFromDatabase((int)row.Field<Int64>("fk_original_trainer"));
+
+            AssignStatValues();
+        };
+
+        List<SqliteParameterPair> moveParameters = 
+        [
+            new SqliteParameterPair("PrimaryKey", SqliteType.Integer, primaryKey)
+        ];
+
+        Int64[] movePrimaryKeys = DbInterface.RetrieveTable($"SELECT id FROM move_set WHERE pokemon_id = @PrimaryKey", "storage", parameters).AsEnumerable().Select(x => x.Field<Int64>("id")).ToArray();
+        Moves.Clear();
+        for (int i = 0; i < movePrimaryKeys.Length; i++)
+        {   
+            Move move = new(0, 0, 0, (byte)i);
+            move.LoadFromDatabase(movePrimaryKeys[i]);
+            Moves.Add(i, move);
+        }
     }
 
     #endregion

@@ -14,9 +14,9 @@ public struct BasicDatabaseEntry
 
 public struct Game
 {
-    public int GenerationId;
-    public int VersionId;
-    public int GameId;
+    public byte GenerationId;
+    public byte VersionId;
+    public byte GameId;
     public string GameName;
 
     public override string ToString()
@@ -111,14 +111,14 @@ public class Lookup
         return value;
     }
 
-        public static int GetLanguageIdByIdentifier(string identifier)
+        public static byte GetLanguageIdByIdentifier(string identifier)
     {
         List<SqliteParameter> parameters = [
             new SqliteParameter("Identifier", SqliteType.Text) { Value = identifier }
         ];
 
         Int64 value = (Int64)DbInterface.RetrieveScalar("SELECT id FROM languages WHERE identifier=@Identifier", "veekun", parameters);
-        return (int)value;
+        return (byte)value;
     }
 
     public static Game GetGameByName(string inputName)
@@ -145,9 +145,9 @@ public class Lookup
         Game game = new();
         foreach (DataRow row in gameDataTable.Rows)
         {
-            game.GameId = (int)row.Field<Int64>("id");
-            game.VersionId = (int)row.Field<Int64>("version_group_id");
-            game.GenerationId = (int)row.Field<Int64>("generation_id");
+            game.GameId = (byte)row.Field<Int64>("id");
+            game.VersionId = (byte)row.Field<Int64>("version_group_id");
+            game.GenerationId = (byte)row.Field<Int64>("generation_id");
             game.GameName = row.Field<string>("name") ?? "";
         }
         return game;
@@ -173,9 +173,9 @@ public class Lookup
         Game game = new();
         foreach (DataRow row in gameDataTable.Rows)
         {
-            game.GameId = (int)row.Field<Int64>("id");
-            game.VersionId = (int)row.Field<Int64>("version_group_id");
-            game.GenerationId = (int)row.Field<Int64>("generation_id");
+            game.GameId = (byte)row.Field<Int64>("id");
+            game.VersionId = (byte)row.Field<Int64>("version_group_id");
+            game.GenerationId = (byte)row.Field<Int64>("generation_id");
             game.GameName = row.Field<string>("name") ?? "";
         }
         return game;

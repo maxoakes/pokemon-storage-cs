@@ -1,3 +1,4 @@
+using System.Data;
 using Microsoft.Data.Sqlite;
 
 namespace PokemonStorage.Models;
@@ -193,6 +194,74 @@ public class RibbonSet
         return DbInterface.InsertIntoDatabase("ribbon", parameterPairs, "storage");
     }
 
+    public void LoadFromDatabase(int primaryKey)
+    {
+        List<SqliteParameter> parameters = [
+            new SqliteParameter("Id", SqliteType.Integer) { Value = primaryKey }
+        ];
+
+        DataTable dataTable = DbInterface.RetrieveTable("SELECT * FROM ribbon WHERE id=@Id", "storage", parameters);
+
+        if (dataTable.Rows.Count == 0)
+        {
+            throw new Exception($"No ribbons found with primary key {primaryKey}");
+        }
+
+        foreach (DataRow row in dataTable.Rows)
+        {
+            SinnohChamp =   row.Field<Int64>("sinnoh_champ") == 1;
+            Ability =       row.Field<Int64>("ability") == 1;
+            GreatAbility =  row.Field<Int64>("great_ability") == 1;
+            DoubleAbility = row.Field<Int64>("double_ability") == 1;
+            MultiAbility =  row.Field<Int64>("multi_ability") == 1;
+            PairAbility =   row.Field<Int64>("pair_ability") == 1;
+            WorldAbility =  row.Field<Int64>("world_ability") == 1;
+            Alert =         row.Field<Int64>("alert") == 1;
+            Shock =         row.Field<Int64>("shock") == 1;
+            Downcast =      row.Field<Int64>("downcast") == 1;
+            Careless =      row.Field<Int64>("careless") == 1;
+            Relax =         row.Field<Int64>("relax") == 1;
+            Snooze =        row.Field<Int64>("snooze") == 1;
+            Smile =         row.Field<Int64>("smile") == 1;
+            Gorgeous =      row.Field<Int64>("gorgeous") == 1;
+            Royal =         row.Field<Int64>("royal") == 1;
+            GorgeousRoyal = row.Field<Int64>("gorgeous_royal") == 1;
+            Footprint =     row.Field<Int64>("footprint") == 1;
+            Record =        row.Field<Int64>("record") == 1;
+            History =       row.Field<Int64>("history") == 1;
+            Legend =        row.Field<Int64>("legend") == 1;
+            Red =           row.Field<Int64>("red") == 1;
+            Green =         row.Field<Int64>("green") == 1;
+            Blue =          row.Field<Int64>("blue") == 1;
+            Festival =      row.Field<Int64>("festival") == 1;
+            Carnival =      row.Field<Int64>("carnival") == 1;
+            Classic =       row.Field<Int64>("classic") == 1;
+            Premier =       row.Field<Int64>("premier") == 1;
+            SinnohCool =    (byte)row.Field<Int64>("sinnoh_cool");
+            SinnohBeauty =  (byte)row.Field<Int64>("sinnoh_beauty");
+            SinnohCute =    (byte)row.Field<Int64>("sinnoh_cute");
+            SinnohSmart =   (byte)row.Field<Int64>("sinnoh_smart");
+            SinnohTough =   (byte)row.Field<Int64>("sinnoh_tough");
+            HeonnCool =     (byte)row.Field<Int64>("heonn_cool");
+            HeonnBeauty =   (byte)row.Field<Int64>("heonn_beauty");
+            HeonnCute =     (byte)row.Field<Int64>("heonn_cute");
+            HeonnSmart =    (byte)row.Field<Int64>("heonn_smart");
+            HeonnTough =    (byte)row.Field<Int64>("heonn_tough");
+            Champion =      row.Field<Int64>("champion") == 1;
+            Winning =       row.Field<Int64>("winning") == 1;
+            Victory =       row.Field<Int64>("victory") == 1;
+            Artist =        row.Field<Int64>("artist") == 1;
+            Effort =        row.Field<Int64>("effort") == 1;
+            Marine =        row.Field<Int64>("marine") == 1;
+            Land =          row.Field<Int64>("land") == 1;
+            Sky =           row.Field<Int64>("sky") == 1;
+            Country =       row.Field<Int64>("country") == 1;
+            National =      row.Field<Int64>("national") == 1;
+            Earth =         row.Field<Int64>("earth") == 1;
+            World =         row.Field<Int64>("world") == 1;
+        }
+    }
+        
     public override string ToString()
     {
         return "";

@@ -36,29 +36,29 @@ public static class DbInterface
     /// </summary>
     /// <param name="input">Unconformed SqliteParameter</param>
     /// <returns>SqlParameter ready for Sqlite statement</returns>
-    private static object PrepareParameterValue(SqliteParameter input)
+    public static SqliteParameter PrepareParameterValue(SqliteParameter input)
     {
-        if (input.Value == null)
+        if (input.Value == null || input.Value == DBNull.Value)
         {
-            return DBNull.Value;
+            input.Value = DBNull.Value;
         }
         if (input.SqliteType == SqliteType.Integer)
         {
-            return Convert.ToInt64(input.Value);
+            input.Value = Convert.ToInt64(input.Value);
         }
         if (input.SqliteType == SqliteType.Text)
         {
-            string str = (string)input.Value;
+            string str = Convert.ToString(input.Value) ?? "";
             if (string.IsNullOrWhiteSpace(str))
             {
-                return DBNull.Value;
+                input.Value = DBNull.Value;
             }
             else
             {
-                return Utility.TruncateString(str, input.Size);
+                input.Value = Utility.TruncateString(str, input.Size);
             }
         }
-        return input.Value;
+        return input;
     }
 
     /// <summary>
@@ -125,7 +125,7 @@ public static class DbInterface
 
         if (parameters != null)
         {
-            command.Parameters.AddRange(parameters.ToArray());
+            command.Parameters.AddRange([.. parameters.Select(x => PrepareParameterValue(x))]);
         }
         
         DataTable dataTable;
@@ -164,7 +164,7 @@ public static class DbInterface
 
         if (parameters != null)
         {
-            command.Parameters.AddRange(parameters.ToArray());
+            command.Parameters.AddRange([.. parameters.Select(x => PrepareParameterValue(x))]);
         }
 
         return ExecuteScalar(command);
@@ -216,15 +216,7 @@ public static class DbInterface
             ); SELECT last_insert_rowid();
         """;
 
-        List<SqliteParameter> preparedParameters = parameters
-            .Select(p => 
-            {
-                SqliteParameter param = p.SqliteParameter;
-                param.Value = PrepareParameterValue(param);
-                return param;
-            })
-            .ToList();
-
+        List<SqliteParameter> preparedParameters = [.. parameters.Select(p => PrepareParameterValue(p.SqliteParameter))];
         return Convert.ToInt32(RetrieveScalar(statement, connectionName, preparedParameters));
     }
 

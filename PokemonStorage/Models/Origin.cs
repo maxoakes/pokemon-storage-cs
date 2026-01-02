@@ -1,3 +1,4 @@
+using System.Data;
 using Microsoft.Data.Sqlite;
 
 namespace PokemonStorage.Models;
@@ -10,22 +11,22 @@ public class Origin
     public string EncounterTypeIdentifier { get { return Lookup.GetEncounterTypeGameIndex(EncounterTypeId); } }
     public byte PokeballId { get; set; }
     public string PokeballIdentifier { get { return Lookup.GetIdentifierById("items", PokeballId, "veekun"); } }
-    public int GameVersionId { get; set; }
+    public byte GameVersionId { get; set; }
     public string GameVersionIdentifier { get { return Lookup.GetIdentifierById("versions", GameVersionId); } }
 
     // Egg
     public DateTime? EggReceiveDate { get; set; }
-    public int EggHatchLocationId { get; set; }
+    public ushort EggHatchLocationId { get; set; }
     public string EggHatchLocationIdentifier { get { return Lookup.GetIdentifierById("locations", EggHatchLocationId, "veekun"); } }
-    public int EggHatchLocationPlatinumId { get; set; }
+    public ushort EggHatchLocationPlatinumId { get; set; }
     public string EggHatchLocationPlatinumIdentifier { get { return Lookup.GetIdentifierById("locations", EggHatchLocationPlatinumId, "veekun"); } }
     
     // Catch
-    public int MetLevel { get; set; }
+    public byte MetLevel { get; set; }
     public DateTime? MetDateTime { get; set; }
-    public int MetLocationId { get; set; }
+    public ushort MetLocationId { get; set; }
     public string MetLocationIdentifier { get { return Lookup.GetIdentifierById("locations", MetLocationId, "veekun"); } }
-    public int MetLocationPlatinumId { get; set; }
+    public ushort MetLocationPlatinumId { get; set; }
     public string MetLocationPlatinumIdentifier { get { return Lookup.GetIdentifierById("locations", MetLocationPlatinumId, "veekun"); } }
     
 
@@ -62,6 +63,52 @@ public class Origin
         ];
 
         return DbInterface.InsertIntoDatabase("origin", parameterPairs, "storage");
+    }
+
+    public void LoadFromDatabase(int primaryKey)
+    {
+        List<SqliteParameter> parameters = [
+            new SqliteParameter("Id", SqliteType.Integer) { Value = primaryKey }
+        ];
+
+        DataTable dataTable = DbInterface.RetrieveTable($"SELECT * FROM origin WHERE id = @Id", "storage", parameters);
+        if (dataTable.Rows.Count == 0)
+        {
+            throw new Exception($"No origin found with primary key {primaryKey}");
+        }
+
+        foreach (DataRow row in dataTable.Rows)
+        {
+            FatefulEncounter = row.Field<Int64>("fateful_encounter_id") == 1;
+            EncounterTypeId = (byte)row.Field<Int64>("encounter_type_id");
+            PokeballId = (byte)row.Field<Int64>("catch_ball_item_id");
+            GameVersionId = (byte)row.Field<Int64>("origin_version_id");
+            string eggReceiveDateTimeString = row.Field<string>("egg_receive_datetime") ?? "";
+            if (string.IsNullOrEmpty(eggReceiveDateTimeString))
+            {
+                EggReceiveDate = null;
+            }
+            else
+            {
+                EggReceiveDate = DateTime.Parse(eggReceiveDateTimeString);
+            }
+
+            EggHatchLocationId = (ushort)row.Field<Int64>("egg_hatch_location_id");
+            EggHatchLocationPlatinumId = (ushort)row.Field<Int64>("egg_hatch_location_platinum_id");
+            MetLevel = (byte)row.Field<Int64>("met_level");
+            string metDateTimeString = row.Field<string>("met_datetime") ?? "";
+            if (string.IsNullOrEmpty(metDateTimeString))
+            {
+                MetDateTime = null;
+            }
+            else
+            {
+                MetDateTime = DateTime.Parse(metDateTimeString);
+            }
+
+            MetLocationId = (ushort)row.Field<Int64>("met_location_id");
+            MetLocationPlatinumId = (ushort)row.Field<Int64>("met_location_platinum_id");
+        }
     }
 
     public override string ToString()
