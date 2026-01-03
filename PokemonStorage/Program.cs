@@ -2,7 +2,9 @@
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using PokemonStorage.Models;
+using PokemonStorage.SaveContent;
 using System.Configuration;
+using System.Diagnostics;
 
 namespace PokemonStorage;
 
@@ -11,6 +13,7 @@ public enum Mode
     NONE = 0,
     READ = 1,
     WRITE = 2,
+    DEBUG = 3,
 }
 
 public struct Settings()
@@ -33,6 +36,7 @@ public struct Settings()
         {
             "READ" => Mode.READ,
             "WRITE" => Mode.WRITE,
+            "DEBUG" => Mode.DEBUG,
             _ => Mode.NONE,
         };
         OutputToConsole = config.GetValue<bool>("Settings:OutputToConsole");
@@ -56,7 +60,7 @@ public class Program
     public static Dictionary<string, string> ConnectionStrings = [];
     private static Settings Settings = new();
     private static string OutputFileName = "";
-    private static GameState? GameState;
+    private static SaveData? GameState;
 
     public static void Main()
     {
@@ -99,7 +103,25 @@ public class Program
             return;
         }
 
-        GameState = new(originalSaveData, Lookup.GetGameByName(Settings.VersionName), Settings.Language);
+        Game game = Lookup.GetGameByName(Settings.VersionName);
+        GameState = null;
+        switch (game.GenerationId)
+        {
+            case 1:
+                GameState = new SaveDataGeneration1(originalSaveData, game, Settings.Language);
+                break;
+            case 2:
+                GameState = new SaveDataGeneration2(originalSaveData, game, Settings.Language);
+                break;
+            case 3:
+                GameState = new SaveDataGeneration3(originalSaveData, game, Settings.Language);
+                break;
+            case 4:
+                GameState = new SaveDataGeneration4(originalSaveData, game, Settings.Language);
+                break;
+            default:
+                throw new ConfigurationErrorsException($"Invalid game version generation: {game}");
+        }
         GameState.ParseOriginalTrainer();
         Console.WriteLine($"Loaded {GameState.Game} with {originalSaveData.Length} bytes as trainer {GameState.Trainer}");
         OutputFileName = $"{Settings.OutputFilePath}/{GameState.Game.GameName}.{DateTime.Now:s}.json";
@@ -108,13 +130,11 @@ public class Program
         {
             case Mode.READ:
                 GameState.ParsePartyPokemon();
-                Console.WriteLine($"Party");
                 if (Settings.OutputToDatabase) ReviewPokemonDictionaryForDatabaseWrite(GameState.Party);
 
                 GameState.ParseBoxPokemon();
                 foreach ((string box, Dictionary<int, PartyPokemon> boxDictionary) in GameState.BoxList)
                 {
-                    Console.WriteLine($"Box [{box}]");
                     if (boxDictionary.Count == 0) continue;
                     if (Settings.OutputToDatabase) ReviewPokemonDictionaryForDatabaseWrite(boxDictionary);
                 }
@@ -135,6 +155,22 @@ public class Program
                     pokemonToStore.Add(pokemon);
                     Console.WriteLine($"Loaded from database {pk}:\t{pokemon.GetSummaryString()}");
                     Console.WriteLine(SerializeObject(pokemon));
+                }
+                break;
+            case Mode.DEBUG:
+                SaveDataGeneration1 debugSaveData = (SaveDataGeneration1)GameState;
+                debugSaveData.WriteToPokedex(151);
+                debugSaveData.WriteRecalculatedChecksums();
+                bool isValidWrite = debugSaveData.AreAllChecksumsValid();
+                if (isValidWrite)
+                {
+                    Logger.LogInformation("Checksum was valid!");
+                    File.Copy(Settings.SaveFilePath, Settings.SaveFilePath + ".original");
+                    File.WriteAllBytes(Settings.SaveFilePath, debugSaveData.ModifiedData);
+                }
+                else
+                {
+                    Logger.LogError("Checksum of modified save file was not valid!");
                 }
                 break;
             default:
