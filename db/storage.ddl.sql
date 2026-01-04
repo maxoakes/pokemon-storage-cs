@@ -93,6 +93,7 @@ CREATE TABLE IF NOT EXISTS pokemon (
     walking_mood INTEGER NOT NULL,
     pokerus_strain INTEGER NOT NULL DEFAULT 0,
     pokerus_days_remaining INTEGER NOT NULL DEFAULT 0,
+    is_modern_stats INTEGER NOT NULL DEFAULT 1,
     hp_ev INTEGER NOT NULL DEFAULT 0,
     hp_iv INTEGER NOT NULL DEFAULT 0,
     att_ev INTEGER NOT NULL DEFAULT 0,

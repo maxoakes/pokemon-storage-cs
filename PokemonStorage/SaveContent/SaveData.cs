@@ -49,6 +49,12 @@ public abstract class SaveData
     /// </summary>
     /// <returns>True if all checksums are valid, false if any are incorrect.</returns>
     public abstract bool AreAllChecksumsValid();
+
+    /// <summary>
+    /// Read byte data and create a standard Pokemon object from that data
+    /// </summary>
+    /// <returns>Standard PartyPokemon that is universal across all generations</returns>
+    public abstract PartyPokemon GetPartyPokemonFromBoxBytes(byte[] data);
     
     /// <summary>
     /// Returns a single object that contains a dictionary of party Pokemon and all box Pokemon.

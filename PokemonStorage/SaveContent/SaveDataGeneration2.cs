@@ -72,10 +72,15 @@ public class SaveDataGeneration2 : SaveData
             string originalTrainerName = Utility.GetEncodedString(originalTrainerNameBytes, Game, lang);
 
             byte[] pokemonBytes = Utility.GetBytes(storageBytes, pokemonOffset + (pokemonSize * i), 32);
-            PartyPokemon pokemon = new(2);
+            PartyPokemon pokemon = new(Game);
             pokemon.LoadFromGen2Bytes(pokemonBytes, Game, nickname, originalTrainerName, lang);
             box[i] = pokemon;
         }
         return box;
+    }
+
+    public override PartyPokemon GetPartyPokemonFromBoxBytes(byte[] data)
+    {
+        throw new NotImplementedException();
     }
 }

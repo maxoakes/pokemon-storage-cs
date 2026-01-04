@@ -38,12 +38,8 @@ public partial class PartyPokemon
     public bool IsShinyAttackIv { get {return GetShinyByIv(); } }
 
     // Stats
-    public Stat HP { get; set; }
-    public Stat Attack { get; set; }
-    public Stat Defense { get; set; }
-    public Stat Speed { get; set; }
-    public Stat SpecialAttack { get; set; }
-    public Stat SpecialDefense { get; set; }
+    public StatSet Stats { get; set; }
+    public StatSet ModernStatSystem { get; set; }
 
     public Dictionary<int, Move> Moves { get; set; }
     public uint PokerusDaysRemaining { get; set; }
@@ -65,10 +61,10 @@ public partial class PartyPokemon
     public byte Gen3Misc { get; set; }
 
 
-    public PartyPokemon(byte generation)
+    public PartyPokemon(Game game)
     {
         // Game
-        Generation = generation;
+        Generation = game.GenerationId;
         LanguageId = Lookup.GetLanguageIdByIdentifier("en");
 
         // Overview
@@ -89,12 +85,7 @@ public partial class PartyPokemon
         WalkingMood = 0;
 
         // Stats
-        HP = new Stat(0, 0, 0);
-        Attack = new Stat(0, 0, 0);
-        Defense = new Stat(0, 0, 0);
-        Speed = new Stat(0, 0, 0);
-        SpecialAttack = new Stat(0, 0, 0);
-        SpecialDefense = new Stat(0, 0, 0);
+        Stats = new(true, new StatHextuple(), new StatHextuple());
         
         Moves = [];
         for (int i = 0; i < 4; i++)
@@ -115,98 +106,21 @@ public partial class PartyPokemon
         Obedience = false;
 
         Ribbons = new RibbonSet();
-        Markings = new Markings(generation, 0);
-        Origin = new Origin();
+        Markings = new Markings(Generation, 0);
+        Origin = new Origin(game.VersionId);
 
         ShinyLeaves = 0;
         Gen3Misc = 0;
     }
 
     #region Getters
-    private StatHextuple GetCalculatedStatValues(int generation)
-    {
-        StatHextuple baseStats = Lookup.GetBaseStats(PokemonIdentity.SpeciesId);
-
-        if (generation > 2)
-        {
-            var nature = Lookup.GetNatureByGameIndex(GetNatureFromPersonalityValue().GameIndex);
-            double modifiedAttack = 1;
-            double modifiedDefense = 1;
-            double modifiedSpecialAttack = 1;
-            double modifiedSpecialDefense = 1;
-            double modifiedSpeed = 1;
-
-            switch (nature.IncreaseId)
-            {
-                case 2:
-                    modifiedAttack = 1.1;
-                    break;
-                case 3:
-                    modifiedDefense = 1.1;
-                    break;
-                case 4:
-                    modifiedSpecialAttack = 1.1;
-                    break;
-                case 5:
-                    modifiedSpecialDefense = 1.1;
-                    break;
-                case 6:
-                    modifiedSpeed = 1.1;
-                    break;
-                default:
-                    break;
-            }
-
-            switch (nature.DecreaseId)
-            {
-                case 2:
-                    modifiedAttack = 0.9;
-                    break;
-                case 3:
-                    modifiedDefense = 0.9;
-                    break;
-                case 4:
-                    modifiedSpecialAttack = 0.9;
-                    break;
-                case 5:
-                    modifiedSpecialDefense = 0.9;
-                    break;
-                case 6:
-                    modifiedSpeed = 0.9;
-                    break;
-                default:
-                    break;
-            }
-
-            return new StatHextuple(
-                Math.Floor((2 * baseStats.HP + HP.Iv + Math.Floor(HP.Ev / 4.0)) * Level / 100.0) + Level + 10,
-                Math.Floor((Math.Floor((2 * baseStats.Attack + Attack.Iv + Math.Floor(Attack.Ev / 4.0)) * Level / 100.0) + 5) * modifiedAttack),
-                Math.Floor((Math.Floor((2 * baseStats.Defense + Defense.Iv + Math.Floor(Defense.Ev / 4.0)) * Level / 100.0) + 5) * modifiedDefense),
-                Math.Floor((Math.Floor((2 * baseStats.SpecialAttack + SpecialAttack.Iv + Math.Floor(SpecialAttack.Ev / 4.0)) * Level / 100.0) + 5) * modifiedSpecialAttack),
-                Math.Floor((Math.Floor((2 * baseStats.SpecialDefense + SpecialDefense.Iv + Math.Floor(SpecialDefense.Ev / 4.0)) * Level / 100.0) + 5) * modifiedSpecialDefense),
-                Math.Floor((Math.Floor((2 * baseStats.Speed + Speed.Iv + Math.Floor(Speed.Ev / 4.0)) * Level / 100.0) + 5) * modifiedSpeed)
-            );
-            
-        }
-        else
-        {
-            return new StatHextuple(
-                Math.Floor(((baseStats.HP + HP.Iv) * 2 + Math.Floor(Math.Ceiling(Math.Sqrt(HP.Ev)) / 4)) * Level / 100) + Level + 10,
-                Math.Floor(((baseStats.Attack + Attack.Iv) * 2 + Math.Floor(Math.Ceiling(Math.Sqrt(Attack.Ev)) / 4)) * Level / 100) + 5,
-                Math.Floor(((baseStats.Defense + Defense.Iv) * 2 + Math.Floor(Math.Ceiling(Math.Sqrt(Defense.Ev)) / 4)) * Level / 100) + 5,
-                Math.Floor(((baseStats.SpecialAttack + SpecialAttack.Iv) * 2 + Math.Floor(Math.Ceiling(Math.Sqrt(SpecialAttack.Ev)) / 4)) * Level / 100) + 5,
-                Math.Floor(((baseStats.SpecialDefense + SpecialDefense.Iv) * 2 + Math.Floor(Math.Ceiling(Math.Sqrt(SpecialDefense.Ev)) / 4)) * Level / 100) + 5,
-                Math.Floor(((baseStats.Speed + Speed.Iv) * 2 + Math.Floor(Math.Ceiling(Math.Sqrt(Speed.Ev)) / 4)) * Level / 100) + 5
-            );
-        }
-    }
 
     private bool GetShinyByIv()
     {
-        return Attack.Iv > 1 &&
-            Defense.Iv == 10 &&
-            Speed.Iv == 10 &&
-            SpecialAttack.Iv == 10;
+        return Stats.Attack.Iv > 1 &&
+            Stats.Defense.Iv == 10 &&
+            Stats.Speed.Iv == 10 &&
+            Stats.SpecialAttack.Iv == 10;
     }
     
     private bool GetShinyFromPersonalityValue()
@@ -236,20 +150,16 @@ public partial class PartyPokemon
         return string.Join(" ", bytes);
     }
 
-    private Gender GetGenderByAttackIv()
+    public void AssignGenderByAttackIv()
     {
         int ratio = Lookup.GetGenderRateBySpeciesId(PokemonIdentity.SpeciesId);
-        switch (ratio)
+        Gender = ratio switch
         {
-            case 0:
-                return Gender.MALE;
-            case 8:
-                return Gender.FEMALE;
-            case -1:
-                return Gender.GENDERLESS;
-            default:
-                return Attack.Iv <= ratio ? Gender.FEMALE : Gender.MALE;
-        }
+            0 => Gender.MALE,
+            8 => Gender.FEMALE,
+            -1 => Gender.GENDERLESS,
+            _ => Stats.AsOldSystem().Attack.Iv <= ratio ? Gender.FEMALE : Gender.MALE,
+        };
     }
 
     private Gender GetGenderByPersonalityValue()
@@ -271,7 +181,7 @@ public partial class PartyPokemon
         }
     }
 
-    private bool NicknameExists()
+    public bool DoesNicknameExist()
     {
         return !string.Equals(PokemonIdentity.SpeciesName.ToLower(), Nickname.ToLower());
     }
@@ -286,74 +196,6 @@ public partial class PartyPokemon
         return (uint)random.NextInt64(UInt32.MaxValue);
     }
 
-    public void AssignStatValues(int generation = 0)
-    {
-        int calculationGeneration = (generation == 0) ? Generation : generation;
-
-        var calcualtedStats = GetCalculatedStatValues(calculationGeneration);
-        HP.Value = calcualtedStats.HP;
-        Attack.Value = calcualtedStats.Attack;
-        Defense.Value = calcualtedStats.Defense;
-        Speed.Value = calcualtedStats.Speed;
-        SpecialAttack.Value = calcualtedStats.SpecialAttack;
-        SpecialDefense.Value = calcualtedStats.SpecialDefense;
-    }
-
-    public void ConformToModernStatSystem()
-    {
-        HP.Ev /= 66;
-        Attack.Ev /= 70;
-        Defense.Ev /= 69;
-        Speed.Ev /= 66;
-        SpecialAttack.Ev /= 66;
-        SpecialDefense.Ev /= 68;
-
-        int sum = HP.Ev + Attack.Ev + Defense.Ev + Speed.Ev + SpecialAttack.Ev + SpecialDefense.Ev;
-
-        if (sum > 510)
-        {
-            float decreaseFactor = sum / 510f;
-            float newHp = HP.Ev / decreaseFactor;
-            float newAttack = Attack.Ev / decreaseFactor;
-            float newDefense = Defense.Ev / decreaseFactor;
-            float newSpeed = Speed.Ev / decreaseFactor;
-            float newSpecialAttack = SpecialAttack.Ev / decreaseFactor;
-            float newSpecialDefense = SpecialDefense.Ev / decreaseFactor;
-
-            HP.Ev = (ushort)Math.Floor(newHp);
-            Attack.Ev = (ushort)Math.Floor(newAttack);
-            Defense.Ev = (ushort)Math.Floor(newDefense);
-            Speed.Ev = (ushort)Math.Floor(newSpeed);
-            SpecialAttack.Ev = (ushort)Math.Floor(newSpecialAttack);
-            SpecialDefense.Ev = (ushort)Math.Floor(newSpecialDefense);
-
-            sum = HP.Ev + Attack.Ev + Defense.Ev + Speed.Ev + SpecialAttack.Ev + SpecialDefense.Ev;
-        }
-
-        HP.Iv = (byte)((HP.Iv * 2) + 1);
-        Attack.Iv = (byte)((Attack.Iv * 2) + 1);
-        Defense.Iv = (byte)((Defense.Iv * 2) + 1);
-        Speed.Iv = (byte)((Speed.Iv * 2) + 1);
-        SpecialAttack.Iv = (byte)((SpecialAttack.Iv * 2) + 1);
-        SpecialDefense.Iv = (byte)((SpecialDefense.Iv * 2) + 1);
-    }
-
-    public void ConvertToOldStatSystem()
-    {
-        HP.Ev *= 66;
-        Attack.Ev *= 70;
-        Defense.Ev *= 69;
-        Speed.Ev *= 66;
-        SpecialAttack.Ev *= 66;
-        SpecialDefense.Ev *= 68;
-
-        HP.Iv = (byte)(HP.Iv >> 1);
-        Attack.Iv = (byte)(Attack.Iv >> 1);
-        Defense.Iv = (byte)(Defense.Iv >> 1);
-        Speed.Iv = (byte)(Speed.Iv >> 1);
-        SpecialAttack.Iv = (byte)(SpecialAttack.Iv >> 1);
-        SpecialDefense.Iv = (byte)(SpecialDefense.Iv >> 1);
-    }
     #endregion
 
     #region Print
@@ -387,18 +229,18 @@ public partial class PartyPokemon
             new SqliteParameterPair("walking_mood", SqliteType.Integer, WalkingMood),
             new SqliteParameterPair("pokerus_strain", SqliteType.Integer, PokerusStrain),
             new SqliteParameterPair("pokerus_days_remaining", SqliteType.Integer, PokerusDaysRemaining),
-            new SqliteParameterPair("hp_iv", SqliteType.Integer, HP.Iv),
-            new SqliteParameterPair("hp_ev", SqliteType.Integer, HP.Ev),
-            new SqliteParameterPair("att_iv", SqliteType.Integer, Attack.Iv),
-            new SqliteParameterPair("att_ev", SqliteType.Integer, Attack.Ev),
-            new SqliteParameterPair("def_iv", SqliteType.Integer, Defense.Iv),
-            new SqliteParameterPair("def_ev", SqliteType.Integer, Defense.Ev),
-            new SqliteParameterPair("spe_iv", SqliteType.Integer, Speed.Iv),
-            new SqliteParameterPair("spe_ev", SqliteType.Integer, Speed.Ev),
-            new SqliteParameterPair("spa_iv", SqliteType.Integer, SpecialAttack.Iv),
-            new SqliteParameterPair("spa_ev", SqliteType.Integer, SpecialAttack.Ev),
-            new SqliteParameterPair("spd_iv", SqliteType.Integer, SpecialDefense.Iv),
-            new SqliteParameterPair("spd_ev", SqliteType.Integer, SpecialDefense.Ev),
+            new SqliteParameterPair("hp_iv", SqliteType.Integer, Stats.HP.Iv),
+            new SqliteParameterPair("hp_ev", SqliteType.Integer, Stats.HP.Ev),
+            new SqliteParameterPair("att_iv", SqliteType.Integer, Stats.Attack.Iv),
+            new SqliteParameterPair("att_ev", SqliteType.Integer, Stats.Attack.Ev),
+            new SqliteParameterPair("def_iv", SqliteType.Integer, Stats.Defense.Iv),
+            new SqliteParameterPair("def_ev", SqliteType.Integer, Stats.Defense.Ev),
+            new SqliteParameterPair("spe_iv", SqliteType.Integer, Stats.Speed.Iv),
+            new SqliteParameterPair("spe_ev", SqliteType.Integer, Stats.Speed.Ev),
+            new SqliteParameterPair("spa_iv", SqliteType.Integer, Stats.SpecialAttack.Iv),
+            new SqliteParameterPair("spa_ev", SqliteType.Integer, Stats.SpecialAttack.Ev),
+            new SqliteParameterPair("spd_iv", SqliteType.Integer, Stats.SpecialDefense.Iv),
+            new SqliteParameterPair("spd_ev", SqliteType.Integer, Stats.SpecialDefense.Ev),
             new SqliteParameterPair("coolness", SqliteType.Integer, Coolness),
             new SqliteParameterPair("beauty", SqliteType.Integer, Beauty),
             new SqliteParameterPair("cuteness", SqliteType.Integer, Cuteness),
@@ -454,12 +296,25 @@ public partial class PartyPokemon
             WalkingMood = (byte)row.Field<Int64>("walking_mood");
             PokerusStrain = (byte)row.Field<Int64>("pokerus_strain");
             PokerusDaysRemaining = (byte)row.Field<Int64>("pokerus_days_remaining");
-            HP = new Stat(0, (ushort)row.Field<Int64>("hp_ev"), (ushort)row.Field<Int64>("hp_iv"));
-            Attack = new Stat(0, (ushort)row.Field<Int64>("att_ev"), (ushort)row.Field<Int64>("att_iv"));
-            Defense = new Stat(0, (ushort)row.Field<Int64>("def_ev"), (ushort)row.Field<Int64>("def_iv"));
-            Speed = new Stat(0, (ushort)row.Field<Int64>("spe_ev"), (ushort)row.Field<Int64>("spe_iv"));
-            SpecialAttack = new Stat(0, (ushort)row.Field<Int64>("spa_ev"), (ushort)row.Field<Int64>("spa_iv"));
-            SpecialDefense = new Stat(0, (ushort)row.Field<Int64>("spd_ev"), (ushort)row.Field<Int64>("spd_iv"));
+            Stats = new(
+                row.Field<Int64>("is_modern_stats") == 1, 
+                new StatHextuple(
+                    (ushort)row.Field<Int64>("hp_iv"),
+                    (ushort)row.Field<Int64>("att_iv"),
+                    (ushort)row.Field<Int64>("def_iv"),
+                    (ushort)row.Field<Int64>("spe_iv"),
+                    (ushort)row.Field<Int64>("spa_iv"),
+                    (ushort)row.Field<Int64>("spd_iv")
+                ), 
+                new StatHextuple(
+                    (ushort)row.Field<Int64>("hp_ev"),
+                    (ushort)row.Field<Int64>("att_ev"),
+                    (ushort)row.Field<Int64>("def_ev"),
+                    (ushort)row.Field<Int64>("spe_ev"),
+                    (ushort)row.Field<Int64>("spa_ev"),
+                    (ushort)row.Field<Int64>("spd_ev")
+                )
+            );
             Coolness = (byte)row.Field<Int64>("coolness");
             Beauty = (byte)row.Field<Int64>("beauty");
             Cuteness = (byte)row.Field<Int64>("cuteness");
@@ -476,8 +331,6 @@ public partial class PartyPokemon
             Ribbons.LoadFromDatabase((int)row.Field<Int64>("fk_ribbon"));
             Origin.LoadFromDatabase((int)row.Field<Int64>("fk_origin"));
             OriginalTrainer.LoadFromDatabase((int)row.Field<Int64>("fk_original_trainer"));
-
-            AssignStatValues();
         };
 
         List<SqliteParameterPair> moveParameters = 

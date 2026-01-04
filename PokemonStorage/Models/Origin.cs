@@ -30,12 +30,12 @@ public class Origin
     public string MetLocationPlatinumIdentifier { get { return Lookup.GetIdentifierById("locations", MetLocationPlatinumId, "veekun"); } }
     
 
-    public Origin()
+    public Origin(byte versionId)
     {
         FatefulEncounter = false;
         EncounterTypeId = 0;
         PokeballId = 0;
-        GameVersionId = 0;
+        GameVersionId = versionId;
         EggReceiveDate = null;
         EggHatchLocationId = 0;
         EggHatchLocationPlatinumId = 0;

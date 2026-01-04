@@ -85,7 +85,7 @@ public class SaveDataGeneration3 : SaveData
 
         for (int i = 0; i < partySize; i++)
         {
-            PartyPokemon pokemon = new(3);
+            PartyPokemon pokemon = new(Game);
             byte[] pokemonBytes = Utility.GetBytes(partyBytes, i * 100, 100);
             pokemon.LoadFromGen3Bytes(pokemonBytes, Game, Language);
             Party[i] = pokemon;
@@ -141,10 +141,15 @@ public class SaveDataGeneration3 : SaveData
                 ushort thisCs = Utility.GetUnsignedNumber<ushort>(pokemonBytes, 0x1C, 2);
                 if (thisPv == 0 && thisCs == 0) continue;
                 
-                PartyPokemon pokemon = new(3);
+                PartyPokemon pokemon = new(Game);
                 pokemon.LoadFromGen3Bytes(pokemonBytes, Game, Language);
                 BoxList[thisBoxName][j] = pokemon;
             }
         }
+    }
+
+    public override PartyPokemon GetPartyPokemonFromBoxBytes(byte[] data)
+    {
+        throw new NotImplementedException();
     }
 }

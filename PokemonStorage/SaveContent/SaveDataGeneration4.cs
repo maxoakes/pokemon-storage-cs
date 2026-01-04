@@ -76,7 +76,7 @@ public class SaveDataGeneration4 : SaveData
 
         for (int i = 0; i < partySize; i++)
         {
-            PartyPokemon pokemon = new(4);
+            PartyPokemon pokemon = new(Game);
             byte[] pokemonBytes = Utility.GetBytes(partyBytes, i * 236, 236);
             pokemon.LoadFromGen4Bytes(pokemonBytes, Game, Language);
             Party[i] = pokemon;
@@ -122,11 +122,16 @@ public class SaveDataGeneration4 : SaveData
                 ushort thisCs = Utility.GetUnsignedNumber<ushort>(thisBoxBytes, (j * 136) + 6, 2);
                 if (thisPv == 0 && thisCs == 0) continue;
                 
-                PartyPokemon pokemon = new(4);
+                PartyPokemon pokemon = new(Game);
                 byte[] pokemonBytes = Utility.GetBytes(thisBoxBytes, j * 136, 136);
                 pokemon.LoadFromGen4Bytes(pokemonBytes, Game, Language);
                 BoxList[boxName][j] = pokemon;
             }
         }
+    }
+
+    public override PartyPokemon GetPartyPokemonFromBoxBytes(byte[] data)
+    {
+        throw new NotImplementedException();
     }
 }

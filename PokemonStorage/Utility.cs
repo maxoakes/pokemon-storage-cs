@@ -29,36 +29,6 @@ public struct StatHextuple
         SpecialDefense = spd;
         Speed = spe;
     }
-
-    public StatHextuple(int hp, int att, int def, int spa, int spd, int spe)
-    {
-        HP = (ushort)hp;
-        Attack = (ushort)att;
-        Defense = (ushort)def;
-        SpecialAttack = (ushort)spa;
-        SpecialDefense = (ushort)spd;
-        Speed = (ushort)spe;
-    }
-
-    public StatHextuple(double hp, double att, double def, double spa, double spd, double spe)
-    {
-        HP = (ushort)hp;
-        Attack = (ushort)att;
-        Defense = (ushort)def;
-        SpecialAttack = (ushort)spa;
-        SpecialDefense = (ushort)spd;
-        Speed = (ushort)spe;
-    }
-
-        public StatHextuple(decimal hp, decimal att, decimal def, decimal spa, decimal spd, decimal spe)
-    {
-        HP = (ushort)hp;
-        Attack = (ushort)att;
-        Defense = (ushort)def;
-        SpecialAttack = (ushort)spa;
-        SpecialDefense = (ushort)spd;
-        Speed = (ushort)spe;
-    }
 }
 
 /// <summary>

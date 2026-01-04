@@ -6,88 +6,11 @@ namespace PokemonStorage.Models;
 
 public partial class PartyPokemon
 {
-    #region Gen 1
-    // https://bulbapedia.bulbagarden.net/wiki/Pok%C3%A9mon_data_structure_(Generation_I)
-    public void LoadFromGen1Bytes(byte[] content, Game game, string nickname, string trainerName, string language)
-    {
-        Origin = new Origin
-        {
-            GameVersionId = game.GameId
-        };
-        LanguageId = Lookup.GetLanguageIdByIdentifier(language);
-        Nickname = nickname;
-
-        OriginalTrainer = new Trainer(trainerName, 0, Utility.GetUnsignedNumber<ushort>(content, 0x0C, 2, true), 0);
-        PokemonIdentity = Lookup.GetPokemonByFormId(Lookup.GetPokemonFormIdByGameIndex(1, Utility.GetByte(content, 0x00)), LanguageId); 
-        ExperiencePoints = Utility.GetUnsignedNumber<uint>(content, 0x0E, 3, true);
-        Friendship = Lookup.GetBaseHappinessBySpeciesId(PokemonIdentity.SpeciesId);
-
-        // Get Moves
-        (int moveIndexOffset, int movePpOffset)[] moveDataOffsets = [
-            (0x08, 0x1D),
-            (0x09, 0x1E),
-            (0x0A, 0x1F),
-            (0x0B, 0x20)
-        ];
-
-        for (int i = 0; i < moveDataOffsets.Length; i++)
-        {
-            int moveIndexOffset = moveDataOffsets[i].moveIndexOffset;
-            int movePpOffset = moveDataOffsets[i].movePpOffset;
-
-            byte ppData = Utility.GetUnsignedNumber<byte>(content, movePpOffset, 1, true);
-            string ppBinary = Convert.ToString(ppData, 2).PadLeft(8, '0');
-
-            Moves[i].TimesIncreased = Convert.ToByte(ppBinary.Substring(0, 2), 2);
-            Moves[i].Pp = Convert.ToByte(ppBinary.Substring(2, 6), 2);
-            Moves[i].Id = Utility.GetUnsignedNumber<byte>(content, moveIndexOffset, 1, true);
-            Moves[i].SlotId = (byte)i;
-        }
-
-        // Get Stats
-        ushort ivData = Utility.GetUnsignedNumber<ushort>(content, 0x1B, 2, true);
-        string ivBinary = Convert.ToString(ivData, 2).PadLeft(16, '0');
-
-        HP = new Stat(
-            Utility.GetUnsignedNumber<ushort>(content, 0x11, 2, true),
-            Convert.ToByte(string.Join("", ivBinary.Chunk(4).Select(x => x.Last())), 2));
-
-        Attack = new Stat(
-            Utility.GetUnsignedNumber<ushort>(content, 0x13, 2, true),
-            Convert.ToByte(ivBinary.Substring(0, 4), 2));
-
-        Defense = new Stat(
-            Utility.GetUnsignedNumber<ushort>(content, 0x15, 2, true),
-            Convert.ToByte(ivBinary.Substring(4, 4), 2));
-
-        Speed = new Stat(
-            Utility.GetUnsignedNumber<ushort>(content, 0x17, 2, true),
-            Convert.ToByte(ivBinary.Substring(8, 4), 2));
-
-        SpecialAttack = new Stat(
-            Utility.GetUnsignedNumber<ushort>(content, 0x19, 2, true),
-            Convert.ToByte(ivBinary.Substring(12, 4), 2));
-
-        SpecialDefense = new Stat(
-            Utility.GetUnsignedNumber<ushort>(content, 0x19, 2, true),
-            Convert.ToByte(ivBinary.Substring(12, 4), 2));
-
-        // Calculations
-        Gender = GetGenderByAttackIv();
-        HasNickname = NicknameExists();
-        ConformToModernStatSystem();
-        AssignStatValues();
-    }
-    #endregion
-
     #region Gen 2
     // https://bulbapedia.bulbagarden.net/wiki/Pok%C3%A9mon_data_structure_(Generation_II)
     public void LoadFromGen2Bytes(byte[] content, Game game, string nickname, string trainerName, string language)
     {
-        Origin = new Origin
-        {
-            GameVersionId = game.GameId
-        };
+        Origin = new Origin(game.VersionId);
         LanguageId = Lookup.GetLanguageIdByIdentifier(language);
 
         Nickname = nickname;
@@ -124,29 +47,25 @@ public partial class PartyPokemon
         string ivBinary = Convert.ToString(ivData, 2).PadLeft(16, '0');
         // Program.Logger.LogInformation($"IV Binary: {string.Join('_', ivBinary.Chunk(4).Select(x => new string(x)))}");
 
-        HP = new Stat(
+        StatHextuple ev = new StatHextuple(
             Utility.GetUnsignedNumber<ushort>(content, 0x0B, 2, true),
-            Convert.ToByte(string.Join("", ivBinary.Chunk(4).Select(x => x.Last())), 2));
-
-        Attack = new Stat(
             Utility.GetUnsignedNumber<ushort>(content, 0x0D, 2, true),
-            Convert.ToByte(ivBinary.Substring(0, 4), 2));
-
-        Defense = new Stat(
             Utility.GetUnsignedNumber<ushort>(content, 0x0F, 2, true),
-            Convert.ToByte(ivBinary.Substring(4, 4), 2));
-
-        Speed = new Stat(
             Utility.GetUnsignedNumber<ushort>(content, 0x11, 2, true),
-            Convert.ToByte(ivBinary.Substring(8, 4), 2));
-
-        SpecialAttack = new Stat(
             Utility.GetUnsignedNumber<ushort>(content, 0x13, 2, true),
-            Convert.ToByte(ivBinary.Substring(12, 4), 2));
+            Utility.GetUnsignedNumber<ushort>(content, 0x13, 2, true)
+        );
 
-        SpecialDefense = new Stat(
-            Utility.GetUnsignedNumber<ushort>(content, 0x13, 2, true),
-            Convert.ToByte(ivBinary.Substring(12, 4), 2));
+        StatHextuple iv = new StatHextuple(
+            Convert.ToByte(string.Join("", ivBinary.Chunk(4).Select(x => x.Last())), 2),
+            Convert.ToByte(ivBinary.Substring(0, 4), 2),
+            Convert.ToByte(ivBinary.Substring(4, 4), 2),
+            Convert.ToByte(ivBinary.Substring(8, 4), 2),
+            Convert.ToByte(ivBinary.Substring(12, 4), 2),
+            Convert.ToByte(ivBinary.Substring(12, 4), 2)
+        );
+
+        Stats = new(false, ev, iv);
 
         // Pokerus
         byte pokerusData = Utility.GetUnsignedNumber<byte>(content, 0x1C, 1, true);
@@ -177,10 +96,8 @@ public partial class PartyPokemon
         Origin.MetLocationId = Lookup.GetLocationIdByGameIndex(2, Convert.ToUInt16(caughtBinary.Substring(9, 7), 2));
 
         // Calculations
-        Gender = GetGenderByAttackIv();
-        HasNickname = NicknameExists();
-        ConformToModernStatSystem();
-        AssignStatValues();
+        AssignGenderByAttackIv();
+        HasNickname = DoesNicknameExist();
     }
     #endregion
 
@@ -188,11 +105,7 @@ public partial class PartyPokemon
     // https://bulbapedia.bulbagarden.net/wiki/Pok%C3%A9mon_data_structure_(Generation_III)
     public void LoadFromGen3Bytes(byte[] content, Game game, string language)
     {
-        Origin = new Origin
-        {
-            GameVersionId = game.GameId
-        };
-
+        Origin = new Origin(game.VersionId);
         PersonalityValue = Utility.GetUnsignedNumber<uint>(content, 0x00, 4);
         uint otId = Utility.GetUnsignedNumber<uint>(content, 0x04, 4);
         OriginalTrainer = new Trainer(
@@ -247,6 +160,8 @@ public partial class PartyPokemon
         }
 
         int abilitySlotId = 0;
+        StatHextuple ev = new StatHextuple();
+        StatHextuple iv = new StatHextuple();
         foreach ((char c, int i) in orderString.Select((c, i) => (c, i)))
         {
             int offset = i * 12;
@@ -283,12 +198,12 @@ public partial class PartyPokemon
                     break;
 
                 case 'E':
-                    HP.Ev = Utility.GetUnsignedNumber<byte>(substructureBytes, 0x00, 1);
-                    Attack.Ev = Utility.GetUnsignedNumber<byte>(substructureBytes, 0x01, 1);
-                    Defense.Ev = Utility.GetUnsignedNumber<byte>(substructureBytes, 0x02, 1);
-                    Speed.Ev = Utility.GetUnsignedNumber<byte>(substructureBytes, 0x03, 1);
-                    SpecialAttack.Ev = Utility.GetUnsignedNumber<byte>(substructureBytes, 0x04, 1);
-                    SpecialDefense.Ev = Utility.GetUnsignedNumber<byte>(substructureBytes, 0x05, 1);
+                    ev.HP = Utility.GetUnsignedNumber<byte>(substructureBytes, 0x00, 1);
+                    ev.Attack = Utility.GetUnsignedNumber<byte>(substructureBytes, 0x01, 1);
+                    ev.Defense = Utility.GetUnsignedNumber<byte>(substructureBytes, 0x02, 1);
+                    ev.Speed = Utility.GetUnsignedNumber<byte>(substructureBytes, 0x03, 1);
+                    ev.SpecialAttack = Utility.GetUnsignedNumber<byte>(substructureBytes, 0x04, 1);
+                    ev.SpecialDefense = Utility.GetUnsignedNumber<byte>(substructureBytes, 0x05, 1);
 
                     Coolness = Utility.GetUnsignedNumber<byte>(substructureBytes, 0x06, 1);
                     Beauty = Utility.GetUnsignedNumber<byte>(substructureBytes, 0x07, 1);
@@ -333,12 +248,12 @@ public partial class PartyPokemon
 
                     abilitySlotId = Int32.Parse(miscBinary[0].ToString());
                     IsEgg = miscBinary[1] == '1';
-                    SpecialDefense.Iv = Convert.ToByte(miscBinary.Substring(2, 5), 2);
-                    SpecialAttack.Iv = Convert.ToByte(miscBinary.Substring(7, 5), 2);
-                    Speed.Iv = Convert.ToByte(miscBinary.Substring(12, 5), 2);
-                    Defense.Iv = Convert.ToByte(miscBinary.Substring(17, 5), 2);
-                    Attack.Iv = Convert.ToByte(miscBinary.Substring(22, 5), 2);
-                    HP.Iv = Convert.ToByte(miscBinary.Substring(27, 5), 2);
+                    iv.SpecialDefense = Convert.ToByte(miscBinary.Substring(2, 5), 2);
+                    iv.SpecialAttack = Convert.ToByte(miscBinary.Substring(7, 5), 2);
+                    iv.Speed = Convert.ToByte(miscBinary.Substring(12, 5), 2);
+                    iv.Defense = Convert.ToByte(miscBinary.Substring(17, 5), 2);
+                    iv.Attack = Convert.ToByte(miscBinary.Substring(22, 5), 2);
+                    iv.HP = Convert.ToByte(miscBinary.Substring(27, 5), 2);
 
                     // Ribbons, Obedience
                     string ribbonBinary = Convert.ToString(Utility.GetUnsignedNumber<uint>(substructureBytes, 0x08, 4), 2).PadLeft(32, '0');
@@ -373,10 +288,10 @@ public partial class PartyPokemon
 
         // Calculations
         // Program.Logger.LogInformation($"Done reading: {PokemonIdentity.SpeciesIdentifier}");
+        Stats = new(true, iv, ev);
         Gender = GetGenderByPersonalityValue();
         AbilityId = GetAbilityFromSlotId(abilitySlotId);
-        HasNickname = NicknameExists();
-        AssignStatValues();
+        HasNickname = DoesNicknameExist();
     }
     #endregion
 
@@ -451,6 +366,8 @@ public partial class PartyPokemon
         string shuffledOrder = shuffle[s];
         // Program.Logger.LogInformation($"Decryption Order: {s}:{shuffledOrder}");
 
+        StatHextuple ev = new StatHextuple();
+        StatHextuple iv = new StatHextuple();
         for (int i = 0; i < shuffledOrder.Length; i++)
         {
             int thisOffset = i * 0x20;
@@ -469,12 +386,12 @@ public partial class PartyPokemon
                     AbilityId = Utility.GetUnsignedNumber<byte>(blockBytes, 0x0D, 1);
                     Markings = new(4, Utility.GetUnsignedNumber<byte>(blockBytes, 0x0E, 1));
                     LanguageId = Lookup.GetLanguageIdByGameIndex(Utility.GetUnsignedNumber<byte>(blockBytes, 0x0F, 1));
-                    HP.Ev = Utility.GetUnsignedNumber<byte>(blockBytes, 0x10, 1);
-                    Attack.Ev = Utility.GetUnsignedNumber<byte>(blockBytes, 0x11, 1);
-                    Defense.Ev = Utility.GetUnsignedNumber<byte>(blockBytes, 0x12, 1);
-                    Speed.Ev = Utility.GetUnsignedNumber<byte>(blockBytes, 0x13, 1);
-                    SpecialAttack.Ev = Utility.GetUnsignedNumber<byte>(blockBytes, 0x14, 1);
-                    SpecialDefense.Ev = Utility.GetUnsignedNumber<byte>(blockBytes, 0x15, 1);
+                    ev.HP = Utility.GetUnsignedNumber<byte>(blockBytes, 0x10, 1);
+                    ev.Attack = Utility.GetUnsignedNumber<byte>(blockBytes, 0x11, 1);
+                    ev.Defense = Utility.GetUnsignedNumber<byte>(blockBytes, 0x12, 1);
+                    ev.Speed = Utility.GetUnsignedNumber<byte>(blockBytes, 0x13, 1);
+                    ev.SpecialAttack = Utility.GetUnsignedNumber<byte>(blockBytes, 0x14, 1);
+                    ev.SpecialDefense = Utility.GetUnsignedNumber<byte>(blockBytes, 0x15, 1);
                     Coolness = Utility.GetUnsignedNumber<byte>(blockBytes, 0x16, 1);
                     Beauty = Utility.GetUnsignedNumber<byte>(blockBytes, 0x17, 1);
                     Cuteness = Utility.GetUnsignedNumber<byte>(blockBytes, 0x18, 1);
@@ -506,12 +423,12 @@ public partial class PartyPokemon
                     // IVs and more
                     uint ivData = Utility.GetUnsignedNumber<uint>(blockBytes, 0x10, 4);
                     string ivBinary = Utility.ReverseString(Convert.ToString(ivData, 2).PadLeft(32, '0'));
-                    HP.Iv = Convert.ToByte(Utility.ReverseString(ivBinary.Substring(0, 5)), 2);
-                    Attack.Iv = Convert.ToByte(Utility.ReverseString(ivBinary.Substring(5, 5)), 2);
-                    Defense.Iv = Convert.ToByte(Utility.ReverseString(ivBinary.Substring(10, 5)), 2);
-                    Speed.Iv = Convert.ToByte(Utility.ReverseString(ivBinary.Substring(15, 5)), 2);
-                    SpecialAttack.Iv = Convert.ToByte(Utility.ReverseString(ivBinary.Substring(20, 5)), 2);
-                    SpecialDefense.Iv = Convert.ToByte(Utility.ReverseString(ivBinary.Substring(25, 5)), 2);
+                    iv.HP = Convert.ToByte(Utility.ReverseString(ivBinary.Substring(0, 5)), 2);
+                    iv.Attack = Convert.ToByte(Utility.ReverseString(ivBinary.Substring(5, 5)), 2);
+                    iv.Defense = Convert.ToByte(Utility.ReverseString(ivBinary.Substring(10, 5)), 2);
+                    iv.Speed = Convert.ToByte(Utility.ReverseString(ivBinary.Substring(15, 5)), 2);
+                    iv.SpecialAttack = Convert.ToByte(Utility.ReverseString(ivBinary.Substring(20, 5)), 2);
+                    iv.SpecialDefense = Convert.ToByte(Utility.ReverseString(ivBinary.Substring(25, 5)), 2);
                     IsEgg = ivBinary[30] == '1';
                     HasNickname = ivBinary[31] == '1';
 
@@ -595,7 +512,7 @@ public partial class PartyPokemon
 
         // Calculations        
         // Program.Logger.LogInformation($"Done reading: {PokemonIdentity.SpeciesIdentifier}");
-        AssignStatValues();
+        Stats = new(true, iv, ev);
     }
     #endregion
 

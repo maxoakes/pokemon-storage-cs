@@ -150,7 +150,7 @@ public class Program
                 List<PartyPokemon> pokemonToStore = [];
                 foreach (int pk in primaryKeys)
                 {
-                    PartyPokemon pokemon = new(GameState.Game.GenerationId);
+                    PartyPokemon pokemon = new(GameState.Game);
                     pokemon.LoadFromDatabase(pk);
                     pokemonToStore.Add(pokemon);
                     Console.WriteLine($"Loaded from database {pk}:\t{pokemon.GetSummaryString()}");
@@ -159,7 +159,30 @@ public class Program
                 break;
             case Mode.DEBUG:
                 SaveDataGeneration1 debugSaveData = (SaveDataGeneration1)GameState;
+                PartyPokemon debugPokemon = new(GameState.Game)
+                {
+                    PokemonIdentity = Lookup.GetPokemonBySpeciesId(151, Lookup.GetLanguageIdByIdentifier(Settings.Language)),
+                    Nickname = "MEW1",
+                    ExperiencePoints = 1027103-666, // lvl 98
+                    OriginalTrainer = new Trainer("Scoot", 0, 12345, 54321),
+                    Moves = new Dictionary<int, Move>
+                    {
+                        {1, new Move(1, 35, 0, 0)}, // pound
+                        {2, new Move(118, 10, 1, 0)}, // metronome
+                        {3, new Move(94, 10, 2, 0)}, // psychic
+                        {4, new Move(142, 10, 3, 0)}, // lovely kiss
+                    },
+                    Stats = new StatSet(false,
+                        new StatHextuple(
+                            15, 14, 13, 12, 11, 10
+                        ),
+                        new StatHextuple(
+                            0xFFFF - 1, 0xFFFF - 2, 0xFFFF - 3, 0xFFFF - 4, 0xFFFF - 5, 0xFFFF - 6
+                        )
+                    )
+                };
                 debugSaveData.WriteToPokedex(151);
+                byte[] debugPokemonBytes = SaveDataGeneration1.GetBoxBytesFromPartyPokemon(debugPokemon);
                 debugSaveData.WriteRecalculatedChecksums();
                 bool isValidWrite = debugSaveData.AreAllChecksumsValid();
                 if (isValidWrite)

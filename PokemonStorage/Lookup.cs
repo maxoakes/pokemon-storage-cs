@@ -49,6 +49,16 @@ public struct AbilityMapping
     }
 }
 
+public struct Types
+{
+    public byte Slot1 = 255;
+    public byte Slot2 = 255;
+
+    public Types()
+    {
+    }
+}
+
 public struct Nature
 {
     public byte Id;
@@ -179,6 +189,32 @@ public class Lookup
             game.GameName = row.Field<string>("name") ?? "";
         }
         return game;
+    }
+
+    public static Types GetTypesByPokemonId(int pokemonId)
+    {
+        List<SqliteParameter> parameters = [
+            new SqliteParameter("Id", SqliteType.Integer) { Value = pokemonId }
+        ];
+
+        DataTable gameDataTable = DbInterface.RetrieveTable("SELECT * FROM pokemon_types WHERE pokemon_id=@Id", "veekun", parameters);
+
+        Types types = new();
+        foreach (DataRow row in gameDataTable.Rows)
+        {
+            if (row.Field<Int64>("slot") == 1) types.Slot1 = (byte)row.Field<Int64>("type_id");
+            if (row.Field<Int64>("slot") == 2) types.Slot2 = (byte)row.Field<Int64>("type_id");
+        }
+        return types;
+    }
+
+    public static byte GetCatchRateBySpeciesId(int speciesId)
+    {
+        List<SqliteParameter> parameters = [
+            new SqliteParameter("Id", SqliteType.Integer) { Value = speciesId }
+        ];
+
+        return (byte)DbInterface.RetrieveScalar("SELECT capture_rate FROM pokemon_species WHERE id=@Id", "veekun", parameters);
     }
 
     #region Pokemon
@@ -425,6 +461,24 @@ public class Lookup
         try
         {
             Int64 index = (Int64)DbInterface.RetrieveScalar("SELECT form_id FROM pokemon_game_index WHERE game_index=@GameIndex AND generation=@Generation", "supplement", parameters);
+            return (ushort)index;
+        }
+        catch (NullReferenceException)
+        {
+            return 0;
+        }
+    }
+
+    public static ushort GetPokemonGameIndexByFormId(int generation, int formId)
+    {
+        List<SqliteParameter> parameters = [
+            new SqliteParameter("FormId", SqliteType.Integer) { Value = formId },
+            new SqliteParameter("Generation", SqliteType.Integer) { Value = generation },
+        ];
+
+        try
+        {
+            Int64 index = (Int64)DbInterface.RetrieveScalar("SELECT * FROM pokemon_game_index WHERE form_id=@FormId AND generation=@Generation", "supplement", parameters);
             return (ushort)index;
         }
         catch (NullReferenceException)
