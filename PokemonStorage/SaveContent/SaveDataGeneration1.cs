@@ -23,7 +23,6 @@ public class SaveDataGeneration1 : SaveData
     {
         IsYellow = game.GameName.Equals("yellow", StringComparison.OrdinalIgnoreCase);
         CurrentBoxNumber = Utility.GetByte(ModifiedData, 0x284C) & 0x7F;
-        Program.Logger.LogInformation($"{CurrentBoxNumber}");
         AreAllChecksumsValid();
         CheckPokedex();
 
@@ -31,7 +30,6 @@ public class SaveDataGeneration1 : SaveData
         {
             int thisOffset = CurrentBoxNumber == i ? 0x30C0 : BoxOffsets[i];
             ByteBoxes.Add(new Generation1Box(Utility.GetBytes(ModifiedData, thisOffset, BoxSize), (byte)i, Game, Language));
-            Program.Logger.LogInformation($"{ByteBoxes[i].Count}: {String.Join(",", ByteBoxes[i].PokemonNames.Select(x => Utility.GetDecodedString(x, Game, Language)).ToList())}");
         }
     }
 
@@ -176,7 +174,7 @@ public class SaveDataGeneration1 : SaveData
             Convert.ToByte(ivBinary.Substring(12, 4), 2)
         );
 
-        p.Stats = new(false, ev, iv);
+        p.Stats = new(false, ev, iv, p.PokemonIdentity.SpeciesId, p.Level);
 
         // Calculations
         p.AssignGenderByAttackIv();
@@ -268,7 +266,6 @@ public class SaveDataGeneration1 : SaveData
 
     public static byte[] GetBoxBytesFromPartyPokemon(PartyPokemon p)
     {
-        StatSet stats = p.Stats.AsOldSystem(Lookup.GetBaseStats(p.PokemonIdentity.SpeciesId), p.Level);
         byte[] bytes = new byte[0x21];
         Array.Fill<byte>(bytes, 0);
         bytes[0x00] = (byte)Lookup.GetPokemonGameIndexByFormId(1, p.PokemonIdentity.FormId);
@@ -292,25 +289,25 @@ public class SaveDataGeneration1 : SaveData
         byte[] exp = BitConverter.GetBytes(p.ExperiencePoints).Reverse().ToArray();
         Buffer.BlockCopy(exp, 1, bytes, 0x0E, 3);
 
-        byte[] hp_ev = BitConverter.GetBytes(stats.HP.Ev).Reverse().ToArray();
+        byte[] hp_ev = BitConverter.GetBytes(p.Stats.Old.HP.Ev).Reverse().ToArray();
         Buffer.BlockCopy(hp_ev, 0, bytes, 0x11, 2);
-        byte[] attack_ev = BitConverter.GetBytes(stats.Attack.Ev).Reverse().ToArray();
+        byte[] attack_ev = BitConverter.GetBytes(p.Stats.Old.Attack.Ev).Reverse().ToArray();
         Buffer.BlockCopy(attack_ev, 0, bytes, 0x13, 2);
-        byte[] defense_ev = BitConverter.GetBytes(stats.Defense.Ev).Reverse().ToArray();
+        byte[] defense_ev = BitConverter.GetBytes(p.Stats.Old.Defense.Ev).Reverse().ToArray();
         Buffer.BlockCopy(defense_ev, 0, bytes, 0x15, 2);
-        byte[] speed_ev = BitConverter.GetBytes(stats.Speed.Ev).Reverse().ToArray();
+        byte[] speed_ev = BitConverter.GetBytes(p.Stats.Old.Speed.Ev).Reverse().ToArray();
         Buffer.BlockCopy(speed_ev, 0, bytes, 0x17, 2);
-        byte[] special_ev = [.. BitConverter.GetBytes(stats.SpecialAttack.Ev).Reverse()];
+        byte[] special_ev = [.. BitConverter.GetBytes(p.Stats.Old.SpecialAttack.Ev).Reverse()];
         Buffer.BlockCopy(special_ev, 0, bytes, 0x19, 2);
 
-        bytes[0x1B] = (byte)((stats.Attack.Iv << 4) + stats.Defense.Iv);
-        bytes[0x1C] = (byte)((stats.Speed.Iv << 4) + stats.SpecialAttack.Iv);
+        bytes[0x1B] = (byte)((p.Stats.Old.Attack.Iv << 4) + p.Stats.Old.Defense.Iv);
+        bytes[0x1C] = (byte)((p.Stats.Old.Speed.Iv << 4) + p.Stats.Old.SpecialAttack.Iv);
         bytes[0x1D] = (byte)((p.Moves[0].TimesIncreased << 6) + p.Moves[0].Pp);
         bytes[0x1E] = (byte)((p.Moves[1].TimesIncreased << 6) + p.Moves[1].Pp);
         bytes[0x1F] = (byte)((p.Moves[2].TimesIncreased << 6) + p.Moves[2].Pp);
         bytes[0x20] = (byte)((p.Moves[3].TimesIncreased << 6) + p.Moves[3].Pp);
 
-        byte[] hp = BitConverter.GetBytes(stats.HP.Value).Reverse().ToArray();
+        byte[] hp = BitConverter.GetBytes(p.Stats.Old.HP.Value).Reverse().ToArray();
         Buffer.BlockCopy(hp, 0, bytes, 0x01, 2);
         return bytes;
     }

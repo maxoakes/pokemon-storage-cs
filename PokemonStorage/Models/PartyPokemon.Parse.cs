@@ -65,7 +65,7 @@ public partial class PartyPokemon
             Convert.ToByte(ivBinary.Substring(12, 4), 2)
         );
 
-        Stats = new(false, ev, iv);
+        Stats = new(false, ev, iv, PokemonIdentity.SpeciesId, Level);
 
         // Pokerus
         byte pokerusData = Utility.GetUnsignedNumber<byte>(content, 0x1C, 1, true);
@@ -288,7 +288,7 @@ public partial class PartyPokemon
 
         // Calculations
         // Program.Logger.LogInformation($"Done reading: {PokemonIdentity.SpeciesIdentifier}");
-        Stats = new(true, iv, ev);
+        Stats = new(true, iv, ev, PokemonIdentity.SpeciesId, Level, Nature);
         Gender = GetGenderByPersonalityValue();
         AbilityId = GetAbilityFromSlotId(abilitySlotId);
         HasNickname = DoesNicknameExist();
@@ -512,7 +512,7 @@ public partial class PartyPokemon
 
         // Calculations        
         // Program.Logger.LogInformation($"Done reading: {PokemonIdentity.SpeciesIdentifier}");
-        Stats = new(true, iv, ev);
+        Stats = new(true, iv, ev, PokemonIdentity.SpeciesId, Level, Nature);
     }
     #endregion
 

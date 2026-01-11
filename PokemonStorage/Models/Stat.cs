@@ -6,13 +6,6 @@ public class Stat
     public ushort Ev { get; set; }
     public byte Iv { get; set; }
 
-    public Stat(int value, int ev, int iv)
-    {
-        Value = (ushort)value;
-        Ev = (ushort)ev;
-        Iv = (byte)iv;
-    }
-
     public Stat(ushort ev, byte iv)
     {
         Ev = ev;

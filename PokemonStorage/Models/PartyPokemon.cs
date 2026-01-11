@@ -38,8 +38,7 @@ public partial class PartyPokemon
     public bool IsShinyAttackIv { get {return GetShinyByIv(); } }
 
     // Stats
-    public StatSet Stats { get; set; }
-    public StatSet ModernStatSystem { get; set; }
+    public StatStructure Stats { get; set; }
 
     public Dictionary<int, Move> Moves { get; set; }
     public uint PokerusDaysRemaining { get; set; }
@@ -85,7 +84,7 @@ public partial class PartyPokemon
         WalkingMood = 0;
 
         // Stats
-        Stats = new(true, new StatHextuple(), new StatHextuple());
+        Stats = new(true, new StatHextuple(), new StatHextuple(), PokemonIdentity.SpeciesId, Level);
         
         Moves = [];
         for (int i = 0; i < 4; i++)
@@ -117,10 +116,10 @@ public partial class PartyPokemon
 
     private bool GetShinyByIv()
     {
-        return Stats.Attack.Iv > 1 &&
-            Stats.Defense.Iv == 10 &&
-            Stats.Speed.Iv == 10 &&
-            Stats.SpecialAttack.Iv == 10;
+        return Stats.Old.Attack.Iv > 1 &&
+            Stats.Old.Defense.Iv == 10 &&
+            Stats.Old.Speed.Iv == 10 &&
+            Stats.Old.SpecialAttack.Iv == 10;
     }
     
     private bool GetShinyFromPersonalityValue()
@@ -158,7 +157,7 @@ public partial class PartyPokemon
             0 => Gender.MALE,
             8 => Gender.FEMALE,
             -1 => Gender.GENDERLESS,
-            _ => Stats.AsOldSystem(Lookup.GetBaseStats(PokemonIdentity.SpeciesId), Level).Attack.Iv <= ratio ? Gender.FEMALE : Gender.MALE,
+            _ => Stats.Old.Attack.Iv <= ratio ? Gender.FEMALE : Gender.MALE,
         };
     }
 
@@ -229,18 +228,18 @@ public partial class PartyPokemon
             new SqliteParameterPair("walking_mood", SqliteType.Integer, WalkingMood),
             new SqliteParameterPair("pokerus_strain", SqliteType.Integer, PokerusStrain),
             new SqliteParameterPair("pokerus_days_remaining", SqliteType.Integer, PokerusDaysRemaining),
-            new SqliteParameterPair("hp_iv", SqliteType.Integer, Stats.HP.Iv),
-            new SqliteParameterPair("hp_ev", SqliteType.Integer, Stats.HP.Ev),
-            new SqliteParameterPair("att_iv", SqliteType.Integer, Stats.Attack.Iv),
-            new SqliteParameterPair("att_ev", SqliteType.Integer, Stats.Attack.Ev),
-            new SqliteParameterPair("def_iv", SqliteType.Integer, Stats.Defense.Iv),
-            new SqliteParameterPair("def_ev", SqliteType.Integer, Stats.Defense.Ev),
-            new SqliteParameterPair("spe_iv", SqliteType.Integer, Stats.Speed.Iv),
-            new SqliteParameterPair("spe_ev", SqliteType.Integer, Stats.Speed.Ev),
-            new SqliteParameterPair("spa_iv", SqliteType.Integer, Stats.SpecialAttack.Iv),
-            new SqliteParameterPair("spa_ev", SqliteType.Integer, Stats.SpecialAttack.Ev),
-            new SqliteParameterPair("spd_iv", SqliteType.Integer, Stats.SpecialDefense.Iv),
-            new SqliteParameterPair("spd_ev", SqliteType.Integer, Stats.SpecialDefense.Ev),
+            new SqliteParameterPair("hp_iv", SqliteType.Integer, Stats.Modern.HP.Iv),
+            new SqliteParameterPair("hp_ev", SqliteType.Integer, Stats.Modern.HP.Ev),
+            new SqliteParameterPair("att_iv", SqliteType.Integer, Stats.Modern.Attack.Iv),
+            new SqliteParameterPair("att_ev", SqliteType.Integer, Stats.Modern.Attack.Ev),
+            new SqliteParameterPair("def_iv", SqliteType.Integer, Stats.Modern.Defense.Iv),
+            new SqliteParameterPair("def_ev", SqliteType.Integer, Stats.Modern.Defense.Ev),
+            new SqliteParameterPair("spe_iv", SqliteType.Integer, Stats.Modern.Speed.Iv),
+            new SqliteParameterPair("spe_ev", SqliteType.Integer, Stats.Modern.Speed.Ev),
+            new SqliteParameterPair("spa_iv", SqliteType.Integer, Stats.Modern.SpecialAttack.Iv),
+            new SqliteParameterPair("spa_ev", SqliteType.Integer, Stats.Modern.SpecialAttack.Ev),
+            new SqliteParameterPair("spd_iv", SqliteType.Integer, Stats.Modern.SpecialDefense.Iv),
+            new SqliteParameterPair("spd_ev", SqliteType.Integer, Stats.Modern.SpecialDefense.Ev),
             new SqliteParameterPair("coolness", SqliteType.Integer, Coolness),
             new SqliteParameterPair("beauty", SqliteType.Integer, Beauty),
             new SqliteParameterPair("cuteness", SqliteType.Integer, Cuteness),
@@ -297,7 +296,7 @@ public partial class PartyPokemon
             PokerusStrain = (byte)row.Field<Int64>("pokerus_strain");
             PokerusDaysRemaining = (byte)row.Field<Int64>("pokerus_days_remaining");
             Stats = new(
-                row.Field<Int64>("is_modern_stats") == 1, 
+                true,
                 new StatHextuple(
                     (ushort)row.Field<Int64>("hp_iv"),
                     (ushort)row.Field<Int64>("att_iv"),
@@ -313,7 +312,10 @@ public partial class PartyPokemon
                     (ushort)row.Field<Int64>("spe_ev"),
                     (ushort)row.Field<Int64>("spa_ev"),
                     (ushort)row.Field<Int64>("spd_ev")
-                )
+                ),
+                PokemonIdentity.SpeciesId,
+                Level,
+                Nature
             );
             Coolness = (byte)row.Field<Int64>("coolness");
             Beauty = (byte)row.Field<Int64>("beauty");

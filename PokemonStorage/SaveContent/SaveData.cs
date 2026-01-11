@@ -26,6 +26,7 @@ public abstract class SaveData
         Array.Copy(content, ModifiedData, content.Length);
         Game = game;
         Language = language;
+        Trainer = ParseOriginalTrainer();
     }
 
     /// <summary>

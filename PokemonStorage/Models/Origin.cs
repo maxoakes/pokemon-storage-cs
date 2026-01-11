@@ -53,11 +53,11 @@ public class Origin
             new SqliteParameterPair("encounter_type_id", SqliteType.Integer, EncounterTypeId),
             new SqliteParameterPair("catch_ball_item_id", SqliteType.Integer, PokeballId),
             new SqliteParameterPair("origin_version_id", SqliteType.Integer, GameVersionId),
-            new SqliteParameterPair("egg_receive_datetime", SqliteType.Text, EggReceiveDate?.ToString("yyyy-MM-dd HH:mm:ss")),
+            new SqliteParameterPair("egg_receive_datetime", SqliteType.Text, EggReceiveDate?.ToString("yyyy-MM-dd HH:mm:ss") ?? ""),
             new SqliteParameterPair("egg_hatch_location_id", SqliteType.Integer, EggHatchLocationId),
             new SqliteParameterPair("egg_hatch_location_platinum_id", SqliteType.Integer, EggHatchLocationPlatinumId),
             new SqliteParameterPair("met_level", SqliteType.Integer, MetLevel),
-            new SqliteParameterPair("met_datetime", SqliteType.Text, MetDateTime?.ToString("yyyy-MM-dd HH:mm:ss")),
+            new SqliteParameterPair("met_datetime", SqliteType.Text, MetDateTime?.ToString("yyyy-MM-dd HH:mm:ss") ?? ""),
             new SqliteParameterPair("met_location_id", SqliteType.Integer, MetLocationId),
             new SqliteParameterPair("met_location_platinum_id", SqliteType.Integer, MetLocationPlatinumId)
         ];

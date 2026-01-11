@@ -66,7 +66,7 @@ public static class DbInterface
     /// </summary>
     /// <param name="command">Fully created SqliteCommand that includes the Sqlite command, parameters, and connection string.</param>
     /// <returns>Result from the Sqlite scalar command</returns>
-    private static object ExecuteScalar(SqliteCommand command)
+    private static object? ExecuteScalar(SqliteCommand command)
     {
         object? result = null;
         try
@@ -131,7 +131,7 @@ public static class DbInterface
         DataTable dataTable;
         using (command.Connection)
         {
-            command.Connection.Open();
+            command.Connection?.Open();
             using SqliteDataReader dataReader = command.ExecuteReader();
             do
             {
@@ -154,7 +154,7 @@ public static class DbInterface
     /// <param name="isStoredProcedure">True if the query parameter is the name of a table-returning stored procedure, 
     /// false if it is a whole select statement string</param>
     /// <returns></returns>
-    public static object RetrieveScalar(string query, string connectionString, List<SqliteParameter>? parameters = null, bool isStoredProcedure = false)
+    public static object? RetrieveScalar(string query, string connectionString, List<SqliteParameter>? parameters = null, bool isStoredProcedure = false)
     {
         SqliteCommand command = PrepareSqlCommand(query, connectionString);
         if (isStoredProcedure)
@@ -169,19 +169,6 @@ public static class DbInterface
 
         return ExecuteScalar(command);
 
-    }
-
-    /// <summary>
-    /// Query a table and get the next highest integer for a given column. Used to get the next available primary key for tables that to not use identities.
-    /// </summary>
-    /// <param name="table">Name of the Sqlite table.</param>
-    /// <param name="column">Name of the column in the Sqlite table.</param>
-    /// <returns></returns>
-    public static int GetNextHighestNumber(string table, string column, string connectionName)
-    {
-        SqliteCommand command = PrepareSqlCommand($"SELECT MAX({column}) FROM {table}", connectionName);
-        int result = (int)ExecuteScalar(command);
-        return result + 1;
     }
 
     #endregion

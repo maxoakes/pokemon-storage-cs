@@ -4,7 +4,6 @@ using Newtonsoft.Json;
 using PokemonStorage.Models;
 using PokemonStorage.SaveContent;
 using System.Configuration;
-using System.Diagnostics;
 
 namespace PokemonStorage;
 
@@ -15,6 +14,8 @@ public enum Mode
     WRITE = 2,
     DEBUG = 3,
 }
+
+#region Settings
 
 public struct Settings()
 {
@@ -54,9 +55,15 @@ public struct Settings()
     }
 }
 
+#endregion
+
+#region Program
+#pragma warning disable CS8618
+
 public class Program
 {
-    public static ILogger? Logger;
+
+    public static ILogger Logger;
     public static Dictionary<string, string> ConnectionStrings = [];
     private static Settings Settings = new();
     private static string OutputFileName = "";
@@ -122,7 +129,6 @@ public class Program
             default:
                 throw new ConfigurationErrorsException($"Invalid game version generation: {game}");
         }
-        GameState.ParseOriginalTrainer();
         Console.WriteLine($"Loaded {GameState.Game} with {originalSaveData.Length} bytes as trainer {GameState.Trainer}");
         OutputFileName = $"{Settings.OutputFilePath}/{GameState.Game.GameName}.{DateTime.Now:s}.json";
 
@@ -172,16 +178,15 @@ public class Program
                         {2, new Move(94, 14, 2, 0)}, // psychic
                         {3, new Move(142, 16, 3, 0)}, // lovely kiss
                     },
-                    Stats = new StatSet(false,
-                        new StatHextuple(
-                            6, 14, 13, 12, 11, 10
-                        //  ^  1   2   4       3
-                        ),
-                        new StatHextuple(
-                            55555, 45555, 54555, 55455, 55545, 55554
-                        )
-                    )
                 };
+                debugPokemon.Stats = new StatStructure(false,
+                    new StatHextuple(6, 14, 13, 12, 11, 10),
+                    new StatHextuple(55555, 45555, 54555, 55455, 55545, 55554),
+                    151,
+                    debugPokemon.Level
+                );
+
+                File.WriteAllText(OutputFileName, SerializeObject(debugPokemon));
                 debugSaveData.WriteToPokedex(151);
                 int assignedBox = debugSaveData.AddPokemonToNextOpenBox(debugPokemon);
                 debugSaveData.ApplyBoxData(assignedBox);
@@ -236,3 +241,6 @@ public class Program
         return JsonConvert.SerializeObject(obj, Formatting.Indented);
     }
 }
+
+#pragma warning restore CS8618
+#endregion
