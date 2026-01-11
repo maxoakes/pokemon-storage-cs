@@ -158,7 +158,7 @@ public partial class PartyPokemon
             0 => Gender.MALE,
             8 => Gender.FEMALE,
             -1 => Gender.GENDERLESS,
-            _ => Stats.AsOldSystem().Attack.Iv <= ratio ? Gender.FEMALE : Gender.MALE,
+            _ => Stats.AsOldSystem(Lookup.GetBaseStats(PokemonIdentity.SpeciesId), Level).Attack.Iv <= ratio ? Gender.FEMALE : Gender.MALE,
         };
     }
 

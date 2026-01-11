@@ -21,9 +21,13 @@ public class StatSet
         SpecialDefense = new(0, iv.SpecialDefense, ev.SpecialDefense);
     }
 
-    public StatSet AsOldSystem()
+    public StatSet AsOldSystem(StatHextuple baseStats, byte level)
     {
-        if (!IsModernSystem) return this; 
+        if (!IsModernSystem)
+        {
+            SetFinalStatValues(baseStats, level, null);
+            return this; 
+        }
 
         StatSet oldSystem = new(false, new StatHextuple(
             (byte)(HP.Iv >> 1),
@@ -41,6 +45,7 @@ public class StatSet
             (ushort)(SpecialAttack.Ev * 66),
             (ushort)(SpecialDefense.Ev * 68)
         ));
+        oldSystem.SetFinalStatValues(baseStats, level, null);
         return oldSystem;
     }
 
@@ -91,7 +96,7 @@ public class StatSet
         return modernSet;
     }
 
-    private void SetFinalStatValues(StatHextuple baseStats, byte level, Nature nature)
+    private void SetFinalStatValues(StatHextuple baseStats, byte level, Nature? nature)
     {
         if (IsModernSystem)
         {
@@ -101,46 +106,50 @@ public class StatSet
             double modifiedSpecialDefense = 1;
             double modifiedSpeed = 1;
 
-            switch (nature.IncreaseId)
+            if (nature.HasValue)
             {
-                case 2:
-                    modifiedAttack = 1.1;
-                    break;
-                case 3:
-                    modifiedDefense = 1.1;
-                    break;
-                case 4:
-                    modifiedSpecialAttack = 1.1;
-                    break;
-                case 5:
-                    modifiedSpecialDefense = 1.1;
-                    break;
-                case 6:
-                    modifiedSpeed = 1.1;
-                    break;
-                default:
-                    break;
-            }
+                    
+                switch (nature.Value.IncreaseId)
+                {
+                    case 2:
+                        modifiedAttack = 1.1;
+                        break;
+                    case 3:
+                        modifiedDefense = 1.1;
+                        break;
+                    case 4:
+                        modifiedSpecialAttack = 1.1;
+                        break;
+                    case 5:
+                        modifiedSpecialDefense = 1.1;
+                        break;
+                    case 6:
+                        modifiedSpeed = 1.1;
+                        break;
+                    default:
+                        break;
+                }
 
-            switch (nature.DecreaseId)
-            {
-                case 2:
-                    modifiedAttack = 0.9;
-                    break;
-                case 3:
-                    modifiedDefense = 0.9;
-                    break;
-                case 4:
-                    modifiedSpecialAttack = 0.9;
-                    break;
-                case 5:
-                    modifiedSpecialDefense = 0.9;
-                    break;
-                case 6:
-                    modifiedSpeed = 0.9;
-                    break;
-                default:
-                    break;
+                switch (nature.Value.DecreaseId)
+                {
+                    case 2:
+                        modifiedAttack = 0.9;
+                        break;
+                    case 3:
+                        modifiedDefense = 0.9;
+                        break;
+                    case 4:
+                        modifiedSpecialAttack = 0.9;
+                        break;
+                    case 5:
+                        modifiedSpecialDefense = 0.9;
+                        break;
+                    case 6:
+                        modifiedSpeed = 0.9;
+                        break;
+                    default:
+                        break;
+                }
             }
 
             HP.Value = (ushort)(Math.Floor((2 * baseStats.HP + HP.Iv + Math.Floor(HP.Ev / 4.0)) * level / 100.0) + level + 10);

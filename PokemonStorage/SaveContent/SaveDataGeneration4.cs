@@ -38,7 +38,7 @@ public class SaveDataGeneration4 : SaveData
         byte[] littleBlockBytes = Utility.GetBytes(OriginalData, littleBlockOffsets.start, littleBlockOffsets.end - littleBlockOffsets.start);
 
         Trainer = new(
-            Utility.GetEncodedString(Utility.GetBytes(littleBlockBytes, trainerNameOffset, 16), Game, Language),
+            Utility.GetDecodedString(Utility.GetBytes(littleBlockBytes, trainerNameOffset, 16), Game, Language),
             Utility.GetUnsignedNumber<byte>(littleBlockBytes, trainerPublicIdOffset, 1),
             Utility.GetUnsignedNumber<ushort>(littleBlockBytes, trainerSecretIdOffset, 2),
             Utility.GetUnsignedNumber<ushort>(littleBlockBytes, trainerGenderOffset, 2)
@@ -112,7 +112,7 @@ public class SaveDataGeneration4 : SaveData
             int boxNameOffset = (Game.VersionId == 10) ? 0x12008 : 0x11EE4;
             
             byte[] boxNameBytes = Utility.GetBytes(bigBlockBytes, boxNameOffset + (i * 40), 40);
-            string boxName = Utility.GetEncodedString(boxNameBytes, Game, Language);
+            string boxName = Utility.GetDecodedString(boxNameBytes, Game, Language);
             if (!BoxList.ContainsKey(boxName)) BoxList.Add(boxName, []);
             byte[] thisBoxBytes = Utility.GetBytes(bigBlockBytes, pokemonOffset + (boxSize * i), 136 * 30);
 

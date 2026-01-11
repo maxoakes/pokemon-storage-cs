@@ -91,7 +91,7 @@ public enum Gender
 
 public class Lookup
 {
-    public static string GetEncodedCharacterByGameIndex(int gameIndex, int generation, string language="en", bool standardCharacter=true)
+    public static string GetDecodedCharacterByGameIndex(int gameIndex, int generation, string language="en", bool standardCharacter=true)
     {
         List<SqliteParameter> parameters = [
             new SqliteParameter("DecValue", SqliteType.Integer) { Value = gameIndex },
@@ -109,6 +109,26 @@ public class Lookup
                 AND standard_character=@StandardCharacter
             """, "supplement", parameters);
         return c;
+    }
+
+    public static ushort GetEncodedCharacterByCharacter(char character, int generation, string language="en", bool standardCharacter=true)
+    {
+        List<SqliteParameter> parameters = [
+            new SqliteParameter("Character", SqliteType.Text) { Value = character.ToString() },
+            new SqliteParameter("Generation", SqliteType.Integer) { Value = generation },
+            new SqliteParameter("Language", SqliteType.Text) { Value = language },
+            new SqliteParameter("StandardCharacter", SqliteType.Integer) { Value = standardCharacter ? 1 : 0 }
+        ];
+
+        Int64 i = (Int64)DbInterface.RetrieveScalar("""
+            SELECT dec_value FROM character_encoding 
+            WHERE 
+                character=@Character AND 
+                generation=@Generation AND 
+                lang_csv LIKE '%' || @Language || '%' 
+                AND standard_character=@StandardCharacter
+            """, "supplement", parameters);
+        return (ushort)i;
     }
 
     public static string GetIdentifierById(string tableName, int id, string connectionString="veekun")
@@ -214,7 +234,7 @@ public class Lookup
             new SqliteParameter("Id", SqliteType.Integer) { Value = speciesId }
         ];
 
-        return (byte)DbInterface.RetrieveScalar("SELECT capture_rate FROM pokemon_species WHERE id=@Id", "veekun", parameters);
+        return (byte)(Int64)DbInterface.RetrieveScalar("SELECT capture_rate FROM pokemon_species WHERE id=@Id", "veekun", parameters);
     }
 
     #region Pokemon
@@ -478,7 +498,7 @@ public class Lookup
 
         try
         {
-            Int64 index = (Int64)DbInterface.RetrieveScalar("SELECT * FROM pokemon_game_index WHERE form_id=@FormId AND generation=@Generation", "supplement", parameters);
+            Int64 index = (Int64)DbInterface.RetrieveScalar("SELECT game_index FROM pokemon_game_index WHERE form_id=@FormId AND generation=@Generation", "supplement", parameters);
             return (ushort)index;
         }
         catch (NullReferenceException)

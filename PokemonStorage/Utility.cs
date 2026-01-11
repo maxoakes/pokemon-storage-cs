@@ -1,5 +1,7 @@
-﻿using System.Numerics;
+﻿using System.Linq;
+using System.Numerics;
 using System.Text;
+using Org.BouncyCastle.Tls;
 
 namespace PokemonStorage;
 
@@ -163,30 +165,22 @@ public static class Utility
             return result;
     }
 
-    public static string GetEncodedString(byte[] data, Game game, string lang)
+    public static string GetDecodedString(byte[] data, Game game, string lang)
     {
         StringBuilder result = new StringBuilder();
 
         if (game.VersionId is >= 1 and <= 7)
         {
-            List<byte> nullTerminators;
-            switch (game.VersionId)
+            List<byte> nullTerminators = game.VersionId switch
             {
-                case 1:
-                case 2:
-                case 3:
-                case 4:
-                    nullTerminators = [0x00, 0x50];
-                    break;
-                default:
-                    nullTerminators = [0xFF, 0xFE];
-                    break;
-            }
+                1 or 2 or 3 or 4 => [0x00, 0x50],
+                _ => [0xFF, 0xFE],
+            };
             ;
 
             foreach (var b in data)
             {
-                string c = Lookup.GetEncodedCharacterByGameIndex(b, game.GenerationId, lang);
+                string c = Lookup.GetDecodedCharacterByGameIndex(b, game.GenerationId, lang);
                 if (!nullTerminators.Contains(b))
                     result.Append(c);
                 else
@@ -200,7 +194,7 @@ public static class Utility
                 if (i % 2 == 0)
                 {
                     ushort charBytes = GetUnsignedNumber<ushort>(data, i, 2);
-                    string ch = Lookup.GetEncodedCharacterByGameIndex(charBytes, game.GenerationId, lang);
+                    string ch = Lookup.GetDecodedCharacterByGameIndex(charBytes, game.GenerationId, lang);
                     if (charBytes != 0xFFFF)
                         result.Append(ch);
                     else
@@ -210,6 +204,45 @@ public static class Utility
         }
 
         return result.ToString();
+    }
+
+    public static byte[] GetEncodedString(string data, int maxSize, Game game, string lang)
+    {
+        byte[] builtBytes = new byte[maxSize];
+        Array.Fill<byte>(builtBytes, 0);
+        for (int i = 0; i < data.Length; i++)
+        {
+            ushort value = Lookup.GetEncodedCharacterByCharacter(data[i], game.GenerationId, lang);
+            if (game.VersionId <= 7)
+            {
+                builtBytes[i] = (byte)value;
+            }
+            else
+            {
+                byte[] bytes = BitConverter.GetBytes(value);
+                Array.Copy(bytes, 0, builtBytes, i*2, 2);
+            }
+        }
+        switch (game.VersionId)
+        {
+            case 1:
+            case 2:
+            case 3:
+            case 4:
+                builtBytes[data.Length] = 0x50;
+                break;
+            case 5:
+            case 6:
+            case 7:
+                builtBytes[data.Length] = 0xFF;
+                break;
+            default:
+                builtBytes[data.Length] = 0xFF;
+                builtBytes[data.Length + 1] = 0xFF;
+                break;
+        }
+
+        return builtBytes;
     }
 
     #endregion

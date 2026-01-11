@@ -16,7 +16,7 @@ public class SaveDataGeneration2 : SaveData
 
     public override Trainer ParseOriginalTrainer()
     {
-        string playerName = Utility.GetEncodedString(Utility.GetBytes(OriginalData, 0x200B, 11), Game, Language);
+        string playerName = Utility.GetDecodedString(Utility.GetBytes(OriginalData, 0x200B, 11), Game, Language);
         ushort playerId = Utility.GetUnsignedNumber<ushort>(OriginalData, 0x2009, 2, true);
         Trainer = new(
             playerName,
@@ -66,10 +66,10 @@ public class SaveDataGeneration2 : SaveData
         for (int i = 0; i < boxCount; i++)
         {
             byte[] nicknameBytes = Utility.GetBytes(storageBytes, nicknameOffset + (0xB * i), 0xB);
-            string nickname = Utility.GetEncodedString(nicknameBytes, Game, lang);
+            string nickname = Utility.GetDecodedString(nicknameBytes, Game, lang);
 
             byte[] originalTrainerNameBytes = Utility.GetBytes(storageBytes, originalTrainerNameOffset + (0xB * i), 0xB);
-            string originalTrainerName = Utility.GetEncodedString(originalTrainerNameBytes, Game, lang);
+            string originalTrainerName = Utility.GetDecodedString(originalTrainerNameBytes, Game, lang);
 
             byte[] pokemonBytes = Utility.GetBytes(storageBytes, pokemonOffset + (pokemonSize * i), 32);
             PartyPokemon pokemon = new(Game);

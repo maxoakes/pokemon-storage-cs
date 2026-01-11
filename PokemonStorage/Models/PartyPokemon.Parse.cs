@@ -109,13 +109,13 @@ public partial class PartyPokemon
         PersonalityValue = Utility.GetUnsignedNumber<uint>(content, 0x00, 4);
         uint otId = Utility.GetUnsignedNumber<uint>(content, 0x04, 4);
         OriginalTrainer = new Trainer(
-            Utility.GetEncodedString(Utility.GetBytes(content, 0x14, 7), game, language),
+            Utility.GetDecodedString(Utility.GetBytes(content, 0x14, 7), game, language),
             0,
             Utility.GetUnsignedNumber<ushort>(content, 0x04, 2),
             Utility.GetUnsignedNumber<ushort>(content, 0x06, 2)
         );
 
-        Nickname = Utility.GetEncodedString(Utility.GetBytes(content, 0x08, 10), game, language);
+        Nickname = Utility.GetDecodedString(Utility.GetBytes(content, 0x08, 10), game, language);
         LanguageId = Lookup.GetLanguageIdByIdentifier(language);
         Gen3Misc = Utility.GetUnsignedNumber<byte>(content, 0x13, 1);
         Markings = new Markings(3, Utility.GetUnsignedNumber<byte>(content, 0x1B, 1));
@@ -455,14 +455,14 @@ public partial class PartyPokemon
 
                 case 'C':
                     byte[] nicknameBytes = Utility.GetBytes(blockBytes, 0x0, 20);
-                    Nickname = Utility.GetEncodedString(nicknameBytes, game, language);
+                    Nickname = Utility.GetDecodedString(nicknameBytes, game, language);
                     Origin.GameVersionId = Lookup.GetVersionIdByGameIndex(Utility.GetUnsignedNumber<byte>(blockBytes, 0x17, 1));
                     Ribbons.ParseRibbonSet(2, Utility.GetBytes(blockBytes, 0x18, 4));
                     break;
 
                 case 'D':
                     byte[] otNameBytes = Utility.GetBytes(blockBytes, 0x0, 16);
-                    OriginalTrainer.Name = Utility.GetEncodedString(otNameBytes, game, language);
+                    OriginalTrainer.Name = Utility.GetDecodedString(otNameBytes, game, language);
                     
                     byte eggYear = Utility.GetUnsignedNumber<byte>(blockBytes, 0x10, 1);
                     byte eggMonth = Utility.GetUnsignedNumber<byte>(blockBytes, 0x11, 1);

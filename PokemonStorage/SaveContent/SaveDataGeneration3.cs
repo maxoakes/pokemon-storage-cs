@@ -41,7 +41,7 @@ public class SaveDataGeneration3 : SaveData
         }
 
         Trainer = new(
-            Utility.GetEncodedString(Utility.GetBytes(sections[0], 0, 7), Game, Language),
+            Utility.GetDecodedString(Utility.GetBytes(sections[0], 0, 7), Game, Language),
             Utility.GetUnsignedNumber<byte>(sections[0], 0x0008, 1),
             Utility.GetUnsignedNumber<ushort>(sections[0], 0x000A, 2),
             Utility.GetUnsignedNumber<ushort>(sections[0], 0x000C, 2)
@@ -131,7 +131,7 @@ public class SaveDataGeneration3 : SaveData
         for (int i = 0; i < 14; i++)
         {
             byte[] thisBoxBytes = Utility.GetBytes(boxBytes, 0x4 + (i * 2400), 2400);
-            string thisBoxName = Utility.GetEncodedString(Utility.GetBytes(boxBytes, 0x8344 + (i * 9), 9), Game, Language);
+            string thisBoxName = Utility.GetDecodedString(Utility.GetBytes(boxBytes, 0x8344 + (i * 9), 9), Game, Language);
             if (!BoxList.ContainsKey(thisBoxName)) BoxList.Add(thisBoxName, []);
 
             for (int j = 0; j < 30; j++)

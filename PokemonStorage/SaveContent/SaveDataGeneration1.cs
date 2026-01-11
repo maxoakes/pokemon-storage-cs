@@ -10,41 +10,36 @@ public struct BoxPosition
     public bool IsAvailable;
 }
 
-public struct BoxGen1
-{
-    public byte Count;
-    public byte[] SpeciesIds;
-    public byte[] PokemonBytes;
-    public string[] OriginalTrainerNames;
-    public string[] PokemonNames;
-}
-
 public class SaveDataGeneration1 : SaveData
 {
     private bool IsYellow { get; }
     private int BoxSize = 0x462;
+    private int CurrentBoxNumber { get; }
     private int[] BoxOffsets =          [0x4000, 0x4462, 0x48C4, 0x4D26, 0x5188, 0x55EA, 0x6000, 0x6462, 0x68C4, 0x6D26, 0x7188, 0x75EA];
     private int[] BoxChecksumOffsets =  [0x5A4D, 0x5A4E, 0x5A4F, 0x5A50, 0x5A51, 0x5A52, 0x7A4D, 0x7A4E, 0x7A4F, 0x7A50, 0x7A51, 0x7A52];
-    private List<BoxPosition> BoxPositions = [];
+    private List<Generation1Box> ByteBoxes = [];
 
     public SaveDataGeneration1(byte[] content, Game game, string language) : base(content, game, language)
     {
         IsYellow = game.GameName.Equals("yellow", StringComparison.OrdinalIgnoreCase);
+        CurrentBoxNumber = Utility.GetByte(ModifiedData, 0x284C) & 0x7F;
+        Program.Logger.LogInformation($"{CurrentBoxNumber}");
         AreAllChecksumsValid();
         CheckPokedex();
 
         for (int i = 0; i < BoxOffsets.Length; i++)
         {
-            ModifiedData[BoxOffsets + (i * 0x20)];
+            int thisOffset = CurrentBoxNumber == i ? 0x30C0 : BoxOffsets[i];
+            ByteBoxes.Add(new Generation1Box(Utility.GetBytes(ModifiedData, thisOffset, BoxSize), (byte)i, Game, Language));
+            Program.Logger.LogInformation($"{ByteBoxes[i].Count}: {String.Join(",", ByteBoxes[i].PokemonNames.Select(x => Utility.GetDecodedString(x, Game, Language)).ToList())}");
         }
     }
-
 
     #region Override
 
     public override Trainer ParseOriginalTrainer()
     {
-        string playerName = Utility.GetEncodedString(Utility.GetBytes(OriginalData, 0x2598, 11), Game, Language);
+        string playerName = Utility.GetDecodedString(Utility.GetBytes(OriginalData, 0x2598, 11), Game, Language);
         ushort playerId = Utility.GetUnsignedNumber<ushort>(OriginalData, 0x2605, 2, true);
         Trainer = new(playerName, (int)Gender.MALE, playerId, 0);
         return Trainer;
@@ -181,7 +176,7 @@ public class SaveDataGeneration1 : SaveData
             Convert.ToByte(ivBinary.Substring(12, 4), 2)
         );
 
-        p.Stats = new(true, ev, iv);
+        p.Stats = new(false, ev, iv);
 
         // Calculations
         p.AssignGenderByAttackIv();
@@ -196,10 +191,10 @@ public class SaveDataGeneration1 : SaveData
         for (int i = 0; i < boxCount; i++)
         {
             byte[] nicknameBytes = Utility.GetBytes(storageBytes, nicknamesOffset + (0xB * i), 0xB);
-            string nickname = Utility.GetEncodedString(nicknameBytes, Game, lang);
+            string nickname = Utility.GetDecodedString(nicknameBytes, Game, lang);
 
             byte[] originalTrainerNameBytes = Utility.GetBytes(storageBytes, trainerNameOffset + (0xB * i), 0xB);
-            string originalTrainerName = Utility.GetEncodedString(originalTrainerNameBytes, Game, lang);
+            string originalTrainerName = Utility.GetDecodedString(originalTrainerNameBytes, Game, lang);
 
             byte[] pokemonBytes = Utility.GetBytes(storageBytes, pokemonOffset + (pokemonSize * i), pokemonSize);
             PartyPokemon pokemon = GetPartyPokemonFromBoxBytes(pokemonBytes);
@@ -244,20 +239,39 @@ public class SaveDataGeneration1 : SaveData
         }
     }
 
+    /// <summary>
+    /// Add the desired Party Pokemon to the next available box slot
+    /// </summary>
+    /// <param name="pokemon"></param>
+    /// <returns>Box that the Pokemon was placed in. -1 if it was not placed.</returns>
+    public int AddPokemonToNextOpenBox(PartyPokemon pokemon)
+    {
+        Generation1Box? targetBox = ByteBoxes.FirstOrDefault(x => x.Count < 20);
+        if (targetBox == null) return -1;
+
+        int boxId = targetBox.Id;
+        int targetSlot = targetBox.Count;
+        bool success = targetBox.AssignPokemon(pokemon, targetSlot);
+        return success ? boxId : -1;
+    }
+
+    public void ApplyBoxData(int boxId)
+    {
+        byte[] newBoxData = ByteBoxes[boxId].GetBoxBytes();
+        int thisOffset = CurrentBoxNumber == boxId ? 0x30C0 : BoxOffsets[boxId];
+        Array.Copy(newBoxData, 0, ModifiedData, thisOffset, newBoxData.Length);
+    }
+
     #endregion
 
     #region Helpers
 
     public static byte[] GetBoxBytesFromPartyPokemon(PartyPokemon p)
     {
-        StatSet stats = p.Stats.AsOldSystem();
-        
-        byte[] bytes = new byte[0x20];
+        StatSet stats = p.Stats.AsOldSystem(Lookup.GetBaseStats(p.PokemonIdentity.SpeciesId), p.Level);
+        byte[] bytes = new byte[0x21];
         Array.Fill<byte>(bytes, 0);
         bytes[0x00] = (byte)Lookup.GetPokemonGameIndexByFormId(1, p.PokemonIdentity.FormId);
-        
-        byte[] hp = BitConverter.GetBytes(stats.HP.Value);
-        Buffer.BlockCopy(hp, 0, bytes, 0x01, 2);
         bytes[0x03] = p.Level;
         
         Types types = Lookup.GetTypesByPokemonId(p.PokemonIdentity.PokemonId);
@@ -272,21 +286,21 @@ public class SaveDataGeneration1 : SaveData
         bytes[0x0A] = (byte)p.Moves[2].Id;
         bytes[0x0B] = (byte)p.Moves[3].Id;
         
-        byte[] otid = BitConverter.GetBytes(p.OriginalTrainer.PublicId);
+        byte[] otid = BitConverter.GetBytes(p.OriginalTrainer.PublicId).Reverse().ToArray();
         Buffer.BlockCopy(otid, 0, bytes, 0x0C, 2);
 
-        byte[] exp = BitConverter.GetBytes(p.ExperiencePoints);
-        Buffer.BlockCopy(exp, 0, bytes, 0x0E, 3);
+        byte[] exp = BitConverter.GetBytes(p.ExperiencePoints).Reverse().ToArray();
+        Buffer.BlockCopy(exp, 1, bytes, 0x0E, 3);
 
-        byte[] hp_ev = BitConverter.GetBytes(stats.HP.Ev);
+        byte[] hp_ev = BitConverter.GetBytes(stats.HP.Ev).Reverse().ToArray();
         Buffer.BlockCopy(hp_ev, 0, bytes, 0x11, 2);
-        byte[] attack_ev = BitConverter.GetBytes(stats.Attack.Ev);
+        byte[] attack_ev = BitConverter.GetBytes(stats.Attack.Ev).Reverse().ToArray();
         Buffer.BlockCopy(attack_ev, 0, bytes, 0x13, 2);
-        byte[] defense_ev = BitConverter.GetBytes(stats.Defense.Ev);
+        byte[] defense_ev = BitConverter.GetBytes(stats.Defense.Ev).Reverse().ToArray();
         Buffer.BlockCopy(defense_ev, 0, bytes, 0x15, 2);
-        byte[] speed_ev = BitConverter.GetBytes(stats.Speed.Ev);
+        byte[] speed_ev = BitConverter.GetBytes(stats.Speed.Ev).Reverse().ToArray();
         Buffer.BlockCopy(speed_ev, 0, bytes, 0x17, 2);
-        byte[] special_ev = BitConverter.GetBytes(stats.SpecialAttack.Ev);
+        byte[] special_ev = [.. BitConverter.GetBytes(stats.SpecialAttack.Ev).Reverse()];
         Buffer.BlockCopy(special_ev, 0, bytes, 0x19, 2);
 
         bytes[0x1B] = (byte)((stats.Attack.Iv << 4) + stats.Defense.Iv);
@@ -295,6 +309,9 @@ public class SaveDataGeneration1 : SaveData
         bytes[0x1E] = (byte)((p.Moves[1].TimesIncreased << 6) + p.Moves[1].Pp);
         bytes[0x1F] = (byte)((p.Moves[2].TimesIncreased << 6) + p.Moves[2].Pp);
         bytes[0x20] = (byte)((p.Moves[3].TimesIncreased << 6) + p.Moves[3].Pp);
+
+        byte[] hp = BitConverter.GetBytes(stats.HP.Value).Reverse().ToArray();
+        Buffer.BlockCopy(hp, 0, bytes, 0x01, 2);
         return bytes;
     }
 

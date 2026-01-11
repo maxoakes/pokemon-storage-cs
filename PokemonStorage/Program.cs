@@ -167,21 +167,24 @@ public class Program
                     OriginalTrainer = new Trainer("Scoot", 0, 12345, 54321),
                     Moves = new Dictionary<int, Move>
                     {
-                        {1, new Move(1, 35, 0, 0)}, // pound
-                        {2, new Move(118, 10, 1, 0)}, // metronome
-                        {3, new Move(94, 10, 2, 0)}, // psychic
-                        {4, new Move(142, 10, 3, 0)}, // lovely kiss
+                        {0, new Move(1, 35, 0, 0)}, // pound
+                        {1, new Move(118, 12, 1, 0)}, // metronome
+                        {2, new Move(94, 14, 2, 0)}, // psychic
+                        {3, new Move(142, 16, 3, 0)}, // lovely kiss
                     },
                     Stats = new StatSet(false,
                         new StatHextuple(
-                            15, 14, 13, 12, 11, 10
+                            6, 14, 13, 12, 11, 10
+                        //  ^  1   2   4       3
                         ),
                         new StatHextuple(
-                            0xFFFF - 1, 0xFFFF - 2, 0xFFFF - 3, 0xFFFF - 4, 0xFFFF - 5, 0xFFFF - 6
+                            55555, 45555, 54555, 55455, 55545, 55554
                         )
                     )
                 };
                 debugSaveData.WriteToPokedex(151);
+                int assignedBox = debugSaveData.AddPokemonToNextOpenBox(debugPokemon);
+                debugSaveData.ApplyBoxData(assignedBox);
                 byte[] debugPokemonBytes = SaveDataGeneration1.GetBoxBytesFromPartyPokemon(debugPokemon);
                 debugSaveData.WriteRecalculatedChecksums();
                 bool isValidWrite = debugSaveData.AreAllChecksumsValid();
