@@ -6,9 +6,10 @@ using PokemonStorage.SaveContent;
 public class Generation1Box
 {
     public Game Game { get; }
+    public byte[] OriginalBoxBytes { get; }
     public string Language { get; }
     public byte Id { get; }
-    public byte Count { get; private set; }
+    public byte Count { get; set; }
     public byte[] SpeciesIds { get; private set; }
     public byte[][] PokemonBytes { get; private set; }
     public byte[][] OriginalTrainerNames { get; private set; }
@@ -17,6 +18,7 @@ public class Generation1Box
     public Generation1Box(byte[] content, byte id, Game game, string lang)
     {
         Game = game;
+        OriginalBoxBytes = content;
         Language = lang;
         Id = id;
         Count = Utility.GetByte(content, 0x00);
@@ -65,22 +67,5 @@ public class Generation1Box
             Buffer.BlockCopy(PokemonNames[i], 0, content, 0x386+(i*0xB), 0xB);
         }
         return content;
-    }
-
-    /// <summary>
-    /// Put all Pokemon bytes in the correct places in a box
-    /// </summary>
-    /// <param name="pokemon">Normalized Party Pokemon data</param>
-    /// <param name="slot">Target slot starting at 0</param>
-    /// <returns>True if placement was done, false if it was not done</returns>
-    public bool AssignPokemon(PartyPokemon pokemon, int slot)
-    {
-        if (slot >= 20) return false;
-        SpeciesIds[slot] = (byte)Lookup.GetPokemonGameIndexByFormId(1, pokemon.PokemonIdentity.FormId);
-        OriginalTrainerNames[slot] = Utility.GetEncodedString(pokemon.OriginalTrainer.Name, 11, Game, Language);
-        PokemonNames[slot] = Utility.GetEncodedString(pokemon.Nickname, 11, Game, Language);
-        PokemonBytes[slot] = SaveDataGeneration1.GetBoxBytesFromPartyPokemon(pokemon);
-        Count++;
-        return true;
     }
 }

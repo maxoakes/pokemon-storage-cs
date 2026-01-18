@@ -14,7 +14,7 @@ public class SaveDataGeneration2 : SaveData
         return true;
     }
 
-    public override Trainer ParseOriginalTrainer()
+    protected override void ParseOriginalTrainer()
     {
         string playerName = Utility.GetDecodedString(Utility.GetBytes(OriginalData, 0x200B, 11), Game, Language);
         ushort playerId = Utility.GetUnsignedNumber<ushort>(OriginalData, 0x2009, 2, true);
@@ -24,24 +24,23 @@ public class SaveDataGeneration2 : SaveData
             playerId,
             0
         );
-        return Trainer;
     }
     
 
     /// <summary>
     /// Fills GameState.Party with the party Pokemon parsed from the save file content.
     /// </summary>
-    public override void ParsePartyPokemon()
+    protected override void ParsePartyPokemon()
     {
         int partyOffset = Game.VersionId == 3 ? 0x288A : 0x2865;
         byte[] partyBytes = Utility.GetBytes(OriginalData, partyOffset, 428);
         Party = GetPokemonFromStorageGen2(partyBytes, Language, 6, 48);
     }
 
-        /// <summary>
+    /// <summary>
     /// Fills GameState.BoxList with the box Pokemon parsed from the save file content.
     /// </summary>
-    public override void ParseBoxPokemon()
+    protected override void ParseBoxPokemon()
     {
         int boxSize = 0x462;
         int[] boxOffets = [0x4000, 0x4450, 0x48A0, 0x4CF0, 0x5140, 0x5590, 0x59E0, 0x6000, 0x6450, 0x68A0, 0x6CF0, 0x7140, 0x7590, 0x79E0];
@@ -80,6 +79,26 @@ public class SaveDataGeneration2 : SaveData
     }
 
     public override PartyPokemon GetPartyPokemonFromBoxBytes(byte[] data)
+    {
+        throw new NotImplementedException();
+    }
+
+    public override void PrintPokedex()
+    {
+        throw new NotImplementedException();
+    }
+
+    public override void WriteToPokedex(int nationalIndex, bool seen = true, bool owned = true)
+    {
+        throw new NotImplementedException();
+    }
+
+    public override byte[] GetBoxBytesFromPartyPokemon(PartyPokemon p)
+    {
+        throw new NotImplementedException();
+    }
+
+    public override int AddPokemonToNextOpenBox(PartyPokemon pokemon, int targetBox = -1)
     {
         throw new NotImplementedException();
     }

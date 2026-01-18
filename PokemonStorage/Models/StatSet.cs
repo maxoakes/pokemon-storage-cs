@@ -10,12 +10,12 @@ public class StatSet {
 
     public StatSet(StatHextuple iv, StatHextuple ev)
     {
-        HP = new(iv.HP, (byte)ev.HP);
-        Attack = new(iv.Attack, (byte)ev.Attack);
-        Defense = new(iv.Defense, (byte)ev.Defense);
-        Speed = new(iv.Speed, (byte)ev.Speed);
-        SpecialAttack = new(iv.SpecialAttack, (byte)ev.SpecialAttack);
-        SpecialDefense = new(iv.SpecialDefense, (byte)ev.SpecialDefense);
+        HP = new(ev.HP, (byte)iv.HP);
+        Attack = new(ev.Attack, (byte)iv.Attack);
+        Defense = new(ev.Defense, (byte)iv.Defense);
+        Speed = new(ev.Speed, (byte)iv.Speed);
+        SpecialAttack = new(ev.SpecialAttack, (byte)iv.SpecialAttack);
+        SpecialDefense = new(ev.SpecialDefense, (byte)iv.SpecialDefense);
     }
 
     public void SetFinalValues(StatHextuple stats)

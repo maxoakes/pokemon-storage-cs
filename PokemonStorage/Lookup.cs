@@ -100,14 +100,14 @@ public class Lookup
             new SqliteParameter("StandardCharacter", SqliteType.Integer) { Value = standardCharacter ? 1 : 0 }
         ];
 
-        string c = (string)DbInterface.RetrieveScalar("""
+        string c = (string)(DbInterface.RetrieveScalar("""
             SELECT character FROM character_encoding 
             WHERE 
                 dec_value=@DecValue AND 
                 generation=@Generation AND 
                 lang_csv LIKE '%' || @Language || '%' 
                 AND standard_character=@StandardCharacter
-            """, "supplement", parameters);
+            """, "supplement", parameters) ?? "");
         return c;
     }
 
@@ -137,8 +137,7 @@ public class Lookup
             new SqliteParameter("Id", SqliteType.Integer) { Value = id }
         ];
 
-        string value = (string)DbInterface.RetrieveScalar($"SELECT identifier FROM {tableName} WHERE id=@Id", connectionString, parameters);
-        return value;
+        return (string)(DbInterface.RetrieveScalar($"SELECT identifier FROM {tableName} WHERE id=@Id", connectionString, parameters) ?? "");
     }
 
         public static byte GetLanguageIdByIdentifier(string identifier)
@@ -237,6 +236,14 @@ public class Lookup
         return (byte)(Int64)DbInterface.RetrieveScalar("SELECT capture_rate FROM pokemon_species WHERE id=@Id", "veekun", parameters);
     }
 
+    public static byte GetPpAmount(int moveId, byte increasedAmount)
+    {
+        List<SqliteParameter> parameters = [
+            new SqliteParameter("Id", SqliteType.Integer) { Value = moveId }
+        ];
+        int baseline = (int)(Int64)DbInterface.RetrieveScalar("SELECT PP FROM moves WHERE id=@Id", "veekun", parameters);
+        return (byte)(baseline * (1 + (increasedAmount * 0.2f)));
+    }
     #region Pokemon
 
     public static PokemonIdentity GetPokemonBySpeciesId(int speciesId, int languageId)
@@ -530,7 +537,7 @@ public class Lookup
             new SqliteParameter("Id", SqliteType.Integer) { Value = gameIndex }
         ];
 
-        string value = (string)DbInterface.RetrieveScalar("SELECT identifier FROM encounter_types_game_index WHERE game_index=@Id", "supplement", parameters);
+        string value = (string)(DbInterface.RetrieveScalar("SELECT identifier FROM encounter_types_game_index WHERE game_index=@Id", "supplement", parameters) ?? "");
         return value;
     }
 

@@ -135,10 +135,7 @@ public class Program
         switch (Settings.Mode)
         {
             case Mode.READ:
-                GameState.ParsePartyPokemon();
                 if (Settings.OutputToDatabase) ReviewPokemonDictionaryForDatabaseWrite(GameState.Party);
-
-                GameState.ParseBoxPokemon();
                 foreach ((string box, Dictionary<int, PartyPokemon> boxDictionary) in GameState.BoxList)
                 {
                     if (boxDictionary.Count == 0) continue;
@@ -173,14 +170,14 @@ public class Program
                     OriginalTrainer = new Trainer("Scoot", 0, 12345, 54321),
                     Moves = new Dictionary<int, Move>
                     {
-                        {0, new Move(1, 35, 0, 0)}, // pound
-                        {1, new Move(118, 12, 1, 0)}, // metronome
-                        {2, new Move(94, 14, 2, 0)}, // psychic
-                        {3, new Move(142, 16, 3, 0)}, // lovely kiss
+                        {0, new Move(12, Lookup.GetPpAmount(12, 2), 2, 0)}, // pound
+                        {1, new Move(21, Lookup.GetPpAmount(21, 1), 1, 1)}, // slam
+                        {2, new Move(84, Lookup.GetPpAmount(84, 2), 2, 2)}, // thundershock
+                        {3, new Move(139, Lookup.GetPpAmount(139, 3), 3, 3)}, // poison gas
                     },
                 };
                 debugPokemon.Stats = new StatStructure(false,
-                    new StatHextuple(6, 14, 13, 12, 11, 10),
+                    new StatHextuple(4, 14, 13, 12, 11, 10),
                     new StatHextuple(55555, 45555, 54555, 55455, 55545, 55554),
                     151,
                     debugPokemon.Level
@@ -190,7 +187,7 @@ public class Program
                 debugSaveData.WriteToPokedex(151);
                 int assignedBox = debugSaveData.AddPokemonToNextOpenBox(debugPokemon);
                 debugSaveData.ApplyBoxData(assignedBox);
-                byte[] debugPokemonBytes = SaveDataGeneration1.GetBoxBytesFromPartyPokemon(debugPokemon);
+                byte[] debugPokemonBytes = GameState.GetBoxBytesFromPartyPokemon(debugPokemon);
                 debugSaveData.WriteRecalculatedChecksums();
                 bool isValidWrite = debugSaveData.AreAllChecksumsValid();
                 if (isValidWrite)

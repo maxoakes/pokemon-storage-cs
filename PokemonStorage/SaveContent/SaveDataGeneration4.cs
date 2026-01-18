@@ -14,7 +14,7 @@ public class SaveDataGeneration4 : SaveData
         return true;
     }
 
-    public override Trainer ParseOriginalTrainer()
+    protected override void ParseOriginalTrainer()
     {
         (int start, int end) littleBlockOffsets = (0x00000, 0x00000);
         int trainerNameOffset = Game.VersionId == 10 ? 0x64 : 0x68;
@@ -43,14 +43,12 @@ public class SaveDataGeneration4 : SaveData
             Utility.GetUnsignedNumber<ushort>(littleBlockBytes, trainerSecretIdOffset, 2),
             Utility.GetUnsignedNumber<ushort>(littleBlockBytes, trainerGenderOffset, 2)
         );
-
-        return Trainer;
     }
 
     /// <summary>
     /// Fills GameState.Party with the party Pokemon parsed from the save file content.
     /// </summary>
-    public override void ParsePartyPokemon()
+    protected override void ParsePartyPokemon()
     {
         (int start, int end) littleBlockOffsets = (0x00000, 0x00000);
         int partySizeOffset = Game.VersionId == 10 ? 0x94 : 0x9C;
@@ -86,7 +84,7 @@ public class SaveDataGeneration4 : SaveData
         /// <summary>
     /// Fills GameState.BoxList with the box Pokemon parsed from the save file content.
     /// </summary>
-    public override void ParseBoxPokemon()
+    protected override void ParseBoxPokemon()
     {
         (int start, int end) bigBlockOffsets = (0x00000, 0x00000);
 
@@ -131,6 +129,26 @@ public class SaveDataGeneration4 : SaveData
     }
 
     public override PartyPokemon GetPartyPokemonFromBoxBytes(byte[] data)
+    {
+        throw new NotImplementedException();
+    }
+
+    public override void PrintPokedex()
+    {
+        throw new NotImplementedException();
+    }
+
+    public override void WriteToPokedex(int nationalIndex, bool seen = true, bool owned = true)
+    {
+        throw new NotImplementedException();
+    }
+
+    public override byte[] GetBoxBytesFromPartyPokemon(PartyPokemon p)
+    {
+        throw new NotImplementedException();
+    }
+
+    public override int AddPokemonToNextOpenBox(PartyPokemon pokemon, int targetBox = -1)
     {
         throw new NotImplementedException();
     }

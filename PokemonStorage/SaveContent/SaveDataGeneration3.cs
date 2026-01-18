@@ -14,7 +14,7 @@ public class SaveDataGeneration3 : SaveData
         return true;
     }
 
-    public override Trainer ParseOriginalTrainer()
+    protected override void ParseOriginalTrainer()
     {
         byte[] save1 = Utility.GetBytes(OriginalData, 0x0000, 57344);
         byte[] save2 = Utility.GetBytes(OriginalData, 0xE000, 57344);
@@ -46,13 +46,12 @@ public class SaveDataGeneration3 : SaveData
             Utility.GetUnsignedNumber<ushort>(sections[0], 0x000A, 2),
             Utility.GetUnsignedNumber<ushort>(sections[0], 0x000C, 2)
         );
-        return Trainer;
     }
 
     /// <summary>
     /// Fills GameState.Party with the party Pokemon parsed from the save file content.
     /// </summary>
-    public override void ParsePartyPokemon()
+    protected override void ParsePartyPokemon()
     {
         byte[] save1 = Utility.GetBytes(OriginalData, 0x0000, 57344);
         byte[] save2 = Utility.GetBytes(OriginalData, 0xE000, 57344);
@@ -95,7 +94,7 @@ public class SaveDataGeneration3 : SaveData
         /// <summary>
     /// Fills GameState.BoxList with the box Pokemon parsed from the save file content.
     /// </summary>
-    public override void ParseBoxPokemon()
+    protected override void ParseBoxPokemon()
     {
         byte[] save1 = Utility.GetBytes(OriginalData, 0x0000, 57344);
         byte[] save2 = Utility.GetBytes(OriginalData, 0xE000, 57344);
@@ -149,6 +148,26 @@ public class SaveDataGeneration3 : SaveData
     }
 
     public override PartyPokemon GetPartyPokemonFromBoxBytes(byte[] data)
+    {
+        throw new NotImplementedException();
+    }
+
+    public override void PrintPokedex()
+    {
+        throw new NotImplementedException();
+    }
+
+    public override void WriteToPokedex(int nationalIndex, bool seen = true, bool owned = true)
+    {
+        throw new NotImplementedException();
+    }
+
+    public override byte[] GetBoxBytesFromPartyPokemon(PartyPokemon p)
+    {
+        throw new NotImplementedException();
+    }
+
+    public override int AddPokemonToNextOpenBox(PartyPokemon pokemon, int targetBox = -1)
     {
         throw new NotImplementedException();
     }
