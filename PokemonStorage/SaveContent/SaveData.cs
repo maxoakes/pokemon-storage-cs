@@ -39,8 +39,6 @@ public abstract class SaveData
         Game = game;
         Language = language;
         ParseOriginalTrainer();
-        ParsePartyPokemon();
-        ParseBoxPokemon();
         AreAllChecksumsValid();
         PrintPokedex();
     }

@@ -514,6 +514,42 @@ public class Lookup
         }
     }
 
+    public static ushort GetItemGameIndexById(int generation, int itemId)
+    {
+        List<SqliteParameter> parameters = [
+            new SqliteParameter("ItemId", SqliteType.Integer) { Value = itemId },
+            new SqliteParameter("Generation", SqliteType.Integer) { Value = generation },
+        ];
+
+        try
+        {
+            Int64 index = (Int64)DbInterface.RetrieveScalar("SELECT game_index FROM item_game_index WHERE item_id=@ItemId AND generation=@Generation", "supplement", parameters);
+            return (ushort)index;
+        }
+        catch (NullReferenceException)
+        {
+            return 0;
+        }
+    }
+
+    public static ushort GetLocationGameIndexById(int generation, int locationId)
+    {
+        List<SqliteParameter> parameters = [
+            new SqliteParameter("LocationId", SqliteType.Integer) { Value = locationId },
+            new SqliteParameter("Generation", SqliteType.Integer) { Value = generation },
+        ];
+
+        try
+        {
+            Int64 index = (Int64)DbInterface.RetrieveScalar("SELECT game_index FROM location_game_index WHERE location_id=@LocationId AND generation=@Generation", "supplement", parameters);
+            return (ushort)index;
+        }
+        catch (NullReferenceException)
+        {
+            return 0;
+        }
+    }
+
     public static byte GetCatchBallByGameIndex(int gameIndex)
     {
         List<SqliteParameter> parameters = [

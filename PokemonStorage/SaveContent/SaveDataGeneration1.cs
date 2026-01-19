@@ -22,6 +22,8 @@ public class SaveDataGeneration1 : SaveData
             int thisOffset = CurrentBoxNumber == i ? 0x30C0 : BoxOffsets[i];
             BoxData.Add(new Generation1Box(Utility.GetBytes(ModifiedData, thisOffset, BoxSize), (byte)i, Game, Language));
         }
+        ParsePartyPokemon();
+        ParseBoxPokemon();
     }
 
     #region Override
@@ -126,7 +128,7 @@ public class SaveDataGeneration1 : SaveData
     public override PartyPokemon GetPartyPokemonFromBoxBytes(byte[] data)
     {
         PartyPokemon p = new(Game);
-        p.Origin = new Origin(Game.VersionId);
+        p.Origin = new Origin(Game.GameId);
         p.LanguageId = Lookup.GetLanguageIdByIdentifier(Language);
         p.PokemonIdentity = Lookup.GetPokemonByFormId(Lookup.GetPokemonFormIdByGameIndex(1, Utility.GetByte(data, 0x00)), p.LanguageId); 
         p.ExperiencePoints = Utility.GetUnsignedNumber<uint>(data, 0x0E, 3, true);

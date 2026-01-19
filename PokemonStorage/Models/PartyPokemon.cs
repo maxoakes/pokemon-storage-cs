@@ -182,7 +182,7 @@ public partial class PartyPokemon
 
     public bool DoesNicknameExist()
     {
-        return !string.Equals(PokemonIdentity.SpeciesName.ToLower(), Nickname.ToLower());
+        return !string.Equals(PokemonIdentity.SpeciesName.ToLower(), Nickname.ToLower(), StringComparison.OrdinalIgnoreCase);
     }
 
     #endregion

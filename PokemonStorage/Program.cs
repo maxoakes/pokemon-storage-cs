@@ -161,7 +161,7 @@ public class Program
                 }
                 break;
             case Mode.DEBUG:
-                SaveDataGeneration1 debugSaveData = (SaveDataGeneration1)GameState;
+                SaveDataGeneration2 debugSaveData = (SaveDataGeneration2)GameState;
                 PartyPokemon debugPokemon = new(GameState.Game)
                 {
                     PokemonIdentity = Lookup.GetPokemonBySpeciesId(151, Lookup.GetLanguageIdByIdentifier(Settings.Language)),

@@ -6,106 +6,12 @@ namespace PokemonStorage.Models;
 
 public partial class PartyPokemon
 {
-    #region Gen 2
-    // https://bulbapedia.bulbagarden.net/wiki/Pok%C3%A9mon_data_structure_(Generation_II)
-    public void LoadFromGen2Bytes(byte[] content, Game game, string nickname, string trainerName, string language)
-    {
-        Origin = new Origin(game.VersionId);
-        LanguageId = Lookup.GetLanguageIdByIdentifier(language);
-
-        Nickname = nickname;
-        PokemonIdentity = Lookup.GetPokemonByFormId(Lookup.GetPokemonFormIdByGameIndex(2, Utility.GetByte(content, 0x00)), LanguageId);
-        HeldItemId = Lookup.GetItemIdByGameIndex(2, Utility.GetUnsignedNumber<byte>(content, 0x01, 1, true));
-        OriginalTrainer = new Trainer(trainerName, 0, Utility.GetUnsignedNumber<ushort>(content, 0x06, 2, true), 0);
-        ExperiencePoints = Utility.GetUnsignedNumber<uint>(content, 0x08, 3, true);
-        Friendship = Utility.GetUnsignedNumber<byte>(content, 0x1B, 1, true);
-
-        // Get Moves
-        (int moveIndexOffset, int movePpOffset)[] moveDataOffsets = [
-            (0x02, 0x17),
-            (0x03, 0x18),
-            (0x04, 0x19),
-            (0x05, 0x1A)
-        ];
-
-        for (int i = 0; i < moveDataOffsets.Length; i++)
-        {
-            int moveIndexOffset = moveDataOffsets[i].moveIndexOffset;
-            int movePpOffset = moveDataOffsets[i].movePpOffset;
-
-            byte ppData = Utility.GetUnsignedNumber<byte>(content, movePpOffset, 1, true);
-            string ppBinary = Convert.ToString(ppData, 2).PadLeft(8, '0');
-
-            Moves[i].Id = Utility.GetUnsignedNumber<byte>(content, moveIndexOffset, 1, true);
-            Moves[i].Pp = Convert.ToByte(ppBinary.Substring(2, 6), 2);
-            Moves[i].TimesIncreased = Convert.ToByte(ppBinary.Substring(0, 2), 2);
-            Moves[i].SlotId = (byte)i;
-        }
-
-        // Get Stats
-        ushort ivData = Utility.GetUnsignedNumber<ushort>(content, 0x15, 2, true);
-        string ivBinary = Convert.ToString(ivData, 2).PadLeft(16, '0');
-        // Program.Logger.LogInformation($"IV Binary: {string.Join('_', ivBinary.Chunk(4).Select(x => new string(x)))}");
-
-        StatHextuple ev = new StatHextuple(
-            Utility.GetUnsignedNumber<ushort>(content, 0x0B, 2, true),
-            Utility.GetUnsignedNumber<ushort>(content, 0x0D, 2, true),
-            Utility.GetUnsignedNumber<ushort>(content, 0x0F, 2, true),
-            Utility.GetUnsignedNumber<ushort>(content, 0x11, 2, true),
-            Utility.GetUnsignedNumber<ushort>(content, 0x13, 2, true),
-            Utility.GetUnsignedNumber<ushort>(content, 0x13, 2, true)
-        );
-
-        StatHextuple iv = new StatHextuple(
-            Convert.ToByte(string.Join("", ivBinary.Chunk(4).Select(x => x.Last())), 2),
-            Convert.ToByte(ivBinary.Substring(0, 4), 2),
-            Convert.ToByte(ivBinary.Substring(4, 4), 2),
-            Convert.ToByte(ivBinary.Substring(8, 4), 2),
-            Convert.ToByte(ivBinary.Substring(12, 4), 2),
-            Convert.ToByte(ivBinary.Substring(12, 4), 2)
-        );
-
-        Stats = new(false, ev, iv, PokemonIdentity.SpeciesId, Level);
-
-        // Pokerus
-        byte pokerusData = Utility.GetUnsignedNumber<byte>(content, 0x1C, 1, true);
-        PokerusStrain = (uint)(pokerusData >> 4);
-        PokerusDaysRemaining = (uint)(pokerusData % 16);
-
-        // Caught Data
-        ushort caughtData = Utility.GetUnsignedNumber<ushort>(content, 0x1D, 2, true);
-        string caughtBinary = Convert.ToString(caughtData, 2).PadLeft(16, '0');
-        byte timeframe = Convert.ToByte(ivBinary.Substring(0, 2));
-        switch (timeframe)
-        {
-            case 1:
-                Origin.MetDateTime = DateTime.Now.Date + TimeSpan.FromHours(9);
-                break;
-            case 2:
-                Origin.MetDateTime = DateTime.Now.Date + TimeSpan.FromHours(13);
-                break;
-            case 3:
-                Origin.MetDateTime = DateTime.Now.Date + TimeSpan.FromHours(21);
-                break;
-            default:
-                Origin.MetDateTime = DateTime.Now.Date + TimeSpan.FromHours(12);
-                break;
-        }
-        Origin.MetLevel = Convert.ToByte(caughtBinary.Substring(2, 6), 2);
-        OriginalTrainer.Gender = Convert.ToByte(caughtBinary.Substring(8, 1), 2) == 1 ? Gender.FEMALE : Gender.MALE;
-        Origin.MetLocationId = Lookup.GetLocationIdByGameIndex(2, Convert.ToUInt16(caughtBinary.Substring(9, 7), 2));
-
-        // Calculations
-        AssignGenderByAttackIv();
-        HasNickname = DoesNicknameExist();
-    }
-    #endregion
 
     #region Gen 3
     // https://bulbapedia.bulbagarden.net/wiki/Pok%C3%A9mon_data_structure_(Generation_III)
     public void LoadFromGen3Bytes(byte[] content, Game game, string language)
     {
-        Origin = new Origin(game.VersionId);
+        Origin = new Origin(game.GameId);
         PersonalityValue = Utility.GetUnsignedNumber<uint>(content, 0x00, 4);
         uint otId = Utility.GetUnsignedNumber<uint>(content, 0x04, 4);
         OriginalTrainer = new Trainer(
