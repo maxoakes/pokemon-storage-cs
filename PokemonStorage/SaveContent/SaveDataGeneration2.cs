@@ -40,6 +40,8 @@ public class SaveDataGeneration2 : SaveData
             }
             BoxData.Add(new Generation2Box(Utility.GetBytes(ModifiedData, thisOffset, BoxSize), (byte)i, Game, Language));
         }
+        ParseOriginalTrainer();
+        AreAllChecksumsValid();
         ParsePartyPokemon();
         ParseBoxPokemon();
     }
@@ -51,7 +53,7 @@ public class SaveDataGeneration2 : SaveData
         ushort playerId = Utility.GetUnsignedNumber<ushort>(ModifiedData, 0x2009, 2, true);
         Trainer = new(
             playerName,
-            Game.VersionId == 4 && playerId % 1 == 1 ? (int)Gender.FEMALE : (int)Gender.MALE,
+            Game.VersionGroupId == 4 && playerId % 1 == 1 ? (int)Gender.FEMALE : (int)Gender.MALE,
             playerId,
             0
         );
@@ -374,13 +376,10 @@ public class SaveDataGeneration2 : SaveData
         return bytes;
     }
 
-    public override int AddPokemonToNextOpenBox(PartyPokemon pokemon, int targetBoxId = -1)
+    public override int AddPokemonToNextOpenBox(PartyPokemon pokemon)
     {
         int boxCapacity = IsJapanese ? 30 : 20;
-        Generation2Box? targetBox = 
-            targetBoxId == -1 ? 
-            BoxData.FirstOrDefault(x => x.Count < boxCapacity) :
-            BoxData.FirstOrDefault(x => x.Id == targetBoxId); 
+        Generation2Box? targetBox = BoxData.FirstOrDefault(x => x.Count < boxCapacity);
             
         if (targetBox == null) return -1;
 

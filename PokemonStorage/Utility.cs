@@ -169,9 +169,9 @@ public static class Utility
     {
         StringBuilder result = new StringBuilder();
 
-        if (game.VersionId is >= 1 and <= 7)
+        if (game.VersionGroupId is >= 1 and <= 7)
         {
-            List<byte> nullTerminators = game.VersionId switch
+            List<byte> nullTerminators = game.VersionGroupId switch
             {
                 1 or 2 or 3 or 4 => [0x00, 0x50],
                 _ => [0xFF, 0xFE],
@@ -187,7 +187,7 @@ public static class Utility
                     break;
             }
         }
-        else if (game.VersionId is >= 8 and <= 10)
+        else if (game.VersionGroupId is >= 8 and <= 10)
         {
             for (int i = 0; i < data.Length; i++)
             {
@@ -213,7 +213,7 @@ public static class Utility
         for (int i = 0; i < data.Length; i++)
         {
             ushort value = Lookup.GetEncodedCharacterByCharacter(data[i], game.GenerationId, lang);
-            if (game.VersionId <= 7)
+            if (game.VersionGroupId <= 7)
             {
                 builtBytes[i] = (byte)value;
             }
@@ -223,7 +223,7 @@ public static class Utility
                 Array.Copy(bytes, 0, builtBytes, i*2, 2);
             }
         }
-        switch (game.VersionId)
+        switch (game.VersionGroupId)
         {
             case 1:
             case 2:

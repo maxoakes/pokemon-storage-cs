@@ -14,14 +14,14 @@ public struct BasicDatabaseEntry
 
 public struct Game
 {
-    public byte GenerationId;
-    public byte VersionId;
     public byte GameId;
+    public byte GenerationId;
+    public byte VersionGroupId;
     public string GameName;
 
     public override string ToString()
     {
-        return $"{VersionId}: {GameName} (Gen {GenerationId})";
+        return $"{GameId}: {GameName} (Gen {GenerationId}) (Group {VersionGroupId})";
     }
 }
 
@@ -140,7 +140,7 @@ public class Lookup
         return (string)(DbInterface.RetrieveScalar($"SELECT identifier FROM {tableName} WHERE id=@Id", connectionString, parameters) ?? "");
     }
 
-        public static byte GetLanguageIdByIdentifier(string identifier)
+    public static byte GetLanguageIdByIdentifier(string identifier)
     {
         List<SqliteParameter> parameters = [
             new SqliteParameter("Identifier", SqliteType.Text) { Value = identifier }
@@ -175,7 +175,7 @@ public class Lookup
         foreach (DataRow row in gameDataTable.Rows)
         {
             game.GameId = (byte)row.Field<Int64>("id");
-            game.VersionId = (byte)row.Field<Int64>("version_group_id");
+            game.VersionGroupId = (byte)row.Field<Int64>("version_group_id");
             game.GenerationId = (byte)row.Field<Int64>("generation_id");
             game.GameName = row.Field<string>("name") ?? "";
         }
@@ -203,7 +203,7 @@ public class Lookup
         foreach (DataRow row in gameDataTable.Rows)
         {
             game.GameId = (byte)row.Field<Int64>("id");
-            game.VersionId = (byte)row.Field<Int64>("version_group_id");
+            game.VersionGroupId = (byte)row.Field<Int64>("version_group_id");
             game.GenerationId = (byte)row.Field<Int64>("generation_id");
             game.GameName = row.Field<string>("name") ?? "";
         }
@@ -244,6 +244,16 @@ public class Lookup
         int baseline = (int)(Int64)DbInterface.RetrieveScalar("SELECT PP FROM moves WHERE id=@Id", "veekun", parameters);
         return (byte)(baseline * (1 + (increasedAmount * 0.2f)));
     }
+
+    public static byte GetLanguageGameIndexById(int id)
+    {
+        List<SqliteParameter> parameters = [
+            new SqliteParameter("Id", SqliteType.Integer) { Value = id }
+        ];
+
+        return (byte)(Int64)DbInterface.RetrieveScalar("SELECT game_index FROM language_game_index WHERE language_index=@Id", "supplement", parameters);
+    }
+    
     #region Pokemon
 
     public static PokemonIdentity GetPokemonBySpeciesId(int speciesId, int languageId)

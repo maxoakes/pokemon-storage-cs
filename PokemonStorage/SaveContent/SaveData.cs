@@ -18,6 +18,11 @@ public struct Checksum
     {
         return (byte)Real == (byte)Calculated;
     }
+
+    public bool IsShortSizeValid()
+    {
+        return (ushort)Real == (ushort)Calculated;
+    }
 }
 
 public abstract class SaveData
@@ -38,9 +43,6 @@ public abstract class SaveData
         Array.Copy(content, ModifiedData, content.Length);
         Game = game;
         Language = language;
-        ParseOriginalTrainer();
-        AreAllChecksumsValid();
-        PrintPokedex();
     }
 
     #region Abstract Declarations
@@ -99,7 +101,7 @@ public abstract class SaveData
     /// <param name="pokemon">Pokemon object to write</param>
     /// <param name="targetBox">Box that the Pokemon should go in. If -1, target first available slot
     /// <returns></returns>
-    public abstract int AddPokemonToNextOpenBox(PartyPokemon pokemon, int targetBox = -1);
+    public abstract int AddPokemonToNextOpenBox(PartyPokemon pokemon);
     
     #endregion
 

@@ -7,6 +7,11 @@ public class SaveDataGeneration4 : SaveData
 {
     public SaveDataGeneration4(byte[] content, Game game, string language) : base(content, game, language)
     {
+        ParseOriginalTrainer();
+        AreAllChecksumsValid();
+        PrintPokedex();
+        ParsePartyPokemon();
+        ParseBoxPokemon();
     }
 
     public override bool AreAllChecksumsValid()
@@ -17,20 +22,20 @@ public class SaveDataGeneration4 : SaveData
     protected override void ParseOriginalTrainer()
     {
         (int start, int end) littleBlockOffsets = (0x00000, 0x00000);
-        int trainerNameOffset = Game.VersionId == 10 ? 0x64 : 0x68;
-        int trainerPublicIdOffset = Game.VersionId == 10 ? 0x74 : 0x78;
-        int trainerSecretIdOffset = Game.VersionId == 10 ? 0x76 : 0x7A;
-        int trainerGenderOffset = Game.VersionId == 10 ? 0x7C : 0x80;
+        int trainerNameOffset = Game.VersionGroupId == 10 ? 0x64 : 0x68;
+        int trainerPublicIdOffset = Game.VersionGroupId == 10 ? 0x74 : 0x78;
+        int trainerSecretIdOffset = Game.VersionGroupId == 10 ? 0x76 : 0x7A;
+        int trainerGenderOffset = Game.VersionGroupId == 10 ? 0x7C : 0x80;
 
-        if (Game.VersionId == 8)
+        if (Game.VersionGroupId == 8)
         {
             littleBlockOffsets = (0x0000, 0x0C0FF);
         }
-        else if (Game.VersionId == 9)
+        else if (Game.VersionGroupId == 9)
         {
             littleBlockOffsets = (0x00000, 0x0CF2B);
         }
-        else if (Game.VersionId == 10)
+        else if (Game.VersionGroupId == 10)
         {
             littleBlockOffsets = (0x00000, 0x0F6FF);
         }
@@ -51,18 +56,18 @@ public class SaveDataGeneration4 : SaveData
     protected override void ParsePartyPokemon()
     {
         (int start, int end) littleBlockOffsets = (0x00000, 0x00000);
-        int partySizeOffset = Game.VersionId == 10 ? 0x94 : 0x9C;
-        int partyOffset = Game.VersionId == 10 ? 0x98 : 0xA0;
+        int partySizeOffset = Game.VersionGroupId == 10 ? 0x94 : 0x9C;
+        int partyOffset = Game.VersionGroupId == 10 ? 0x98 : 0xA0;
 
-        if (Game.VersionId == 8)
+        if (Game.VersionGroupId == 8)
         {
             littleBlockOffsets = (0x0000, 0x0C0FF);
         }
-        else if (Game.VersionId == 9)
+        else if (Game.VersionGroupId == 9)
         {
             littleBlockOffsets = (0x00000, 0x0CF2B);
         }
-        else if (Game.VersionId == 10)
+        else if (Game.VersionGroupId == 10)
         {
             littleBlockOffsets = (0x00000, 0x0F6FF);
         }
@@ -88,26 +93,26 @@ public class SaveDataGeneration4 : SaveData
     {
         (int start, int end) bigBlockOffsets = (0x00000, 0x00000);
 
-        if (Game.VersionId == 8)
+        if (Game.VersionGroupId == 8)
         {
             bigBlockOffsets = (0x0C100, 0x1E2DF);
         }
-        else if (Game.VersionId == 9)
+        else if (Game.VersionGroupId == 9)
         {
             bigBlockOffsets = (0x0CF2C, 0x1F10F);
         }
-        else if (Game.VersionId == 10)
+        else if (Game.VersionGroupId == 10)
         {
             bigBlockOffsets = (0x0F700, 0x21A10);
         }
 
         byte[] bigBlockBytes = Utility.GetBytes(OriginalData, bigBlockOffsets.start, bigBlockOffsets.end - bigBlockOffsets.start);
 
-        int boxSize = (Game.VersionId == 10) ? 0x1000 : 0xFF0;
+        int boxSize = (Game.VersionGroupId == 10) ? 0x1000 : 0xFF0;
         for (int i = 0; i < 18; i++)
         {
-            int pokemonOffset = (Game.VersionId == 10) ? 0x00 : 0x04;
-            int boxNameOffset = (Game.VersionId == 10) ? 0x12008 : 0x11EE4;
+            int pokemonOffset = (Game.VersionGroupId == 10) ? 0x00 : 0x04;
+            int boxNameOffset = (Game.VersionGroupId == 10) ? 0x12008 : 0x11EE4;
             
             byte[] boxNameBytes = Utility.GetBytes(bigBlockBytes, boxNameOffset + (i * 40), 40);
             string boxName = Utility.GetDecodedString(boxNameBytes, Game, Language);
@@ -148,7 +153,7 @@ public class SaveDataGeneration4 : SaveData
         throw new NotImplementedException();
     }
 
-    public override int AddPokemonToNextOpenBox(PartyPokemon pokemon, int targetBox = -1)
+    public override int AddPokemonToNextOpenBox(PartyPokemon pokemon)
     {
         throw new NotImplementedException();
     }

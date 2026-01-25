@@ -106,7 +106,7 @@ public partial class PartyPokemon
 
         Ribbons = new RibbonSet();
         Markings = new Markings(Generation, 0);
-        Origin = new Origin(game.VersionId);
+        Origin = new Origin(game.VersionGroupId);
 
         ShinyLeaves = 0;
         Gen3Misc = 0;
@@ -130,13 +130,13 @@ public partial class PartyPokemon
         return shinyValue < 8;
     }
 
-    private Nature GetNatureFromPersonalityValue()
+    public Nature GetNatureFromPersonalityValue()
     {
         int pNature = (int)(PersonalityValue % 25);
         return Lookup.GetNatureByGameIndex(pNature);
     }
 
-    private ushort GetAbilityFromSlotId(int slotId)
+    public ushort GetAbilityFromSlotId(int slotId)
     {
         var speciesAbilities = Lookup.GetAbilitiesByPokemonId(PokemonIdentity.PokemonId);
         return slotId == 0 ? speciesAbilities.First : speciesAbilities.Second;
@@ -161,7 +161,7 @@ public partial class PartyPokemon
         };
     }
 
-    private Gender GetGenderByPersonalityValue()
+    public Gender GetGenderByPersonalityValue()
     {
         int pGender = (int)(PersonalityValue % 256);
         int threshold = Lookup.GetGenderThreshold(PokemonIdentity.SpeciesId);

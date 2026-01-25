@@ -22,6 +22,8 @@ public class SaveDataGeneration1 : SaveData
             int thisOffset = CurrentBoxNumber == i ? 0x30C0 : BoxOffsets[i];
             BoxData.Add(new Generation1Box(Utility.GetBytes(ModifiedData, thisOffset, BoxSize), (byte)i, Game, Language));
         }
+        ParseOriginalTrainer();
+        AreAllChecksumsValid();
         ParsePartyPokemon();
         ParseBoxPokemon();
     }
@@ -233,13 +235,9 @@ public class SaveDataGeneration1 : SaveData
         return bytes;
     }
 
-    public override int AddPokemonToNextOpenBox(PartyPokemon pokemon, int targetBoxId = -1)
+    public override int AddPokemonToNextOpenBox(PartyPokemon pokemon)
     {
-        Generation1Box? targetBox = 
-            targetBoxId == -1 ? 
-            BoxData.FirstOrDefault(x => x.Count < 20) :
-            BoxData.FirstOrDefault(x => x.Id == targetBoxId); 
-            
+        Generation1Box? targetBox = BoxData.FirstOrDefault(x => x.Count < 20);
         if (targetBox == null) return -1;
 
         int boxId = targetBox.Id;

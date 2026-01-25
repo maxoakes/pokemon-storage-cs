@@ -161,11 +161,12 @@ public class Program
                 }
                 break;
             case Mode.DEBUG:
-                SaveDataGeneration2 debugSaveData = (SaveDataGeneration2)GameState;
+                SaveDataGeneration3 debugSaveData = (SaveDataGeneration3)GameState;
                 PartyPokemon debugPokemon = new(GameState.Game)
                 {
-                    PokemonIdentity = Lookup.GetPokemonBySpeciesId(151, Lookup.GetLanguageIdByIdentifier(Settings.Language)),
-                    Nickname = "MEW1",
+                    PokemonIdentity = Lookup.GetPokemonBySpeciesId(386, Lookup.GetLanguageIdByIdentifier(Settings.Language)),
+                    Nickname = "Me, DEO!",
+                    PersonalityValue = 0x11111111,
                     ExperiencePoints = 1027103-666, // lvl 98
                     OriginalTrainer = new Trainer("Scoot", 0, 12345, 54321),
                     Moves = new Dictionary<int, Move>
@@ -175,6 +176,7 @@ public class Program
                         {2, new Move(84, Lookup.GetPpAmount(84, 2), 2, 2)}, // thundershock
                         {3, new Move(139, Lookup.GetPpAmount(139, 3), 3, 3)}, // poison gas
                     },
+                    Markings = new Markings(3, 2)
                 };
                 debugPokemon.Stats = new StatStructure(false,
                     new StatHextuple(4, 14, 13, 12, 11, 10),
@@ -183,13 +185,14 @@ public class Program
                     debugPokemon.Level
                 );
 
+
                 File.WriteAllText(OutputFileName, SerializeObject(debugPokemon));
-                debugSaveData.WriteToPokedex(151);
+                debugSaveData.WriteToPokedex(386);
                 int assignedBox = debugSaveData.AddPokemonToNextOpenBox(debugPokemon);
-                debugSaveData.ApplyBoxData(assignedBox);
                 byte[] debugPokemonBytes = GameState.GetBoxBytesFromPartyPokemon(debugPokemon);
-                debugSaveData.WriteRecalculatedChecksums();
                 bool isValidWrite = debugSaveData.AreAllChecksumsValid();
+                
+                return;
                 if (isValidWrite)
                 {
                     Logger.LogInformation("Checksum was valid!");
