@@ -283,20 +283,69 @@ public class SaveDataGeneration3 : SaveData
     public override void PrintPokedex()
     {
         Generation3Section readPokedex = Sections.First(x => x.SectionId == 0);
-        byte[] owned = Utility.GetBytes(readPokedex.Data, 0x0028, 49);
-        byte[] seen = Utility.GetBytes(readPokedex.Data, 0x005C, 49);
+        byte[] ownedBytes = Utility.GetBytes(readPokedex.Data, 0x0028, 49);
+        byte[] seenBytes = Utility.GetBytes(readPokedex.Data, 0x005C, 49);
         for (int i = 0; i < 386; i++)
         {
             PokemonIdentity pokemon = Lookup.GetPokemonBySpeciesId(i+1, Lookup.GetLanguageIdByIdentifier(Language));
-            int ownedBit = owned[i >> 3] >> (i & 7) & 1;
-            int seenBit = seen[i >> 3] >> (i & 7) & 1;
+            int ownedBit = ownedBytes[i >> 3] >> (i & 7) & 1;
+            int seenBit = seenBytes[i >> 3] >> (i & 7) & 1;
             Program.Logger.LogInformation($"{seenBit}/{ownedBit} - {pokemon.SpeciesName}");
         }
     }
 
     public override void WriteToPokedex(int nationalIndex, bool seen = true, bool owned = true)
     {
+        Generation3Section readPokedex = Sections.First(x => x.SectionId == 0);
+        byte[] ownedBytes = Utility.GetBytes(readPokedex.Data, 0x0028, 49);
+        byte[] seenBytes = Utility.GetBytes(readPokedex.Data, 0x005C, 49);
+
+        int byteIndex = (nationalIndex-1) >> 3;
+        int bitIndex = (nationalIndex-1) % 8;
+        if (seen)
+        {
+            seenBytes[byteIndex] = (byte)((int)Math.Pow(2, bitIndex) | seenBytes[byteIndex]);
+        }
+        if (owned)
+        {
+            ownedBytes[byteIndex] = (byte)((int)Math.Pow(2, bitIndex) | ownedBytes[byteIndex]);
+        }
         
+        if (owned)
+        {
+            Buffer.BlockCopy(ownedBytes, 0, readPokedex.Data, 0x0028, 49);
+        }
+
+        if (seen)
+        {
+            Buffer.BlockCopy(seenBytes, 0, readPokedex.Data, 0x005C, 49);
+            Generation3Section seenB = Sections.First(x => x.SectionId == 1);
+            Generation3Section seenC = Sections.First(x => x.SectionId == 4);
+            int bOffset = 0;
+            int cOffset = 0;
+
+            switch (Game.VersionGroupId)
+            {
+                case 5:
+                    bOffset = 0x0938;
+                    cOffset = 0x0C0C;
+                    break;
+                case 6:
+                    bOffset = 0x0988;
+                    cOffset = 0x0CA4;
+                    break;
+                case 7:
+                    bOffset = 0x05F8;
+                    cOffset = 0x0B98;
+                    break;
+            }
+
+            Buffer.BlockCopy(seenBytes, 0, seenB.Data, bOffset, 49);
+            Buffer.BlockCopy(seenBytes, 0, seenC.Data, cOffset, 49);
+            seenB.Checksum = seenB.GetCalculatedChecksum();
+            seenC.Checksum = seenC.GetCalculatedChecksum();
+            readPokedex.Checksum = readPokedex.GetCalculatedChecksum();
+        }
     }
 
     public override byte[] GetBoxBytesFromPartyPokemon(PartyPokemon p)
@@ -321,7 +370,7 @@ public class SaveDataGeneration3 : SaveData
         byte[] otNameData = Utility.GetEncodedString(p.OriginalTrainer.Name, 7, Game, Language);
         Buffer.BlockCopy(otNameData, 0, bytes, 0x14, 7);
 
-        bytes[0x1B] = p.Markings.Bits;
+        bytes[0x1B] = p.Markings.AsGen3Byte();
 
         // Subsections
         // Growth

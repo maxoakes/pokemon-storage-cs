@@ -253,7 +253,7 @@ public partial class PartyPokemon
             new SqliteParameterPair("toughness", SqliteType.Integer, Toughness),
             new SqliteParameterPair("sheen", SqliteType.Integer, Sheen),
             new SqliteParameterPair("obedience", SqliteType.Integer, Obedience ? 1 : 0),
-            new SqliteParameterPair("markings_mask", SqliteType.Integer, Markings.Bits),
+            new SqliteParameterPair("markings_mask", SqliteType.Integer, Markings.AsGen4Byte()),
             new SqliteParameterPair("shiny_leaves", SqliteType.Integer, ShinyLeaves),
             new SqliteParameterPair("gen3_misc", SqliteType.Integer, Gen3Misc),
             new SqliteParameterPair("fk_ribbon", SqliteType.Integer, Ribbons.InsertIntoDatabase()),
@@ -330,10 +330,7 @@ public partial class PartyPokemon
             Toughness = (byte)row.Field<Int64>("toughness");
             Sheen = (byte)row.Field<Int64>("sheen");
             Obedience = row.Field<Int64>("obedience") == 1;
-            Markings = new(4, 0)
-            {
-                Bits = (byte)row.Field<Int64>("markings_mask")
-            };
+            Markings = new(4, (byte)row.Field<Int64>("markings_mask"));
             ShinyLeaves = (byte)row.Field<Int64>("shiny_leaves");
             Gen3Misc = (byte)row.Field<Int64>("gen3_misc");
             Ribbons.LoadFromDatabase((int)row.Field<Int64>("fk_ribbon"));
