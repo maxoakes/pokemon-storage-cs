@@ -48,7 +48,7 @@ public static class Utility
     /// <returns>Truncated input string if it is longer than the max length, or the (trimmed) input string if its length is less than max</returns>
     public static string TruncateString(string input, int max)
     {
-        if (string.IsNullOrWhiteSpace(input) || max <= 0)
+        if (input == null || max <= 0)
         {
             return "";
         }
@@ -114,7 +114,7 @@ public static class Utility
 
     public static byte GetBit(byte data, byte index, bool isBigEndian = false)
     {
-        return Convert.ToByte((data & (1 << (index - 1))) != 0);
+        return Convert.ToByte((data & (1 << index)) != 0);
     }
 
     public static byte GetByte(byte[] data, int offset)

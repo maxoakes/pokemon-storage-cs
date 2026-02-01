@@ -162,37 +162,59 @@ public class Program
                 break;
             case Mode.DEBUG:
                 SaveDataGeneration3 debugSaveData = (SaveDataGeneration3)GameState;
-                PartyPokemon debugPokemon = new(GameState.Game)
+                PartyPokemon debugDeoxys = new(GameState.Game)
                 {
                     PokemonIdentity = Lookup.GetPokemonBySpeciesId(386, Lookup.GetLanguageIdByIdentifier(Settings.Language)),
                     Nickname = "Me, DEO!",
-                    PersonalityValue = 0x11111111,
-                    ExperiencePoints = 1027103-666, // lvl 98
-                    OriginalTrainer = new Trainer("Scoot", 0, 12345, 54321),
+                    HeldItemId = 93, //heart scale
+                    PersonalityValue = 1234567890,
+                    ExperiencePoints = 1212873-666, // lvl 98
+                    Friendship = 225,
+                    OriginalTrainer = new Trainer("Scoot", 1, 12345, 54321),
                     Moves = new Dictionary<int, Move>
                     {
-                        {0, new Move(12, Lookup.GetPpAmount(12, 2), 2, 0)}, // pound
+                        {0, new Move(12, Lookup.GetPpAmount(12, 2), 2, 0)}, // guillotine
                         {1, new Move(21, Lookup.GetPpAmount(21, 1), 1, 1)}, // slam
                         {2, new Move(84, Lookup.GetPpAmount(84, 2), 2, 2)}, // thundershock
                         {3, new Move(139, Lookup.GetPpAmount(139, 3), 3, 3)}, // poison gas
                     },
-                    Markings = new Markings(3, 2)
+                    Markings = new Markings(3, 0b00001010), // square, heart
+                    PokerusDaysRemaining = 5,
+                    PokerusStrain = 7,
+                    Obedience = true
                 };
-                debugPokemon.Stats = new StatStructure(false,
-                    new StatHextuple(4, 14, 13, 12, 11, 10),
-                    new StatHextuple(55555, 45555, 54555, 55455, 55545, 55554),
-                    151,
-                    debugPokemon.Level
+                debugDeoxys.Stats = new StatStructure(true,
+                    new StatHextuple(31, 30, 29, 28, 27, 26),
+                    new StatHextuple(10, 20, 30, 40, 50, 60),
+                    386,
+                    debugDeoxys.Level
                 );
+                debugDeoxys.Origin = new Origin(Lookup.GetVersionIdByGameIndex(3)) // Emerald
+                {
+                    MetLocationId = Lookup.GetLocationIdByGameIndex(3, 0x46), // Victory Road
+                    PokeballId = 11, // Luxury Ball
+                    MetLevel = 2
+                };
+                debugDeoxys.Ribbons = new RibbonSet()
+                {
+                    HeonnBeauty = 2,
+                    Artist = true,
+                    World = true
+                };
 
 
-                File.WriteAllText(OutputFileName, SerializeObject(debugPokemon));
+                File.WriteAllText(OutputFileName, SerializeObject(debugDeoxys));
+
+                byte[] debugPokemonBytes = GameState.GetBoxBytesFromPartyPokemon(debugDeoxys);
+                PartyPokemon decryptedPokemon = GameState.GetPartyPokemonFromBoxBytes(debugPokemonBytes);
+                File.WriteAllText(OutputFileName + ".json", SerializeObject(decryptedPokemon));
+
                 debugSaveData.WriteToPokedex(386);
-                int assignedBox = debugSaveData.AddPokemonToNextOpenBox(debugPokemon);
-                byte[] debugPokemonBytes = GameState.GetBoxBytesFromPartyPokemon(debugPokemon);
-                bool isValidWrite = debugSaveData.AreAllChecksumsValid();
+                int assignedBox = debugSaveData.AddPokemonToNextOpenBox(debugDeoxys);
                 
-                return;
+                bool isValidWrite = debugSaveData.AreAllChecksumsValid();
+                debugSaveData.SaveBoxDataSectionsToBytes();
+                
                 if (isValidWrite)
                 {
                     Logger.LogInformation("Checksum was valid!");

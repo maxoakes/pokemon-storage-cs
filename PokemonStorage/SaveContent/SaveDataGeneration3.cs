@@ -1,3 +1,4 @@
+using System;
 using Microsoft.Extensions.Logging;
 using PokemonStorage.Models;
 
@@ -14,6 +15,7 @@ public class SaveDataGeneration3 : SaveData
         uint s0 = Utility.GetUnsignedNumber<uint>(content, SaveOffsets[0] + 0x0FFC, 4);
         uint s1 = Utility.GetUnsignedNumber<uint>(content, SaveOffsets[1] + 0x0FFC, 4);
         SaveIndex = s0 > s1 ? 0 : 1;
+        Program.Logger.LogInformation($"Using SaveIndex {SaveIndex}");
 
         for (int i = 0; i < 14; i++)
         {
@@ -22,7 +24,7 @@ public class SaveDataGeneration3 : SaveData
         }
         ParseOriginalTrainer();
         AreAllChecksumsValid();
-        PrintPokedex();
+        // PrintPokedex();
         ParsePartyPokemon();
         ParseBoxPokemon();
     }
@@ -124,28 +126,9 @@ public class SaveDataGeneration3 : SaveData
         p.Markings = new Markings(3, Utility.GetUnsignedNumber<byte>(data, 0x1B, 1));
 
         // Data Section Decryption
-
         ushort checksum = Utility.GetUnsignedNumber<ushort>(data, 0x1C, 2);
-        byte[] fullEncryptedData = Utility.GetBytes(data, 0x20, 48);
-        int order_index = (int)(p.PersonalityValue % 24);
-
-        Dictionary<int, string> order = new()
-        {
-            {0, "GAEM"}, {1,"GAME"}, {2,"GEAM"}, {3,"GEMA"},{4, "GMAE"}, {5,"GMEA"}, {6,"AGEM"}, {7,"AGME"},
-            {8, "AEGM"}, {9,"AEMG"},{10,"AMGE"},{11,"AMEG"},{12,"AGAM"},{13,"EGMA"},{14,"EAGM"},{15,"EAMG"},
-            {16,"EMGA"},{17,"EMAG"},{18,"MGAE"},{19,"MGEA"},{20,"MAGE"},{21,"MAEG"},{22,"MEGA"},{23,"MEAG"}
-        };
-
-        string orderString = order[order_index];
-        // Program.Logger.LogInformation($"Decryption Order: {order_index}:{orderString}");
-        uint decryptionKey = p.PersonalityValue ^ otId;
-        byte[] decryptedData = [];
-        for (int i = 0; i < 48; i += 4)
-        {
-            byte[] y = Utility.GetBytes(fullEncryptedData, 0x1 * i, 4);
-            byte[] unencryptedBytes = y.Zip(BitConverter.GetBytes(decryptionKey)).Select(x => Convert.ToByte(x.First ^ x.Second)).ToArray();
-            decryptedData = decryptedData.Concat(unencryptedBytes).ToArray();
-        }
+        string orderString = GetSubstructureOrder(p.PersonalityValue);
+        byte[] decryptedData = XorSubstructure(p.PersonalityValue ^ otId, Utility.GetBytes(data, 0x20, 48));
 
         uint calculated = 0;
         for (int i = 0; i < 48; i += 2)
@@ -153,16 +136,15 @@ public class SaveDataGeneration3 : SaveData
             calculated += Utility.GetUnsignedNumber<ushort>(decryptedData, 0x1 * i, 2);
         }
 
-        // Program.Logger.LogInformation($"{checksum & 0xffff} ?== {calculated & 0xffff}");
-        // Program.Logger.LogInformation($"CHSM:{Convert.ToString(checksum, 2).PadLeft(17, '0')}");
-        // Program.Logger.LogInformation($"CALC:{Convert.ToString(calculated, 2).PadLeft(17, '0')}");
+        Program.Logger.LogInformation($"{checksum & 0xffff} ?== {calculated & 0xffff}");
+        Program.Logger.LogInformation($"CHSM:{Convert.ToString(checksum, 2).PadLeft(17, '0')}");
+        Program.Logger.LogInformation($"CALC:{Convert.ToString(calculated, 2).PadLeft(17, '0')}");
         bool checksumResult = (checksum & 0xffff) == (calculated & 0xffff);
         if (!checksumResult)
         {
             throw new Exception($"Bad checksum result. Expected {checksum & 0xffff} and got {calculated & 0xffff}");
         }
 
-        int abilitySlotId = 0;
         StatHextuple ev = new StatHextuple();
         StatHextuple iv = new StatHextuple();
         foreach ((char c, int i) in orderString.Select((c, i) => (c, i)))
@@ -249,7 +231,7 @@ public class SaveDataGeneration3 : SaveData
                     // 0 0 00000 00000 00000 00000 00000 00000
                     // Program.Logger.LogInformation($"Misc Data: {miscBinary}");
 
-                    abilitySlotId = Int32.Parse(miscBinary[0].ToString());
+                    p.AbilityNumber = byte.Parse(miscBinary[0].ToString());
                     p.IsEgg = miscBinary[1] == '1';
                     iv.SpecialDefense = Convert.ToByte(miscBinary.Substring(2, 5), 2);
                     iv.SpecialAttack = Convert.ToByte(miscBinary.Substring(7, 5), 2);
@@ -293,7 +275,7 @@ public class SaveDataGeneration3 : SaveData
         // Program.Logger.LogInformation($"Done reading: {PokemonIdentity.SpeciesIdentifier}");
         p.Stats = new(true, iv, ev, p.PokemonIdentity.SpeciesId, p.Level, p.Nature);
         p.Gender = p.GetGenderByPersonalityValue();
-        p.AbilityId = p.GetAbilityFromSlotId(abilitySlotId);
+        p.AbilityId = p.GetAbilityIdFromAbilityNumber();
         p.HasNickname = p.DoesNicknameExist();
         return p;
     }
@@ -351,13 +333,13 @@ public class SaveDataGeneration3 : SaveData
         Buffer.BlockCopy(itemData, 0, g, 0x02, 2);
 
         byte[] experienceData = BitConverter.GetBytes(p.ExperiencePoints);
-        Buffer.BlockCopy(itemData, 0, g, 0x04, 4);
+        Buffer.BlockCopy(experienceData, 0, g, 0x04, 4);
 
         g[0x08] = (byte)(
             p.Moves[0].TimesIncreased + 
-            p.Moves[1].TimesIncreased << 2 + 
-            p.Moves[2].TimesIncreased << 4 + 
-            p.Moves[3].TimesIncreased << 6
+            (p.Moves[1].TimesIncreased << 2) + 
+            (p.Moves[2].TimesIncreased << 4) + 
+            (p.Moves[3].TimesIncreased << 6)
         );
 
         g[0x09] = p.Friendship;
@@ -365,44 +347,102 @@ public class SaveDataGeneration3 : SaveData
         // Attacks
         byte[] a = new byte[12];
 
-        bytes[0x02] = (byte)p.Moves[0].Id;
-        bytes[0x03] = (byte)p.Moves[1].Id;
-        bytes[0x04] = (byte)p.Moves[2].Id;
-        bytes[0x05] = (byte)p.Moves[3].Id;
+        byte[] m1 = [.. BitConverter.GetBytes(p.Moves[0].Id)];
+        Buffer.BlockCopy(m1, 0, a, 0x00, 2);
+        byte[] m2 = [.. BitConverter.GetBytes(p.Moves[1].Id)];
+        Buffer.BlockCopy(m2, 0, a, 0x02, 2);
+        byte[] m3 = [.. BitConverter.GetBytes(p.Moves[2].Id)];
+        Buffer.BlockCopy(m3, 0, a, 0x04, 2);
+        byte[] m4 = [.. BitConverter.GetBytes(p.Moves[3].Id)];
+        Buffer.BlockCopy(m4, 0, a, 0x06, 2);
         
-        bytes[0x17] = (byte)((p.Moves[0].TimesIncreased << 6) + Math.Min((byte)63, p.Moves[0].Pp));
-        bytes[0x18] = (byte)((p.Moves[1].TimesIncreased << 6) + Math.Min((byte)63, p.Moves[1].Pp));
-        bytes[0x19] = (byte)((p.Moves[2].TimesIncreased << 6) + Math.Min((byte)63, p.Moves[2].Pp));
-        bytes[0x1A] = (byte)((p.Moves[3].TimesIncreased << 6) + Math.Min((byte)63, p.Moves[3].Pp));
+        a[0x08] = p.Moves[0].Pp;
+        a[0x09] = p.Moves[1].Pp;
+        a[0x0A] = p.Moves[2].Pp;
+        a[0x0B] = p.Moves[3].Pp;
 
         // EVs and Condition
         byte[] e = new byte[12];
-
-                byte[] hp_ev = [.. BitConverter.GetBytes(p.Stats.Old.HP.Ev).Reverse()];
-        Buffer.BlockCopy(hp_ev, 0, bytes, 0x0B, 2);
-        byte[] attack_ev = [.. BitConverter.GetBytes(p.Stats.Old.Attack.Ev).Reverse()];
-        Buffer.BlockCopy(attack_ev, 0, bytes, 0x0D, 2);
-        byte[] defense_ev = [.. BitConverter.GetBytes(p.Stats.Old.Defense.Ev).Reverse()];
-        Buffer.BlockCopy(defense_ev, 0, bytes, 0x0F, 2);
-        byte[] speed_ev = [.. BitConverter.GetBytes(p.Stats.Old.Speed.Ev).Reverse()];
-        Buffer.BlockCopy(speed_ev, 0, bytes, 0x11, 2);
-        byte[] special_ev = [.. BitConverter.GetBytes(p.Stats.Old.SpecialAttack.Ev).Reverse()];
-        Buffer.BlockCopy(special_ev, 0, bytes, 0x13, 2);
+        e[0x00] = (byte)p.Stats.Modern.HP.Ev;
+        e[0x01] = (byte)p.Stats.Modern.Attack.Ev;
+        e[0x02] = (byte)p.Stats.Modern.Defense.Ev;
+        e[0x03] = (byte)p.Stats.Modern.Speed.Ev;
+        e[0x04] = (byte)p.Stats.Modern.SpecialAttack.Ev;
+        e[0x05] = (byte)p.Stats.Modern.SpecialDefense.Ev;
+        e[0x06] = (byte)p.Coolness;
+        e[0x07] = (byte)p.Beauty;
+        e[0x08] = (byte)p.Cuteness;
+        e[0x09] = (byte)p.Smartness;
+        e[0x0A] = (byte)p.Toughness;
+        e[0x0B] = (byte)p.Sheen;
 
         // Misc
         byte[] m = new byte[12];
-        
-        bytes[0x15] = (byte)((p.Stats.Old.Attack.Iv << 4) + p.Stats.Old.Defense.Iv);
-        bytes[0x16] = (byte)((p.Stats.Old.Speed.Iv << 4) + p.Stats.Old.SpecialAttack.Iv);
-        bytes[0x1C] = (byte)((int)(p.PokerusStrain << 4) + p.PokerusDaysRemaining);
-        byte timeOfDay = 2;
-        if (p.Origin.MetDateTime.HasValue)
+        m[0x00] = (byte)(p.PokerusDaysRemaining + (p.PokerusStrain << 4));
+        m[0x01] = (byte)Lookup.GetLocationGameIndexById(3, p.Origin.MetLocationId);
+        ushort origin = (ushort)(
+            p.Origin.MetLevel + 
+            (Lookup.GetGameGameIndexById(p.Origin.GameVersionId) << 7) + 
+            (Lookup.GetBallGameIndexByItemId(p.Origin.PokeballId) << 11) +
+            (((byte)p.OriginalTrainer.Gender) << 15)
+        );
+        byte[] originData = [.. BitConverter.GetBytes(origin)];
+        Buffer.BlockCopy(originData, 0, m, 0x02, 2);
+
+        uint ivEggAbility = (uint)(
+            p.Stats.Modern.HP.Iv + 
+            (p.Stats.Modern.Attack.Iv << 5) + 
+            (p.Stats.Modern.Defense.Iv << 10) + 
+            (p.Stats.Modern.Speed.Iv << 15) + 
+            (p.Stats.Modern.SpecialAttack.Iv << 20) +
+            (p.Stats.Modern.SpecialDefense.Iv << 25) +
+            ((p.IsEgg ? 1 : 0) << 30) + 
+            (p.AbilityNumber << 31)
+        );
+
+        byte[] ivEggAbilityData = [.. BitConverter.GetBytes(ivEggAbility)];
+        Buffer.BlockCopy(ivEggAbilityData, 0, m, 0x04, 4);
+
+        uint ribbon = (uint)(p.Ribbons.AsGen3RibbonData() + ((p.Obedience ? 1 : 0) << 31));
+        byte[] ribbonData = [.. BitConverter.GetBytes(ribbon)];
+        Buffer.BlockCopy(ribbonData, 0, m, 0x08, 4);
+
+        // Arrange substructure
+        byte[] substructure = new byte[48];
+        Array.Fill<byte>(substructure, 0x00);
+
+        string order = GetSubstructureOrder(p.PersonalityValue);
+        for (int i = 0; i < order.Length; i++)
         {
-            if (p.Origin.MetDateTime.Value.TimeOfDay.Hours < 4 || p.Origin.MetDateTime.Value.TimeOfDay.Hours > 5) timeOfDay = 3;
-            else if (p.Origin.MetDateTime.Value.TimeOfDay.Hours > 3 || p.Origin.MetDateTime.Value.TimeOfDay.Hours < 10) timeOfDay = 1;
+            if (string.Equals(order[i].ToString(), "g", StringComparison.OrdinalIgnoreCase))
+            {
+                Buffer.BlockCopy(g, 0, substructure, i*12, 12);
+            }
+            if (string.Equals(order[i].ToString(), "a", StringComparison.OrdinalIgnoreCase))
+            {
+                Buffer.BlockCopy(a, 0, substructure, i*12, 12);
+            }
+            if (string.Equals(order[i].ToString(), "m", StringComparison.OrdinalIgnoreCase))
+            {
+                Buffer.BlockCopy(m, 0, substructure, i*12, 12);
+            }
+            if (string.Equals(order[i].ToString(), "e", StringComparison.OrdinalIgnoreCase))
+            {
+                Buffer.BlockCopy(e, 0, substructure, i*12, 12);
+            }
         }
-        bytes[0x1D] = (byte)((timeOfDay << 6) + p.Level);
-        bytes[0x1E] = (byte)(((int)p.OriginalTrainer.Gender << 7) + Lookup.GetLocationGameIndexById(2, p.Origin.MetLocationId));        
+        ushort checksum = 0;
+        for (int i = 0; i < 48; i += 2)
+        {
+            checksum += Utility.GetUnsignedNumber<ushort>(substructure, 0x1 * i, 2);
+        }
+        byte[] checksumData = [.. BitConverter.GetBytes(checksum)];
+        Buffer.BlockCopy(checksumData, 0, bytes, 0x1C, 2);
+
+        // Encrypt the substructure
+        byte[] encrypted = XorSubstructure(Utility.GetUnsignedNumber<uint>(bytes, 0x00, 4) ^ Utility.GetUnsignedNumber<uint>(bytes, 0x04, 4), substructure);
+        Buffer.BlockCopy(encrypted, 0, bytes, 0x20, 48);
+
         return bytes;
     }
 
@@ -426,6 +466,31 @@ public class SaveDataGeneration3 : SaveData
 
     #region Helper
 
+    private byte[] XorSubstructure(uint key, byte[] bytes)
+    {
+        byte[] result = [];
+        for (int i = 0; i < 48; i += 4)
+        {
+            byte[] y = Utility.GetBytes(bytes, 0x1 * i, 4);
+            byte[] unencryptedBytes = y.Zip(BitConverter.GetBytes(key)).Select(x => Convert.ToByte(x.First ^ x.Second)).ToArray();
+            result = result.Concat(unencryptedBytes).ToArray();
+        }
+        return result;
+    }
+
+    private string GetSubstructureOrder(uint pv)
+    {
+        int order_index = (int)(pv % 24);
+        Dictionary<int, string> order = new()
+        {
+            {0, "GAEM"}, {1,"GAME"}, {2,"GEAM"}, {3,"GEMA"},{4, "GMAE"}, {5,"GMEA"}, {6,"AGEM"}, {7,"AGME"},
+            {8, "AEGM"}, {9,"AEMG"},{10,"AMGE"},{11,"AMEG"},{12,"AGAM"},{13,"EGMA"},{14,"EAGM"},{15,"EAMG"},
+            {16,"EMGA"},{17,"EMAG"},{18,"MGAE"},{19,"MGEA"},{20,"MAGE"},{21,"MAEG"},{22,"MEGA"},{23,"MEAG"}
+        };
+
+        return order[order_index];
+    }
+
     public byte[] GetBoxDataBytes()
     {
         List<byte> bytes = [];
@@ -440,20 +505,25 @@ public class SaveDataGeneration3 : SaveData
     {
         foreach (Generation3Section section in Sections)
         {
-            if (section.SectionId >= 5 && section.SectionId <= 12)
-            {
-                section.Data = Utility.GetBytes(boxData, (5-0)*section.SectionId, 3968);
-            }
-            else if (section.SectionId == 13)
-            {
-                section.Data = Utility.GetBytes(boxData, 3968*12, 2000);
-            }
+            if (section.SectionId < 5) continue;
+            byte[] newData = new byte[3968];
+            Array.Fill<byte>(newData, 0x00);
+
+            int dataLength = section.SectionId == 13 ? 2000 : 3968;
+            Buffer.BlockCopy(boxData, (section.SectionId-5)*3968, newData, 0, dataLength);
+            section.Data = newData;
+            section.Checksum = section.GetCalculatedChecksum();
         }
     }
 
     public void SaveBoxDataSectionsToBytes()
     {
-        
+        int physicalSectionOffset = 0;
+        foreach (Generation3Section section in Sections)
+        {
+            Buffer.BlockCopy(section.GetBytes(), 0, ModifiedData, SaveOffsets[SaveIndex] + (physicalSectionOffset * 0x1000), 0x1000);
+            physicalSectionOffset++;
+        }
     }
 
     #endregion

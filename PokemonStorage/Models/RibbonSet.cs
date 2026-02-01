@@ -261,6 +261,28 @@ public class RibbonSet
             World =         row.Field<Int64>("world") == 1;
         }
     }
+
+    public uint AsGen3RibbonData()
+    {
+        return
+            (uint)(HeonnCool + 
+            (HeonnBeauty << 3) + 
+            (HeonnCute << 6) + 
+            (HeonnSmart << 9) + 
+            (HeonnTough << 12) + 
+            ((Champion ? 1 : 0) << 15) + 
+            ((Winning ? 1 : 0) << 16) +
+            ((Victory ? 1 : 0) << 17) +
+            ((Artist ? 1 : 0) << 18) +
+            ((Effort ? 1 : 0) << 19) +
+            ((Marine ? 1 : 0) << 20) +
+            ((Land ? 1 : 0) << 21) +
+            ((Sky ? 1 : 0) << 22) +
+            ((Country ? 1 : 0) << 23) +
+            ((National ? 1 : 0) << 24) +
+            ((Earth ? 1 : 0) << 25) +
+            ((World ? 1 : 0) << 26));
+    }
         
     public override string ToString()
     {

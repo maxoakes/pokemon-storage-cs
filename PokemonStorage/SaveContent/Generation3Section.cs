@@ -25,27 +25,27 @@ class Generation3Section
             Calculated = GetCalculatedChecksum()
         };
 
-        Program.Logger.LogInformation($"1-Real:{Convert.ToString(checksumEvaluation.Real, 2)}");
-        Program.Logger.LogInformation($"1-Calc:{Convert.ToString(checksumEvaluation.Calculated, 2)}");
+        // Program.Logger.LogInformation($"1-Real:{Convert.ToString(checksumEvaluation.Real, 2)}");
+        // Program.Logger.LogInformation($"1-Calc:{Convert.ToString(checksumEvaluation.Calculated, 2)}");
     }
 
     public byte[] GetBytes()
     {
-        byte[] bytes = new byte[3980];
+        byte[] bytes = new byte[0x1000];
         Array.Fill<byte>(bytes, 0x00);
 
         Buffer.BlockCopy(Data, 0, bytes, 0, 3968);
         byte[] SectionIdData = [.. BitConverter.GetBytes(SectionId)];
         Buffer.BlockCopy(SectionIdData, 0, bytes, 0x0FF4, 2);
 
-        byte[] checksumData = [.. BitConverter.GetBytes(GetCalculatedChecksum())];
-        Buffer.BlockCopy(checksumData, 0, bytes, 0x0FF4, 2);
+        byte[] checksumData = [.. BitConverter.GetBytes(Checksum)];
+        Buffer.BlockCopy(checksumData, 0, bytes, 0x0FF6, 2);
 
         byte[] signatureData = [.. BitConverter.GetBytes(Signature)];
-        Buffer.BlockCopy(signatureData, 0, bytes, 0x0FF4, 4);
+        Buffer.BlockCopy(signatureData, 0, bytes, 0x0FF8, 4);
 
         byte[] saveIndexData = [.. BitConverter.GetBytes(SaveIndex)];
-        Buffer.BlockCopy(saveIndexData, 0, bytes, 0x0FF4, 4);
+        Buffer.BlockCopy(saveIndexData, 0, bytes, 0x0FFC, 4);
 
         return bytes;
     }

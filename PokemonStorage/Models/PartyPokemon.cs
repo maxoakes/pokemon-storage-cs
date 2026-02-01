@@ -18,6 +18,7 @@ public partial class PartyPokemon
     public bool IsEgg { get; set; }
     public Origin Origin { get; set; }
     public Trainer OriginalTrainer { get; set; }
+    public byte AbilityNumber { get; set; }
     public ushort AbilityId { get; set; }
     public string AbilityIdentifier { get { return Lookup.GetIdentifierById("abilities", AbilityId); } }
     public Nature Nature {get { return GetNatureFromPersonalityValue(); } }
@@ -136,10 +137,15 @@ public partial class PartyPokemon
         return Lookup.GetNatureByGameIndex(pNature);
     }
 
-    public ushort GetAbilityFromSlotId(int slotId)
+    public ushort GetAbilityIdFromAbilityNumber()
     {
         var speciesAbilities = Lookup.GetAbilitiesByPokemonId(PokemonIdentity.PokemonId);
-        return slotId == 0 ? speciesAbilities.First : speciesAbilities.Second;
+        return AbilityNumber == 0 ? speciesAbilities.First : speciesAbilities.Second;
+    }
+
+    public ushort GetAbilityNumberFromAbilityId()
+    {
+        return Lookup.GetAbilityIdByAbilityNumber(PokemonIdentity.PokemonId, AbilityNumber);
     }
 
     private string GetPersonalityString()

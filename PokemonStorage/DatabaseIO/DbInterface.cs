@@ -49,7 +49,7 @@ public static class DbInterface
         if (input.SqliteType == SqliteType.Text)
         {
             string str = Convert.ToString(input.Value) ?? "";
-            if (string.IsNullOrWhiteSpace(str))
+            if (str == null)
             {
                 input.Value = DBNull.Value;
             }

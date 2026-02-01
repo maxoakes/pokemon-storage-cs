@@ -17,8 +17,8 @@ public class Markings
         if (generation == 3)
         {
             Bits |= (byte)(Utility.GetBit(value, 0) == 1 ? 1 : 0); // circle
-            Bits |= (byte)(Utility.GetBit(value, 1) == 1 ? 4 : 0); // square
-            Bits |= (byte)(Utility.GetBit(value, 2) == 1 ? 2 : 0); // trinagle
+            Bits |= (byte)(Utility.GetBit(value, 1) == 1 ? 2 : 0); // square
+            Bits |= (byte)(Utility.GetBit(value, 2) == 1 ? 4 : 0); // trinagle
             Bits |= (byte)(Utility.GetBit(value, 3) == 1 ? 8 : 0); // heart
         }
         else

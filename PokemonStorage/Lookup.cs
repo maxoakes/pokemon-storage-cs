@@ -412,6 +412,24 @@ public class Lookup
         return nature;
     }
 
+    public static ushort GetAbilityIdByAbilityNumber(ushort pokemonId, byte slotId)
+    {
+        List<SqliteParameter> parameters = [
+            new SqliteParameter("PokemonId", SqliteType.Integer) { Value = pokemonId },
+            new SqliteParameter("SlotId", SqliteType.Integer) { Value = slotId + 1 },
+        ];
+
+        try
+        {
+            Int64 index = (Int64)DbInterface.RetrieveScalar("SELECT ability_id FROM pokemon_abilities WHERE pokemon_id=@PokemonId AND slot=@SlotId", "veekun", parameters);
+            return (ushort)index;
+        }
+        catch (NullReferenceException)
+        {
+            return 0;
+        }
+    }
+
     public static StatHextuple GetBaseStats(int speciesId)
     {
         List<SqliteParameter> parameters = [
@@ -542,6 +560,23 @@ public class Lookup
         }
     }
 
+    public static byte GetGameGameIndexById(int gameId)
+    {
+        List<SqliteParameter> parameters = [
+            new SqliteParameter("GameId", SqliteType.Integer) { Value = gameId },
+        ];
+
+        try
+        {
+            Int64 index = (Int64)DbInterface.RetrieveScalar("SELECT game_index FROM game_origin_game_index WHERE version_id=@GameId", "supplement", parameters);
+            return (byte)index;
+        }
+        catch (NullReferenceException)
+        {
+            return 0;
+        }
+    }
+
     public static ushort GetLocationGameIndexById(int generation, int locationId)
     {
         List<SqliteParameter> parameters = [
@@ -569,6 +604,23 @@ public class Lookup
         try
         {
             Int64 index = (Int64)DbInterface.RetrieveScalar("SELECT item_index FROM catch_ball_game_index WHERE game_index=@Id", "supplement", parameters);
+            return (byte)index;
+        }
+        catch (NullReferenceException)
+        {
+            return 0;
+        }
+    }
+
+    public static byte GetBallGameIndexByItemId(int itemId)
+    {
+        List<SqliteParameter> parameters = [
+            new SqliteParameter("ItemId", SqliteType.Integer) { Value = itemId },
+        ];
+
+        try
+        {
+            Int64 index = (Int64)DbInterface.RetrieveScalar("SELECT game_index FROM catch_ball_game_index WHERE item_index=@ItemId", "supplement", parameters);
             return (byte)index;
         }
         catch (NullReferenceException)
