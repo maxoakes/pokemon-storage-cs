@@ -161,7 +161,7 @@ public class Program
                 }
                 break;
             case Mode.DEBUG:
-                SaveDataGeneration3 debugSaveData = (SaveDataGeneration3)GameState;
+                SaveDataGeneration4 debugSaveData = (SaveDataGeneration4)GameState;
                 PartyPokemon debugDeoxys = new(GameState.Game)
                 {
                     PokemonIdentity = Lookup.GetPokemonBySpeciesId(386, Lookup.GetLanguageIdByIdentifier(Settings.Language)),
@@ -202,7 +202,7 @@ public class Program
                     World = true
                 };
 
-
+                return;
                 File.WriteAllText(OutputFileName, SerializeObject(debugDeoxys));
 
                 byte[] debugPokemonBytes = GameState.GetBoxBytesFromPartyPokemon(debugDeoxys);
@@ -213,7 +213,7 @@ public class Program
                 int assignedBox = debugSaveData.AddPokemonToNextOpenBox(debugDeoxys);
                 
                 bool isValidWrite = debugSaveData.AreAllChecksumsValid();
-                debugSaveData.SaveBoxDataSectionsToBytes();
+                //debugSaveData.SaveBoxDataSectionsToBytes();
                 
                 if (isValidWrite)
                 {

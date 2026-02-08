@@ -1,3 +1,4 @@
+using System;
 using Microsoft.Extensions.Logging;
 using PokemonStorage.Models;
 
@@ -5,8 +6,62 @@ namespace PokemonStorage.SaveContent;
 
 public class SaveDataGeneration4 : SaveData
 {
+    private List<Generation4Block> GeneralBlocks { get; set; }
+    private List<Generation4Block> StorageBlocks { get; set; }
+    private int GeneralBlockIndex = 0;
+    private int StorageBlockIndex = 0;
+
     public SaveDataGeneration4(byte[] content, Game game, string language) : base(content, game, language)
     {
+        GeneralBlocks =
+        [
+            new(content, game, false),
+            new(content, game, false, true),
+        ];
+        StorageBlocks =
+        [
+            new(content, game, true),
+            new(content, game, true, true),
+        ];
+
+        // https://projectpokemon.org/home/docs/gen-4/dp-save-structure-r74/
+        // Choose the general block to write to
+        GeneralBlockIndex = GeneralBlocks[0].GeneralSaveCount > GeneralBlocks[1].GeneralSaveCount ? 0 : 1;
+        if (!GeneralBlocks[GeneralBlockIndex].IsChecksumValid) GeneralBlockIndex = (GeneralBlockIndex + 1) % 2;
+        if (!GeneralBlocks[GeneralBlockIndex].IsChecksumValid) throw new Exception("Bad checksum");
+
+        // Choose the storage block to write to
+        if (StorageBlocks[0].StorageSaveCount > StorageBlocks[1].StorageSaveCount)
+        {
+            StorageBlockIndex = 0;
+        }
+        else if (StorageBlocks[0].StorageSaveCount < StorageBlocks[1].StorageSaveCount)
+        {
+            StorageBlockIndex = 1;
+        }
+        else
+        {
+            StorageBlockIndex = GeneralBlocks[0].StorageSaveCount > GeneralBlocks[1].StorageSaveCount ? 0 : 1;
+        }
+        
+        if (!(StorageBlocks[StorageBlockIndex].GeneralSaveCount == GeneralBlocks[GeneralBlockIndex].GeneralSaveCount && StorageBlocks[StorageBlockIndex].IsChecksumValid))
+        {
+            GeneralBlockIndex = (GeneralBlockIndex + 1) % 2;
+            StorageBlockIndex = (StorageBlockIndex + 1) % 2;
+            if (!StorageBlocks[StorageBlockIndex].IsChecksumValid && !GeneralBlocks[GeneralBlockIndex].IsChecksumValid)
+            {
+                throw new Exception("Gen 4 load error");
+            }
+        }
+        
+        foreach (var block in GeneralBlocks)
+        {
+            Program.Logger.LogInformation($"{block.Checksum} ?== {block.GetCalculatedChecksum()}");
+        }
+        foreach (var block in StorageBlocks)
+        {
+            Program.Logger.LogInformation($"{block.Checksum} ?== {block.GetCalculatedChecksum()}");
+        }
         ParseOriginalTrainer();
         AreAllChecksumsValid();
         PrintPokedex();
@@ -135,26 +190,26 @@ public class SaveDataGeneration4 : SaveData
 
     public override PartyPokemon GetPartyPokemonFromBoxBytes(byte[] data)
     {
-        throw new NotImplementedException();
+        return null;
     }
 
     public override void PrintPokedex()
     {
-        throw new NotImplementedException();
+        return;
     }
 
     public override void WriteToPokedex(int nationalIndex, bool seen = true, bool owned = true)
     {
-        throw new NotImplementedException();
+        return;
     }
 
     public override byte[] GetBoxBytesFromPartyPokemon(PartyPokemon p)
     {
-        throw new NotImplementedException();
+        return [];
     }
 
     public override int AddPokemonToNextOpenBox(PartyPokemon pokemon)
     {
-        throw new NotImplementedException();
+        return -1;
     }
 }
