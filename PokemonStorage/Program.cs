@@ -202,7 +202,6 @@ public class Program
                     World = true
                 };
 
-                return;
                 File.WriteAllText(OutputFileName, SerializeObject(debugDeoxys));
 
                 byte[] debugPokemonBytes = GameState.GetBoxBytesFromPartyPokemon(debugDeoxys);
@@ -214,6 +213,8 @@ public class Program
                 
                 bool isValidWrite = debugSaveData.AreAllChecksumsValid();
                 //debugSaveData.SaveBoxDataSectionsToBytes();
+
+                return;
                 
                 if (isValidWrite)
                 {

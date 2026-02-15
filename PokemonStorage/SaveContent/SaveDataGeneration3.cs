@@ -241,29 +241,10 @@ public class SaveDataGeneration3 : SaveData
                     iv.HP = Convert.ToByte(miscBinary.Substring(27, 5), 2);
 
                     // Ribbons, Obedience
-                    string ribbonBinary = Convert.ToString(Utility.GetUnsignedNumber<uint>(substructureBytes, 0x08, 4), 2).PadLeft(32, '0');
-
                     // O ---- W E N C n r b E A V W C Tou Sma Cut Bea Coo
                     // 0 0000 0 0 0 0 0 0 0 0 0 0 0 0 000 000 000 000 000
-                    // Program.Logger.LogInformation($"Ribbon Data: {ribbonBinary}");
-                    p.Obedience = ribbonBinary[0] == '1';
-                    p.Ribbons.World = ribbonBinary[5] == '1';
-                    p.Ribbons.Earth = ribbonBinary[6] == '1';
-                    p.Ribbons.National = ribbonBinary[7] == '1';
-                    p.Ribbons.Country = ribbonBinary[8] == '1';
-                    p.Ribbons.Sky = ribbonBinary[9] == '1';
-                    p.Ribbons.Land = ribbonBinary[10] == '1';
-                    p.Ribbons.Marine = ribbonBinary[11] == '1';
-                    p.Ribbons.Effort = ribbonBinary[12] == '1';
-                    p.Ribbons.Artist = ribbonBinary[13] == '1';
-                    p.Ribbons.Victory = ribbonBinary[14] == '1';
-                    p.Ribbons.Winning = ribbonBinary[15] == '1';
-                    p.Ribbons.Champion = ribbonBinary[16] == '1';
-                    p.Ribbons.HeonnTough = Convert.ToByte(ribbonBinary.Substring(17, 3), 2);
-                    p.Ribbons.HeonnSmart = Convert.ToByte(ribbonBinary.Substring(20, 3), 2);
-                    p.Ribbons.HeonnCute = Convert.ToByte(ribbonBinary.Substring(23, 3), 2);
-                    p.Ribbons.HeonnBeauty = Convert.ToByte(ribbonBinary.Substring(26, 3), 2);
-                    p.Ribbons.HeonnCool = Convert.ToByte(ribbonBinary.Substring(29, 3), 2);
+                    p.Obedience = (Utility.GetUnsignedNumber<uint>(substructureBytes, 0x08, 4) & 0x80000000) > 0;
+                    p.Ribbons.HoennSet = Utility.GetUnsignedNumber<uint>(substructureBytes, 0x08, 4) & 0x7FFFFFFF;
                     break;
 
                 default:
@@ -452,7 +433,7 @@ public class SaveDataGeneration3 : SaveData
         byte[] ivEggAbilityData = [.. BitConverter.GetBytes(ivEggAbility)];
         Buffer.BlockCopy(ivEggAbilityData, 0, m, 0x04, 4);
 
-        uint ribbon = (uint)(p.Ribbons.AsGen3RibbonData() + ((p.Obedience ? 1 : 0) << 31));
+        uint ribbon = (uint)(p.Ribbons.HoennSet + ((p.Obedience ? 1 : 0) << 31));
         byte[] ribbonData = [.. BitConverter.GetBytes(ribbon)];
         Buffer.BlockCopy(ribbonData, 0, m, 0x08, 4);
 
