@@ -206,14 +206,16 @@ public static class Utility
         return result.ToString();
     }
 
-    public static byte[] GetEncodedString(string data, int maxSize, Game game, string lang)
+    public static byte[] GetEncodedString(string data, int maxStringLength, Game game, string lang)
     {
-        byte[] builtBytes = new byte[maxSize];
+        bool useShort = game.VersionGroupId is >= 8 and <= 10;
+        int byteArraySize = useShort ? maxStringLength * 2 : maxStringLength; 
+        byte[] builtBytes = new byte[byteArraySize];
         Array.Fill<byte>(builtBytes, 0);
         for (int i = 0; i < data.Length; i++)
         {
             ushort value = Lookup.GetEncodedCharacterByCharacter(data[i], game.GenerationId, lang);
-            if (game.VersionGroupId <= 7)
+            if (!useShort)
             {
                 builtBytes[i] = (byte)value;
             }
@@ -236,9 +238,11 @@ public static class Utility
             case 7:
                 builtBytes[data.Length] = 0xFF;
                 break;
-            default:
-                builtBytes[data.Length] = 0xFF;
-                builtBytes[data.Length + 1] = 0xFF;
+            case 8:
+            case 9:
+            case 10:
+                builtBytes[data.Length * 2] = 0xFF;
+                builtBytes[data.Length * 2 + 1] = 0xFF;
                 break;
         }
 

@@ -165,9 +165,12 @@ public class Program
                 PartyPokemon debugDeoxys = new(GameState.Game)
                 {
                     PokemonIdentity = Lookup.GetPokemonBySpeciesId(386, Lookup.GetLanguageIdByIdentifier(Settings.Language)),
+                    AlternateFormId = 0x10,
+                    AbilityNumber = 0,
+                    AbilityId = Lookup.GetAbilityIdByAbilityNumber(386, 0),
                     Nickname = "Me, DEO!",
                     HeldItemId = 93, //heart scale
-                    PersonalityValue = 1234567890,
+                    PersonalityValue = 58376,
                     ExperiencePoints = 1212873-666, // lvl 98
                     Friendship = 225,
                     OriginalTrainer = new Trainer("Scoot", 1, 12345, 54321),
@@ -191,15 +194,17 @@ public class Program
                 );
                 debugDeoxys.Origin = new Origin(Lookup.GetVersionIdByGameIndex(3)) // Emerald
                 {
-                    MetLocationId = Lookup.GetLocationIdByGameIndex(3, 0x46), // Victory Road
+                    MetLocationId = Lookup.GetLocationIdByGameIndex(4, 0x36), // Victory Road
+                    MetDateTime = new DateTime(2012, 12, 21),
+                    EggReceiveDate = new DateTime(2012, 12, 1),
                     PokeballId = 11, // Luxury Ball
                     MetLevel = 2
                 };
                 debugDeoxys.Ribbons = new RibbonSet()
                 {
-                    HeonnBeauty = 2,
-                    Artist = true,
-                    World = true
+                    SinnohSet1 =    0b00000000_11100000_00000010_00000000, // Red, green, blue, downcast
+                    SinnohSet2 =    0b00000000_00000000_00000000_11110000, // all beauty
+                    HoennSet =      0b00000100_00010000_00000000_00001111 // Land, champion, all cool
                 };
 
                 File.WriteAllText(OutputFileName, SerializeObject(debugDeoxys));
@@ -211,10 +216,8 @@ public class Program
                 debugSaveData.WriteToPokedex(386);
                 int assignedBox = debugSaveData.AddPokemonToNextOpenBox(debugDeoxys);
                 
+                debugSaveData.SaveStructureToModifiedBytes();
                 bool isValidWrite = debugSaveData.AreAllChecksumsValid();
-                //debugSaveData.SaveBoxDataSectionsToBytes();
-
-                return;
                 
                 if (isValidWrite)
                 {

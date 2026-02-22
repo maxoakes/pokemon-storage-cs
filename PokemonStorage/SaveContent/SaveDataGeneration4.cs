@@ -24,54 +24,76 @@ public class SaveDataGeneration4 : SaveData
             new(content, game, false, true),
         ];
 
-        // https://projectpokemon.org/home/docs/gen-4/dp-save-structure-r74/
-        // Choose the general block to write to
-        GeneralBlockIndex = GeneralBlocks[0].GeneralSaveCount > GeneralBlocks[1].GeneralSaveCount ? 0 : 1;
-        if (!GeneralBlocks[GeneralBlockIndex].IsChecksumValid) GeneralBlockIndex = (GeneralBlockIndex + 1) % 2;
-        if (!GeneralBlocks[GeneralBlockIndex].IsChecksumValid) throw new Exception("Bad checksum");
+        if (Game.VersionGroupId == 10)
+        {
+            if (GeneralBlocks[0].Int1 > GeneralBlocks[1].Int2) GeneralBlockIndex = 0;
+            if (GeneralBlocks[GeneralBlockIndex].IsChecksumValid) GeneralBlockIndex = (GeneralBlockIndex + 1) % 2;
 
-        // Choose the storage block to write to
-        if (StorageBlocks[0].StorageSaveCount > StorageBlocks[1].StorageSaveCount)
-        {
-            StorageBlockIndex = 0;
-        }
-        else if (StorageBlocks[0].StorageSaveCount < StorageBlocks[1].StorageSaveCount)
-        {
-            StorageBlockIndex = 1;
+            if (StorageBlocks[0].Int1 > StorageBlocks[1].Int2) StorageBlockIndex = 0;
+            if (StorageBlocks[GeneralBlockIndex].IsChecksumValid) StorageBlockIndex = (StorageBlockIndex + 1) % 2;
         }
         else
         {
-            StorageBlockIndex = GeneralBlocks[0].StorageSaveCount > GeneralBlocks[1].StorageSaveCount ? 0 : 1;
-        }
-        
-        if (!(StorageBlocks[StorageBlockIndex].GeneralSaveCount == GeneralBlocks[GeneralBlockIndex].GeneralSaveCount && StorageBlocks[StorageBlockIndex].IsChecksumValid))
-        {
-            GeneralBlockIndex = (GeneralBlockIndex + 1) % 2;
-            StorageBlockIndex = (StorageBlockIndex + 1) % 2;
-            if (!StorageBlocks[StorageBlockIndex].IsChecksumValid && !GeneralBlocks[GeneralBlockIndex].IsChecksumValid)
+            // https://projectpokemon.org/home/docs/gen-4/dp-save-structure-r74/
+            // Choose the general block to write to
+            GeneralBlockIndex = GeneralBlocks[0].Int2 > GeneralBlocks[1].Int2 ? 0 : 1;
+            if (!GeneralBlocks[GeneralBlockIndex].IsChecksumValid) GeneralBlockIndex = (GeneralBlockIndex + 1) % 2;
+
+            // Choose the storage block to write to
+            if (StorageBlocks[0].Int1 > StorageBlocks[1].Int1)
             {
-                throw new Exception("Gen 4 load error");
+                StorageBlockIndex = 0;
+            }
+            else if (StorageBlocks[0].Int1 < StorageBlocks[1].Int1)
+            {
+                StorageBlockIndex = 1;
+            }
+            else
+            {
+                StorageBlockIndex = GeneralBlocks[0].Int1 > GeneralBlocks[1].Int1 ? 0 : 1;
+            }
+            
+            if (!(StorageBlocks[StorageBlockIndex].Int2 == GeneralBlocks[GeneralBlockIndex].Int2 && StorageBlocks[StorageBlockIndex].IsChecksumValid))
+            {
+                GeneralBlockIndex = (GeneralBlockIndex + 1) % 2;
+                StorageBlockIndex = (StorageBlockIndex + 1) % 2;
+                if (!StorageBlocks[StorageBlockIndex].IsChecksumValid && !GeneralBlocks[GeneralBlockIndex].IsChecksumValid)
+                {
+                    throw new Exception("Gen 4 load error");
+                }
+            }
+            
+            int i = 0;
+            foreach (var block in GeneralBlocks)
+            {
+                Program.Logger.LogInformation($"General_{i}: Real:{block.Checksum} ?== Calculated:{block.GetCalculatedChecksum()}");
+                Program.Logger.LogInformation($"General_{i}: GenSave:{block.Int2}");
+                Program.Logger.LogInformation($"General_{i}: StorSave:{block.Int1}");
+                i++;
+            }
+            i = 0;
+            foreach (var block in StorageBlocks)
+            {
+                Program.Logger.LogInformation($"Storage_{i}: Real:{block.Checksum} ?== Calculated:{block.GetCalculatedChecksum()}");
+                Program.Logger.LogInformation($"Storage_{i}: GenSave:{block.Int2}");
+                Program.Logger.LogInformation($"Storage_{i}: StorSave:{block.Int1}");
+                i++;
             }
         }
-        
-        foreach (var block in GeneralBlocks)
-        {
-            Program.Logger.LogInformation($"{block.Checksum} ?== {block.GetCalculatedChecksum()}");
-        }
-        foreach (var block in StorageBlocks)
-        {
-            Program.Logger.LogInformation($"{block.Checksum} ?== {block.GetCalculatedChecksum()}");
-        }
+
+        Program.Logger.LogInformation($"GeneralIndex: {GeneralBlockIndex}, StorageIndex: {StorageBlockIndex}");
         ParseOriginalTrainer();
         AreAllChecksumsValid();
-        PrintPokedex();
+        // PrintPokedex();
         ParsePartyPokemon();
         ParseBoxPokemon();
     }
 
     public override bool AreAllChecksumsValid()
     {
-        return true;
+        return 
+            StorageBlocks[StorageBlockIndex].GetCalculatedChecksum() == StorageBlocks[StorageBlockIndex].Checksum &&
+            GeneralBlocks[GeneralBlockIndex].GetCalculatedChecksum() == GeneralBlocks[GeneralBlockIndex].Checksum;
     }
 
     protected override void ParseOriginalTrainer()
@@ -405,6 +427,11 @@ public class SaveDataGeneration4 : SaveData
 
     public override byte[] GetBoxBytesFromPartyPokemon(PartyPokemon p)
     {
+        // decryption
+        const int WORD_SIZE = 2;
+        const uint DECRYPTION_FACTOR = 0x41C64E6D;
+        const uint DECRYPTION_CONST = 0x6073;
+
         byte[] bytes = new byte[0x88];
         Array.Fill<byte>(bytes, 0);
 
@@ -429,25 +456,25 @@ public class SaveDataGeneration4 : SaveData
         byte[] experienceData = BitConverter.GetBytes(p.ExperiencePoints);
         Buffer.BlockCopy(experienceData, 0, a, 0x08, 4);
 
-        a[0x0A] = p.Friendship;
-        a[0x0B] = (byte)p.AbilityId;
-        a[0x0C] = p.Markings.AsGen4Byte();
-        a[0x0D] = Lookup.GetLanguageGameIndexById(p.LanguageId);
-        a[0x0E] = (byte)p.Stats.Modern.HP.Ev;
-        a[0x0F] = (byte)p.Stats.Modern.Attack.Ev;
-        a[0x10] = (byte)p.Stats.Modern.Defense.Ev;
-        a[0x11] = (byte)p.Stats.Modern.Speed.Ev;
-        a[0x12] = (byte)p.Stats.Modern.SpecialAttack.Ev;
-        a[0x13] = (byte)p.Stats.Modern.SpecialDefense.Ev;
-        a[0x14] = (byte)p.Coolness;
-        a[0x15] = (byte)p.Beauty;
-        a[0x16] = (byte)p.Cuteness;
-        a[0x17] = (byte)p.Smartness;
-        a[0x18] = (byte)p.Toughness;
-        a[0x19] = (byte)p.Sheen;
+        a[0x0C] = p.Friendship;
+        a[0x0D] = (byte)p.AbilityId;
+        a[0x0E] = p.Markings.AsGen4Byte();
+        a[0x0F] = Lookup.GetLanguageGameIndexById(p.LanguageId);
+        a[0x10] = (byte)p.Stats.Modern.HP.Ev;
+        a[0x11] = (byte)p.Stats.Modern.Attack.Ev;
+        a[0x12] = (byte)p.Stats.Modern.Defense.Ev;
+        a[0x13] = (byte)p.Stats.Modern.Speed.Ev;
+        a[0x14] = (byte)p.Stats.Modern.SpecialAttack.Ev;
+        a[0x15] = (byte)p.Stats.Modern.SpecialDefense.Ev;
+        a[0x16] = (byte)p.Coolness;
+        a[0x17] = (byte)p.Beauty;
+        a[0x18] = (byte)p.Cuteness;
+        a[0x19] = (byte)p.Smartness;
+        a[0x1A] = (byte)p.Toughness;
+        a[0x1B] = (byte)p.Sheen;
 
         byte[] sinnohRibbon1Data = BitConverter.GetBytes(p.Ribbons.SinnohSet1);
-        Buffer.BlockCopy(sinnohRibbon1Data, 0, a, 0x08, 4);
+        Buffer.BlockCopy(sinnohRibbon1Data, 0, a, 0x1C, 4);
 
         // B block
         byte[] b = new byte[0x20];
@@ -501,24 +528,24 @@ public class SaveDataGeneration4 : SaveData
         Buffer.BlockCopy(platEggLocationData, 0, b, 0x1C, 2);
 
         byte[] platLocation = BitConverter.GetBytes(Lookup.GetLocationGameIndexById(4, p.Origin.MetLocationPlatinumId));
-        Buffer.BlockCopy(platEggLocationData, 0, b, 0x1E, 2);
+        Buffer.BlockCopy(platLocation, 0, b, 0x1E, 2);
 
         // C block
         byte[] c = new byte[0x20];
 
         byte[] nicknameData = Utility.GetEncodedString(p.Nickname, 10, Game, Language);
-        Buffer.BlockCopy(nicknameData, 0, c, 0x00, 21);
+        Buffer.BlockCopy(nicknameData, 0, c, 0x00, 20);
 
         c[0x15] = Lookup.GetGameGameIndexById(p.Origin.GameVersionId);
 
         byte[] sinnohRibbon2Data = BitConverter.GetBytes(p.Ribbons.SinnohSet2);
-        Buffer.BlockCopy(sinnohRibbon2Data, 0, c, 0x16, 4);
+        Buffer.BlockCopy(sinnohRibbon2Data, 0, c, 0x18, 4);
 
         // D block
         byte[] d = new byte[0x20];
 
-        byte[] otNameData = Utility.GetEncodedString(p.OriginalTrainer.Name, 7, Game, Language);
-        Buffer.BlockCopy(otNameData, 0, d, 0x00, 15);
+        byte[] otNameData = Utility.GetEncodedString(p.OriginalTrainer.Name, 8, Game, Language);
+        Buffer.BlockCopy(otNameData, 0, d, 0x00, 16);
 
         d[0x10] = (byte)(p.Origin.EggReceiveDate.HasValue ? p.Origin.EggReceiveDate.Value.Year - 2000 : 0);
         d[0x11] = (byte)(p.Origin.EggReceiveDate.HasValue ? p.Origin.EggReceiveDate.Value.Month : 0);
@@ -542,46 +569,104 @@ public class SaveDataGeneration4 : SaveData
         d[0x1F] = p.WalkingMood;
 
         // Arrange substructure
-        byte[] substructure = new byte[48];
-        Array.Fill<byte>(substructure, 0x00);
+        byte[] unencryptedSubstructure = new byte[0x80];
+        int blockSize = 0x20;
+        Array.Fill<byte>(unencryptedSubstructure, 0x00);
 
-        string order = GetSubstructureOrder(p.PersonalityValue);
+        string order = GetSubstructureOrder(p.PersonalityValue, false);
         for (int i = 0; i < order.Length; i++)
         {
-            if (string.Equals(order[i].ToString(), "g", StringComparison.OrdinalIgnoreCase))
-            {
-                Buffer.BlockCopy(g, 0, substructure, i*12, 12);
-            }
             if (string.Equals(order[i].ToString(), "a", StringComparison.OrdinalIgnoreCase))
             {
-                Buffer.BlockCopy(a, 0, substructure, i*12, 12);
+                Buffer.BlockCopy(a, 0, unencryptedSubstructure, i*blockSize, blockSize);
             }
-            if (string.Equals(order[i].ToString(), "m", StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(order[i].ToString(), "b", StringComparison.OrdinalIgnoreCase))
             {
-                Buffer.BlockCopy(m, 0, substructure, i*12, 12);
+                Buffer.BlockCopy(b, 0, unencryptedSubstructure, i*blockSize, blockSize);
             }
-            if (string.Equals(order[i].ToString(), "e", StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(order[i].ToString(), "c", StringComparison.OrdinalIgnoreCase))
             {
-                Buffer.BlockCopy(e, 0, substructure, i*12, 12);
+                Buffer.BlockCopy(c, 0, unencryptedSubstructure, i*blockSize, blockSize);
+            }
+            if (string.Equals(order[i].ToString(), "d", StringComparison.OrdinalIgnoreCase))
+            {
+                Buffer.BlockCopy(d, 0, unencryptedSubstructure, i*blockSize, blockSize);
             }
         }
-        ushort checksum = 0;
-        for (int i = 0; i < 48; i += 2)
+
+        // checksum calculation
+        uint checksum = 0;
+        for (int i = 0; i < 64 * WORD_SIZE; i += 2)
         {
-            checksum += Utility.GetUnsignedNumber<ushort>(substructure, 0x1 * i, 2);
+            checksum += Utility.GetUnsignedNumber<ushort>(unencryptedSubstructure, i, 2);
         }
+        checksum &= 0xFFFF;
+
         byte[] checksumData = [.. BitConverter.GetBytes(checksum)];
-        Buffer.BlockCopy(checksumData, 0, bytes, 0x1C, 2);
+        Buffer.BlockCopy(checksumData, 0, bytes, 0x06, 2);
 
         // Encrypt the substructure
-        byte[] encrypted = XorSubstructure(Utility.GetUnsignedNumber<uint>(bytes, 0x00, 4) ^ Utility.GetUnsignedNumber<uint>(bytes, 0x04, 4), substructure);
-        Buffer.BlockCopy(encrypted, 0, bytes, 0x20, 48);
+        uint prng = checksum;
+        byte[] encryptedSubstructure = new byte[0x80];
+
+        for (int i = 0; i < 0x80; i += WORD_SIZE)
+        {
+            unchecked
+            {
+                prng = (DECRYPTION_FACTOR * prng + DECRYPTION_CONST) & 0xFFFFFFFFu;
+            }
+
+            uint rand = prng >> 16;
+            uint y = Utility.GetUnsignedNumber<uint>(unencryptedSubstructure, i, WORD_SIZE);
+            ushort transformedWord = (ushort)((y ^ (int)rand) & 0xFFFF);
+
+            // write little-endian two bytes to decrypted buffer
+            encryptedSubstructure[i] = (byte)(transformedWord & 0xFF);
+            encryptedSubstructure[i + 1] = (byte)((transformedWord >> 8) & 0xFF);
+        }
+        Buffer.BlockCopy(encryptedSubstructure, 0, bytes, 0x8, 0x80);
 
         return bytes;
     }
 
     public override int AddPokemonToNextOpenBox(PartyPokemon pokemon)
     {
+        int checksumOffset = 0x06;
+        int slot = 0;
+        if (Game.VersionGroupId != 10)
+        {
+            int boxOffset = 0x04;
+            for (int i = 0; i < 73440; i+=136)
+            {
+                ushort thisChecksum = Utility.GetUnsignedNumber<ushort>(StorageBlocks[StorageBlockIndex].Data, boxOffset+i+checksumOffset, 2);
+                if (thisChecksum == 0)
+                {
+                    byte[] pokemonBytes = GetBoxBytesFromPartyPokemon(pokemon);
+                    Buffer.BlockCopy(pokemonBytes, 0, StorageBlocks[StorageBlockIndex].Data, boxOffset+i, pokemonBytes.Length);
+                    return slot;
+                }
+                slot++;
+            }
+        }
+        else
+        {
+            for (int i = 0; i < 18; i++)
+            {
+                int boxOffset = 0x1000 * i;
+                for (int j = 0; j < 30; j++)
+                {
+                    int slotOffset = 136 * j;
+                    ushort thisChecksum = Utility.GetUnsignedNumber<ushort>(StorageBlocks[StorageBlockIndex].Data, boxOffset+slotOffset+checksumOffset, 2);
+                    if (thisChecksum == 0)
+                    {
+                        byte[] pokemonBytes = GetBoxBytesFromPartyPokemon(pokemon);
+                        Buffer.BlockCopy(pokemonBytes, 0, StorageBlocks[StorageBlockIndex].Data, boxOffset+slotOffset, pokemonBytes.Length);
+                        return slot;
+                    }
+                    slot++;
+                }
+            }
+        }
         return -1;
     }
 
@@ -610,5 +695,34 @@ public class SaveDataGeneration4 : SaveData
 
         int s = (int)(((pv & 0x3E000) >> 0xD) % 24);
         return unencrypt ? blockOrder[s] : inverseOrder[s];
+    }
+
+    public void SaveStructureToModifiedBytes()
+    {
+        foreach (var block in GeneralBlocks)
+        {
+            block.WriteCalculatedChecksum();
+            byte[] data = block.GetBlockData();
+            Buffer.BlockCopy(data, 0, ModifiedData, block.DataOffset, data.Length);
+        }
+
+        foreach (var block in StorageBlocks)
+        {
+            block.WriteCalculatedChecksum();
+            byte[] data = block.GetBlockData();
+            Buffer.BlockCopy(data, 0, ModifiedData, block.DataOffset, data.Length);
+        }
+    }
+
+    public void UpdateGeneralBlock(byte[] input, int offset)
+    {
+        GeneralBlocks[0].WriteBytesToData(input, offset);
+        GeneralBlocks[1].WriteBytesToData(input, offset);
+    }
+
+    public void UpdateStorageBlock(byte[] input, int offset)
+    {
+        StorageBlocks[0].WriteBytesToData(input, offset);
+        StorageBlocks[1].WriteBytesToData(input, offset);
     }
 }

@@ -333,7 +333,7 @@ public partial class PartyPokemon
             Markings = new(4, (byte)row.Field<Int64>("markings_mask"));
             ShinyLeaves = (byte)row.Field<Int64>("shiny_leaves");
             Gen3Misc = (byte)row.Field<Int64>("gen3_misc");
-            Ribbons.LoadFromDatabase((int)row.Field<Int64>("fk_ribbon"));
+            //Ribbons.LoadFromDatabase((int)row.Field<Int64>("fk_ribbon"));
             Origin.LoadFromDatabase((int)row.Field<Int64>("fk_origin"));
             OriginalTrainer.LoadFromDatabase((int)row.Field<Int64>("fk_original_trainer"));
         };
