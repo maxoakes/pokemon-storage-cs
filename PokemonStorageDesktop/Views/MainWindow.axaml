@@ -1,0 +1,67 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:PokemonStorageDesktop.ViewModels"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        x:Class="PokemonStorageDesktop.Views.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        Icon="/Assets/avalonia-logo.ico"
+        Title="PokemonStorageDesktop"
+        Width="1600" 
+        Height="900">
+    <Design.DataContext>
+        <vm:MainWindowViewModel/>
+    </Design.DataContext>
+    <DockPanel LastChildFill="True">
+        <Border Background="Orange" Width="250" DockPanel.Dock="Right">
+            <StackPanel>
+                <TextBlock Foreground="Black">Pokemon Name</TextBlock>
+                <TextBlock Foreground="Black">Nickname</TextBlock>
+                <TextBlock Foreground="Black">Description</TextBlock>
+            </StackPanel>
+        </Border>
+        <TabControl TabStripPlacement="Left">
+            <TabItem Header="File">
+                <Grid RowDefinitions="*, Auto">
+                    <ScrollViewer Name="FileGridParent">
+                    </ScrollViewer>
+                    <WrapPanel Grid.Row="1" Height="32" Background="Olive">
+                        <TextBlock Text="This panel is at the bottom" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                        <Button HorizontalAlignment="Right" VerticalAlignment="Center">Export</Button>
+                    </WrapPanel>
+                </Grid>
+            </TabItem>
+            <TabItem Header="DB">
+                <Grid RowDefinitions="*, Auto">
+                    <ScrollViewer Name="DatabaseGridParent">
+                        <Grid Grid.Row="0" ColumnDefinitions="auto, auto, auto, auto, auto, auto" Name="DatabaseGrid" Background="Red" DockPanel.Dock="Top">
+                            <StackPanel>
+                                <UserControl Width="135" Height="250">
+                                    <Border BorderThickness="2" BorderBrush="Yellow" Background="Green" Padding="2">
+                                        <Grid RowDefinitions="*,*">
+                                            <Panel Grid.Row="0" ClipToBounds="False">
+                                                <Image Source="{Binding ImageFromWebsite^}" Height="128" Width="128" RenderOptions.BitmapInterpolationMode="None" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                <Image Source="{Binding ImageFromWebsite2^}" Height="48" Width="48" Stretch="Uniform" HorizontalAlignment="Left" VerticalAlignment="Bottom"/>
+                                            </Panel>
+                                            <StackPanel Grid.Row="1" VerticalAlignment="Center" Background="Blue">
+                                                <TextBlock Text="Bulbasaur" FontWeight="Bold" FontSize="12" HorizontalAlignment="Left" Background="Gray"/>
+                                                <TextBlock Text="Lv. 66 (M)" FontSize="12" HorizontalAlignment="Left" Background="Gray"/>
+                                                <TextBlock Text="Exp: 123456000" FontSize="12" HorizontalAlignment="Left" Background="Gray"/>
+                                                <TextBlock Text="Adament" FontSize="12" HorizontalAlignment="Left" Background="Gray"/>
+                                                <TextBlock Text="O/T: NOCTOWL" FontSize="12" HorizontalAlignment="Left" Background="Gray"/>
+                                                <CheckBox HorizontalAlignment="Right"></CheckBox>
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
+                                </UserControl>
+                            </StackPanel>        
+                        </Grid>
+                    </ScrollViewer>
+                <StackPanel Grid.Row="1" Height="50" Background="LightGray">
+                    <TextBlock Text="This panel is at the bottom" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </StackPanel>
+                </Grid>
+            </TabItem>
+        </TabControl>
+    </DockPanel>
+</Window>

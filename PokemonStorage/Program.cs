@@ -1,8 +1,9 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using PokemonStorage.Models;
-using PokemonStorage.SaveContent;
+using PokemonStorageLibrary;
+using PokemonStorageLibrary.Models;
+using PokemonStorageLibrary.SaveContent;
 using System.Configuration;
 
 namespace PokemonStorage;
@@ -89,9 +90,9 @@ public class Program
         Logger = factory.CreateLogger<Program>();
 
         // Access configuration values
-        ConnectionStrings["veekun"] = config.GetConnectionString("veekun") ?? "";
-        ConnectionStrings["supplement"] = config.GetConnectionString("supplement") ?? "";
-        ConnectionStrings["storage"] = config.GetConnectionString("storage") ?? "";
+        Lookup.VeekunConnectionString = config.GetConnectionString("veekun") ?? "";
+        Lookup.SupplementConnectionString = config.GetConnectionString("supplement") ?? "";
+        Lookup.StorageConnectionString = config.GetConnectionString("storage") ?? "";
         Settings = new Settings(config);
 
         if (!Settings.AreSettingsValid())
