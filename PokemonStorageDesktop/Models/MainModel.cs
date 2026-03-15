@@ -13,12 +13,13 @@ public class MainModel
     public Game Game { get; private set; }
     public SaveData? GameState { get; private set; }
     public string StorageConnectionString { get; private set; }
-    public Dictionary<string, Dictionary<int, PartyPokemon>> SaveFilePokemon;
-    public Dictionary<int, PartyPokemon> DatabasePokemon;
+    public List<PokemonModel> SaveFilePokemon;
+    public List<PokemonModel> DatabasePokemon;
 
     public MainModel()
     {
-        
+        SaveFilePokemon = [];
+        DatabasePokemon = [];
     }
 
     public void LoadDatabase(string connectionString)
@@ -26,7 +27,7 @@ public class MainModel
         Lookup.StorageConnectionString = connectionString;
     }
 
-    public bool LoadSaveFile(string filePath)
+    public void LoadSaveFile(string filePath, string gameName, string language)
     {
         byte[] readData;
         SaveFilePath = filePath;
@@ -37,29 +38,40 @@ public class MainModel
         catch (Exception ex)
         {
             Console.WriteLine(ex);
-            return false;
+            return;
         }
 
-        Game game = Lookup.GetGameByName("Blue");
+        Game = Lookup.GetGameByName(gameName);
         GameState = null;
-        switch (game.GenerationId)
+        switch (Game.GenerationId)
         {
             case 1:
-                GameState = new SaveDataGeneration1(readData, game, "en");
+                GameState = new SaveDataGeneration1(readData, Game, language);
                 break;
             case 2:
-                GameState = new SaveDataGeneration2(readData, game, "en");
+                GameState = new SaveDataGeneration2(readData, Game, language);
                 break;
             case 3:
-                GameState = new SaveDataGeneration3(readData, game, "en");
+                GameState = new SaveDataGeneration3(readData, Game, language);
                 break;
             case 4:
-                GameState = new SaveDataGeneration4(readData, game, "en");
+                GameState = new SaveDataGeneration4(readData, Game, language);
                 break;
-            default:
-                return false;
         }
-        
-        return true;
+
+        if (GameState != null)
+        {
+            foreach (PartyPokemon pokemon in GameState.Party.Values)
+            {
+                SaveFilePokemon.Add(new PokemonModel(pokemon, Game));
+            }
+            foreach (var box in GameState.BoxList.Values)
+            {
+                foreach (PartyPokemon pokemon in box.Values)
+                {
+                    SaveFilePokemon.Add(new PokemonModel(pokemon, Game));
+                }
+            }
+        }
     }
 }

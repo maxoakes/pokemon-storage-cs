@@ -40,8 +40,8 @@
                                     <Border BorderThickness="2" BorderBrush="Yellow" Background="Green" Padding="2">
                                         <Grid RowDefinitions="*,*">
                                             <Panel Grid.Row="0" ClipToBounds="False">
-                                                <Image Source="{Binding ImageFromWebsite^}" Height="128" Width="128" RenderOptions.BitmapInterpolationMode="None" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                                <Image Source="{Binding ImageFromWebsite2^}" Height="48" Width="48" Stretch="Uniform" HorizontalAlignment="Left" VerticalAlignment="Bottom"/>
+                                                <Image Source="" Height="128" Width="128" RenderOptions.BitmapInterpolationMode="None" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                <Image Source="" Height="48" Width="48" Stretch="Uniform" HorizontalAlignment="Left" VerticalAlignment="Bottom"/>
                                             </Panel>
                                             <StackPanel Grid.Row="1" VerticalAlignment="Center" Background="Blue">
                                                 <TextBlock Text="Bulbasaur" FontWeight="Bold" FontSize="12" HorizontalAlignment="Left" Background="Gray"/>

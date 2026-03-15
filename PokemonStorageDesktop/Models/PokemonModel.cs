@@ -1,8 +1,13 @@
+using System;
+using System.IO;
+using System.Net.Http;
+using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
+using PokemonStorageLibrary;
 using PokemonStorageLibrary.Models;
 
 namespace PokemonStorageDesktop.Models;
@@ -14,13 +19,12 @@ public class PokemonModel
     private CheckBox TransferCheckbox { get; set; }
     public bool IsChecked { get { return TransferCheckbox.IsChecked ?? false; }}
 
-    public PokemonModel(PartyPokemon pokemon)
+    public PokemonModel(PartyPokemon pokemon, Game game)
     {
         Pokemon = pokemon;
-        Card = BuildCard();
     }
 
-    private StackPanel BuildCard()
+    public async Task<StackPanel> BuildCard(Game game)
     {
         var userControl = new UserControl
         {
@@ -54,23 +58,25 @@ public class PokemonModel
             Width = 128,
             Stretch = Stretch.Uniform,
             HorizontalAlignment = HorizontalAlignment.Center,
-            VerticalAlignment = VerticalAlignment.Center
+            VerticalAlignment = VerticalAlignment.Center,
+            Source = await GetImageFromUrl(BuildSpriteUrl(game))
         };
-        mainSprite.Bind(Image.SourceProperty, new Avalonia.Data.Binding("ImageFromWebsite"));
+        // mainSprite.Bind(Image.SourceProperty, new Avalonia.Data.Binding(GetImageFromUrl(BuildSpriteUrl(game))));
         RenderOptions.SetBitmapInterpolationMode(mainSprite, BitmapInterpolationMode.None);
 
-        var itemSprite = new Image
-        {
-            Height = 48,
-            Width = 48,
-            Stretch = Stretch.Uniform,
-            HorizontalAlignment = HorizontalAlignment.Left,
-            VerticalAlignment = VerticalAlignment.Bottom
-        };
-        itemSprite.Bind(Image.SourceProperty, new Avalonia.Data.Binding("ImageFromWebsite2"));
+        // var itemSprite = new Image
+        // {
+        //     Height = 48,
+        //     Width = 48,
+        //     Stretch = Stretch.Uniform,
+        //     HorizontalAlignment = HorizontalAlignment.Left,
+        //     VerticalAlignment = VerticalAlignment.Bottom
+        // };
+        // itemSprite.Bind(Image.SourceProperty, new Avalonia.Data.Binding("ImageFromWebsite2"));
+        // panel.Children.Add(itemSprite);
 
         panel.Children.Add(mainSprite);
-        panel.Children.Add(itemSprite);
+        
 
         // Bottom stack
         var stackPanel = new StackPanel
@@ -140,5 +146,32 @@ public class PokemonModel
         parentControl.Children.Add(userControl);
 
         return parentControl;
+    }
+
+    public string BuildSpriteUrl(Game game)
+    {
+        //https://img.pokemondb.net/sprites/heartgold-soulsilver/normal/pikachu-f.png
+        string baseUrl = "https://img.pokemondb.net/sprites";
+        string versionRoot = Lookup.GetVersionGroupIdentifierByVersionGroupId(game.VersionGroupId);
+        string shiny = Pokemon.IsShinyPersonalityValue ? "shiny" : "normal";
+        string female = Lookup.DoesSpeciesHaveGenderDifference(Pokemon.PokemonIdentity.SpeciesId) ? "-f" : "";
+
+        return $"{baseUrl}/{versionRoot}/{shiny}/{Pokemon.PokemonIdentity.SpeciesIdentifier}{female}.png";
+    }
+
+    private async Task<IImage?> GetImageFromUrl(string url)
+    {
+        try
+        {
+            var response = await Program.HttpClient.GetAsync(url);
+            response.EnsureSuccessStatusCode();
+            var data = await response.Content.ReadAsByteArrayAsync();
+            return new Bitmap(new MemoryStream(data));
+        }
+        catch (HttpRequestException ex)
+        {
+            Console.WriteLine($"An error occurred while downloading image '{url}' : {ex.Message}");
+            return null;
+        }
     }
 }

@@ -1,10 +1,18 @@
 using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Net.Http;
+using System.Threading.Tasks;
 using Avalonia.Controls;
-using Avalonia.Controls.Templates;
-using Avalonia.Data;
 using Avalonia.Interactivity;
 using Avalonia.Media;
+using Avalonia.Media.Imaging;
+using Avalonia.Platform.Storage;
+using Avalonia.VisualTree;
+using PokemonStorageDesktop.Models;
 using PokemonStorageLibrary;
+using PokemonStorageLibrary.Models;
 
 namespace PokemonStorageDesktop.Views;
 
@@ -15,10 +23,20 @@ public enum TabType
 }
 
 public partial class MainWindow : Window
-{    
+{
+    public MainModel MainModel { get; set; }
+    public string SelectedFilepath { get; set; }
+    public string SelectedLanguage { get; set; }
+    public string SelectedVersionGroup { get; set; }
+    public ScrollViewer FileViewerControl { get { return this.GetControl<ScrollViewer>("FileGridParent"); } }
+    public ScrollViewer DatabaseViewerControl { get; set; }
+    public Task<Bitmap?> ImageFromWebsite { get; } = LoadFromWeb(new Uri("https://veekun.com/dex/media/pokemon/main-sprites/heartgold-soulsilver/1.png"));
+
     public MainWindow()
     {
         InitializeComponent();
+        FileViewerControl.Content = GetNewOpenFileMenu();
+        MainModel = new();
     }
 
     private void OpenSaveFile_OnClick(object? sender, RoutedEventArgs e)
@@ -26,23 +44,24 @@ public partial class MainWindow : Window
         Console.WriteLine("Click!");
     }
 
-    private Grid GetNewPokemonGrid(TabType tabType)
+    private WrapPanel GetNewPokemonGrid(TabType tabType)
     {
-        return new Grid
+        WrapPanel grid = new WrapPanel
         {
             Name = Enum.GetName(tabType),
             Background = Brushes.Red,
-            ColumnDefinitions = new ColumnDefinitions("Auto,Auto,Auto,Auto,Auto,Auto")
         };
+        return grid;
     }
 
     private Grid GetNewOpenFileMenu()
     {
-        var grid = new Grid
+        Grid grid = new Grid
         {
+            Name = "OpenFileDialogGrid",
             Background = Brushes.Gainsboro,
-            HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Left,
-            VerticalAlignment = Avalonia.Layout.VerticalAlignment.Top,
+            HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center,
+            VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center,
             Width = 500,
             Height = 200,
             ColumnDefinitions = new ColumnDefinitions("Auto,Auto,Auto"),
@@ -50,7 +69,7 @@ public partial class MainWindow : Window
         };
 
         // Row 0 title
-        var title = new TextBlock
+        TextBlock title = new TextBlock
         {
             Text = "Find the .sav file you would like to open."
         };
@@ -60,7 +79,7 @@ public partial class MainWindow : Window
         grid.Children.Add(title);
 
         // Row 1 - Save File label
-        var saveLabel = new TextBlock
+        TextBlock saveLabel = new TextBlock
         {
             Text = "Save File:"
         };
@@ -69,19 +88,22 @@ public partial class MainWindow : Window
         grid.Children.Add(saveLabel);
 
         // Row 1 - TextBox
-        var savePathBox = new TextBox
+        TextBox savePathBox = new TextBox
         {
-            Text = "File path"
+            Name = "OpenFileTextBox",
+            Text = "",
+            
         };
         Grid.SetRow(savePathBox, 1);
         Grid.SetColumn(savePathBox, 1);
         grid.Children.Add(savePathBox);
 
         // Row 1 - Browse Button
-        var browseButton = new Button
+        Button browseButton = new Button
         {
-            Content = "Browse..."
+            Content = "Browse...",
         };
+        browseButton.Click += BrowseSaveFile_Click;
         Grid.SetRow(browseButton, 1);
         Grid.SetColumn(browseButton, 2);
         grid.Children.Add(browseButton);
@@ -98,17 +120,13 @@ public partial class MainWindow : Window
         // Row 2 - Version ComboBox
         var versionCombo = new ComboBox
         {
-            Name = "dropdownVersions",
+            Name = "OpenFileVersionDropdown",
             SelectedIndex = 0,
             Width = 200,
-            MaxDropDownHeight = 300
+            MaxDropDownHeight = 300,
+            ItemsSource = Lookup.GetVersionNames(),
+            SelectedItem = "HeartGold"
         };
-
-        versionCombo.Bind(ComboBox.ItemsSourceProperty, new Binding("Versions"));
-        versionCombo.Bind(ComboBox.SelectedValueProperty, new Binding("SelectedVersion"));
-
-        versionCombo.ItemTemplate = new FuncDataTemplate<object>((item, _) =>
-            new TextBlock { Text = item?.ToString() });
 
         Grid.SetRow(versionCombo, 2);
         Grid.SetColumn(versionCombo, 1);
@@ -126,17 +144,13 @@ public partial class MainWindow : Window
         // Row 3 - Language ComboBox
         var languageCombo = new ComboBox
         {
-            Name = "dropdownLanguage",
+            Name = "OpenFileLanguageDropdown",
             SelectedIndex = 0,
             Width = 200,
-            MaxDropDownHeight = 300
+            MaxDropDownHeight = 300,
+            ItemsSource = Lookup.GetLanguageNames("iso639"),
+            SelectedItem = "en"
         };
-
-        languageCombo.Bind(ComboBox.ItemsSourceProperty, new Binding("Languages"));
-        languageCombo.Bind(ComboBox.SelectedValueProperty, new Binding("SelectedLanguage"));
-
-        languageCombo.ItemTemplate = new FuncDataTemplate<object>((item, _) =>
-            new TextBlock { Text = item?.ToString() });
 
         Grid.SetRow(languageCombo, 3);
         Grid.SetColumn(languageCombo, 1);
@@ -147,6 +161,8 @@ public partial class MainWindow : Window
         {
             Content = "Open"
         };
+        openButton.Click += OpenSaveFile_Click;
+
         Grid.SetRow(openButton, 4);
         Grid.SetColumn(openButton, 2);
         grid.Children.Add(openButton);
@@ -154,4 +170,64 @@ public partial class MainWindow : Window
         return grid;
     }
 
+    private async void BrowseSaveFile_Click(object? sender, RoutedEventArgs e)
+    {
+        Console.WriteLine("Button clicked!");
+        this.GetVisualDescendants().OfType<TextBox>().First(x => x.Name == "OpenFileTextBox").Text = await HandleSaveFileOpenClick();
+    }
+
+    public async Task<string> HandleSaveFileOpenClick()
+    {
+        TopLevel? topLevel = GetTopLevel(this);
+
+        if (topLevel != null)
+        {
+            // Start async operation to open the dialog.
+            var files = await topLevel.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+            {
+                Title = "Open Pokemon Save File",
+                AllowMultiple = false
+            });
+
+            if (files.Count >= 1)
+            {
+                return files[0].Path.LocalPath;
+            }
+        }
+
+        return "";
+    }
+
+    private async void OpenSaveFile_Click(object? sender, RoutedEventArgs e)
+    {
+        Console.WriteLine("Opening file");
+        SelectedFilepath = this.GetVisualDescendants().OfType<TextBox>().First(x => x.Name == "OpenFileTextBox").Text ?? "";
+        SelectedLanguage = this.GetVisualDescendants().OfType<ComboBox>().First(x => x.Name == "OpenFileLanguageDropdown").SelectedItem?.ToString() ?? "";
+        SelectedVersionGroup = this.GetVisualDescendants().OfType<ComboBox>().First(x => x.Name == "OpenFileVersionDropdown").SelectedItem?.ToString() ?? "";
+        MainModel.LoadSaveFile(SelectedFilepath, SelectedVersionGroup, SelectedLanguage);
+        FileGridParent.Content = GetNewPokemonGrid(TabType.File);
+
+        foreach (PokemonModel pokemonModel in MainModel.SaveFilePokemon)
+        {
+            Control card = await pokemonModel.BuildCard(MainModel.Game);
+            (FileGridParent.Content as WrapPanel).Children.Add(card);
+        }
+    }
+
+    public static async Task<Bitmap?> LoadFromWeb(Uri url)
+    {
+        using var httpClient = new HttpClient();
+        try
+        {
+            var response = await httpClient.GetAsync(url);
+            response.EnsureSuccessStatusCode();
+            var data = await response.Content.ReadAsByteArrayAsync();
+            return new Bitmap(new MemoryStream(data));
+        }
+        catch (HttpRequestException ex)
+        {
+            Console.WriteLine($"An error occurred while downloading image '{url}' : {ex.Message}");
+            return null;
+        }
+    }
 }

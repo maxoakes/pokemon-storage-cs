@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.IO;
+using System.Net.Http;
 
 namespace PokemonStorageDesktop;
 
@@ -40,6 +41,7 @@ public struct Settings()
 
 sealed class Program
 {
+    public static HttpClient HttpClient;
     public static ILogger Logger;
     public static Dictionary<string, string> ConnectionStrings = [];
     private static Settings Settings = new();
@@ -76,6 +78,9 @@ sealed class Program
         {
             throw new ConfigurationErrorsException("appsettings.json is not configured correctly");
         }
+
+        // Http client for sprite retrieval
+        HttpClient = new();
 
 
         BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);

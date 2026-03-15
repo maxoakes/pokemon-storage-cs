@@ -231,6 +231,15 @@ public class Lookup
         return types;
     }
 
+    public static string GetVersionGroupIdentifierByVersionGroupId(int id)
+    {
+        List<SqliteParameter> parameters = [
+            new SqliteParameter("Id", SqliteType.Integer) { Value = id }
+        ];
+
+        return (string)(DbInterface.RetrieveScalar("SELECT identifier FROM version_groups WHERE id=@Id", VeekunConnectionString, parameters) ?? "");
+    }
+
     public static List<string> GetVersionNames(int languageId=9)
     {
         List<SqliteParameter> parameters = [
@@ -238,7 +247,7 @@ public class Lookup
         ];
 
         // Get basic game ids and names
-        DataTable gameDataTable = DbInterface.RetrieveTable("""
+        DataTable dataTable = DbInterface.RetrieveTable("""
             SELECT 
                 v.id,
                 v.version_group_id,
@@ -252,24 +261,24 @@ public class Lookup
         """, VeekunConnectionString, parameters);
 
         List<string> versions = [];
-        foreach (DataRow row in gameDataTable.Rows)
+        foreach (DataRow row in dataTable.Rows)
         {
             string v = row.Field<string>("name") ?? "";
-            if (string.IsNullOrWhiteSpace(v)) versions.Append(v);
+            if (!string.IsNullOrWhiteSpace(v)) versions.Add(v);
         }
         return versions;
     }
 
-    public static List<string> GetLanguageNames(int languageId=9)
+    public static List<string> GetLanguageNames(string columnName = "name", int languageId=9)
     {
         List<SqliteParameter> parameters = [
             new SqliteParameter("LanguageId", SqliteType.Integer) { Value = languageId }
         ];
 
         // Get basic game ids and names
-        DataTable gameDataTable = DbInterface.RetrieveTable("""
+        DataTable dataTable = DbInterface.RetrieveTable($"""
             SELECT 
-                name
+                {columnName}
             FROM
                 languages l 
                 LEFT JOIN language_names t  ON l.id = t.language_id 
@@ -277,10 +286,10 @@ public class Lookup
         """, VeekunConnectionString, parameters);
 
         List<string> languages = [];
-        foreach (DataRow row in gameDataTable.Rows)
+        foreach (DataRow row in dataTable.Rows)
         {
-            string l = row.Field<string>("name") ?? "";
-            if (string.IsNullOrWhiteSpace(l)) languages.Append(l);
+            string l = row.Field<string>(columnName) ?? "";
+            if (!string.IsNullOrWhiteSpace(l)) languages.Add(l);
         }
         return languages;
     }
@@ -301,6 +310,15 @@ public class Lookup
         ];
         int baseline = (int)(Int64)DbInterface.RetrieveScalar("SELECT PP FROM moves WHERE id=@Id", VeekunConnectionString, parameters);
         return (byte)(baseline * (1 + (increasedAmount * 0.2f)));
+    }
+
+    public static bool DoesSpeciesHaveGenderDifference(ushort id)
+    {
+        List<SqliteParameter> parameters = [
+            new SqliteParameter("Id", SqliteType.Integer) { Value = id }
+        ];
+
+        return (Int64)DbInterface.RetrieveScalar("SELECT has_gender_differences FROM pokemon_species WHERE id=@Id", VeekunConnectionString, parameters) == 1;
     }
 
     public static byte GetLanguageGameIndexById(int id)
