@@ -18,6 +18,27 @@ public class Trainer
         SecretId = secretId;
     }
 
+    public Trainer(Int64 trainerPrimaryKey)
+    {
+        List<SqliteParameter> parameters = [
+            new SqliteParameter("Id", SqliteType.Integer) { Value = trainerPrimaryKey }
+        ];
+
+        DataTable dataTable = DbInterface.RetrieveTable($"SELECT * FROM original_trainer WHERE id = @Id", Lookup.StorageConnectionString, parameters);
+        if (dataTable.Rows.Count == 0)
+        {
+            throw new Exception($"No Original Trainer found with primary key {trainerPrimaryKey}");
+        }
+
+        foreach (DataRow row in dataTable.Rows)
+        {
+            Name = row.Field<string>("name") ?? "???";
+            Gender = (Gender)row.Field<Int64>("gender");
+            PublicId = (ushort)row.Field<Int64>("public_id");
+            SecretId = (ushort)row.Field<Int64>("secret_id");
+        }
+    }
+
     public int InsertIntoDatabase()
     {
         List<SqliteParameterPair> parameterPairs =
@@ -28,7 +49,7 @@ public class Trainer
             new SqliteParameterPair("secret_id", SqliteType.Integer, SecretId)
         ];
 
-        return DbInterface.InsertIntoDatabase("original_trainer", parameterPairs, "storage");
+        return DbInterface.InsertIntoDatabase("original_trainer", parameterPairs, Lookup.StorageConnectionString);
     }
 
     public int GetDatabasePrimaryKeyIfExists()
@@ -52,7 +73,7 @@ public class Trainer
         }
     }
 
-    public int GetDatabasePrimaryKey()
+    public int GetDatabasePrimaryKeyAndInsertIfNotExist()
     {
         int primaryKey = GetDatabasePrimaryKeyIfExists();
         if (primaryKey < 0)
@@ -62,27 +83,6 @@ public class Trainer
         else
         {
             return primaryKey;
-        }
-    }
-
-    public void LoadFromDatabase(int primaryKey)
-    {
-        List<SqliteParameter> parameters = [
-            new SqliteParameter("Id", SqliteType.Integer) { Value = primaryKey }
-        ];
-
-        DataTable dataTable = DbInterface.RetrieveTable($"SELECT * FROM original_trainer WHERE id = @Id", "storage", parameters);
-        if (dataTable.Rows.Count == 0)
-        {
-            throw new Exception($"No Original Trainer found with primary key {primaryKey}");
-        }
-
-        foreach (DataRow row in dataTable.Rows)
-        {
-            Name = row.Field<string>("name") ?? "???";
-            Gender = (Gender)row.Field<Int64>("gender");
-            PublicId = (ushort)row.Field<Int64>("public_id");
-            SecretId = (ushort)row.Field<Int64>("secret_id");
         }
     }
 

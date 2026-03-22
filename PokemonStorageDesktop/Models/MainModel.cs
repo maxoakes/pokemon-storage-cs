@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.IO;
+using System.Linq;
 using PokemonStorageLibrary;
 using PokemonStorageLibrary.Models;
 using PokemonStorageLibrary.SaveContent;
@@ -20,11 +22,13 @@ public class MainModel
     {
         SaveFilePokemon = [];
         DatabasePokemon = [];
+        LoadDatabase();
     }
 
-    public void LoadDatabase(string connectionString)
+    public void LoadDatabase()
     {
-        Lookup.StorageConnectionString = connectionString;
+        List<Int64> primaryKeys = DbInterface.RetrieveTable("SELECT id FROM pokemon", Lookup.StorageConnectionString).AsEnumerable().Select(x => x.Field<Int64>("id")).ToList();
+        primaryKeys.ForEach(x => DatabasePokemon.Add(new PokemonModel(new PartyPokemon(x))));
     }
 
     public void LoadSaveFile(string filePath, string gameName, string language)
@@ -63,13 +67,13 @@ public class MainModel
         {
             foreach (PartyPokemon pokemon in GameState.Party.Values)
             {
-                SaveFilePokemon.Add(new PokemonModel(pokemon, Game));
+                SaveFilePokemon.Add(new PokemonModel(pokemon));
             }
             foreach (var box in GameState.BoxList.Values)
             {
                 foreach (PartyPokemon pokemon in box.Values)
                 {
-                    SaveFilePokemon.Add(new PokemonModel(pokemon, Game));
+                    SaveFilePokemon.Add(new PokemonModel(pokemon));
                 }
             }
         }

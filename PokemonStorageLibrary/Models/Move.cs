@@ -19,31 +19,17 @@ public class Move
         SlotId = slotId;
     }
 
-    public int InsertIntoDatabase(int pokemonId)
-    {
-        List<SqliteParameterPair> parameterPairs =
-        [
-            new SqliteParameterPair("pokemon_id", SqliteType.Integer, pokemonId),
-            new SqliteParameterPair("slot_id", SqliteType.Integer, SlotId),
-            new SqliteParameterPair("move_id", SqliteType.Integer, Id),
-            new SqliteParameterPair("move_pp", SqliteType.Integer, Pp),
-            new SqliteParameterPair("times_increased", SqliteType.Integer, TimesIncreased),
-        ];
-
-        return DbInterface.InsertIntoDatabase("move_set", parameterPairs, "storage");
-    }
-
-    public void LoadFromDatabase(Int64 id)
+    public Move(Int64 movePrimaryKey)
     {
         List<SqliteParameter> parameters = 
         [
-            new SqliteParameter("id", SqliteType.Integer) { Value = id }
+            new SqliteParameter("id", SqliteType.Integer) { Value = movePrimaryKey }
         ];
 
-        DataTable dataTable = DbInterface.RetrieveTable("SELECT * FROM move_set WHERE id = @id", "storage", parameters);
+        DataTable dataTable = DbInterface.RetrieveTable("SELECT * FROM move_set WHERE id = @id", Lookup.StorageConnectionString, parameters);
         if (dataTable.Rows.Count == 0)
         {
-            throw new Exception($"No move with {id} found in database.");
+            throw new Exception($"No move with {movePrimaryKey} found in database.");
         }
 
         foreach (DataRow row in dataTable.Rows)
@@ -53,6 +39,20 @@ public class Move
             Pp = (byte)row.Field<Int64>("move_pp");
             TimesIncreased = (byte)row.Field<Int64>("times_increased");
         }
+    }
+
+    public int InsertIntoDatabase(int pokemonPrimaryKey)
+    {
+        List<SqliteParameterPair> parameterPairs =
+        [
+            new SqliteParameterPair("pokemon_id", SqliteType.Integer, pokemonPrimaryKey),
+            new SqliteParameterPair("slot_id", SqliteType.Integer, SlotId),
+            new SqliteParameterPair("move_id", SqliteType.Integer, Id),
+            new SqliteParameterPair("move_pp", SqliteType.Integer, Pp),
+            new SqliteParameterPair("times_increased", SqliteType.Integer, TimesIncreased),
+        ];
+
+        return DbInterface.InsertIntoDatabase("move_set", parameterPairs, Lookup.StorageConnectionString);
     }
 
     public override string ToString()

@@ -14,14 +14,14 @@ public struct BasicDatabaseEntry
 
 public struct Game
 {
-    public byte GameId;
+    public byte VersionId;
     public byte GenerationId;
     public byte VersionGroupId;
     public string GameName;
 
     public override string ToString()
     {
-        return $"{GameId}: {GameName} (Gen {GenerationId}) (Group {VersionGroupId})";
+        return $"{VersionId}: {GameName} (Gen {GenerationId}) (Group {VersionGroupId})";
     }
 }
 
@@ -178,7 +178,7 @@ public class Lookup
         Game game = new();
         foreach (DataRow row in gameDataTable.Rows)
         {
-            game.GameId = (byte)row.Field<Int64>("id");
+            game.VersionId = (byte)row.Field<Int64>("id");
             game.VersionGroupId = (byte)row.Field<Int64>("version_group_id");
             game.GenerationId = (byte)row.Field<Int64>("generation_id");
             game.GameName = row.Field<string>("name") ?? "";
@@ -186,7 +186,7 @@ public class Lookup
         return game;
     }
 
-    public static Game GetGameByVersionId(int versionId)
+    public static Game GetGameByVersionId(int versionId, int languageId=9)
     {
         List<SqliteParameter> parameters = [
             new SqliteParameter("Id", SqliteType.Integer) { Value = versionId }
@@ -195,9 +195,13 @@ public class Lookup
         // Get basic game ids and names
         DataTable gameDataTable = DbInterface.RetrieveTable("""
             SELECT 
+                v.id,
+                v.version_group_id,
+                vg.generation_id,
                 vn.name
             FROM
                 versions v 
+                LEFT JOIN version_groups vg ON vg.id = v.version_group_id 
                 LEFT JOIN version_names vn ON v.id = vn.version_id 
             WHERE 
                 v.id LIKE @Id
@@ -206,7 +210,7 @@ public class Lookup
         Game game = new();
         foreach (DataRow row in gameDataTable.Rows)
         {
-            game.GameId = (byte)row.Field<Int64>("id");
+            game.VersionId = (byte)row.Field<Int64>("id");
             game.VersionGroupId = (byte)row.Field<Int64>("version_group_id");
             game.GenerationId = (byte)row.Field<Int64>("generation_id");
             game.GameName = row.Field<string>("name") ?? "";
@@ -328,6 +332,16 @@ public class Lookup
         ];
 
         return (byte)(Int64)DbInterface.RetrieveScalar("SELECT game_index FROM language_game_index WHERE language_index=@Id", SupplementConnectionString, parameters);
+    }
+
+    public static string GetNameById(string tableName, string primaryColumnName, int id, int languageId, string connectionString)
+    {
+        List<SqliteParameter> parameters = [
+            new SqliteParameter("Id", SqliteType.Integer) { Value = id },
+            new SqliteParameter("Language", SqliteType.Integer) { Value = languageId }
+        ];
+
+        return (string)(DbInterface.RetrieveScalar($"SELECT name FROM {tableName} WHERE {primaryColumnName}=@Id AND local_language_id=@Language", connectionString, parameters) ?? "");
     }
     
     #region Pokemon

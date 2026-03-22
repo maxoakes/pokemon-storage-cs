@@ -19,12 +19,12 @@ public class PokemonModel
     private CheckBox TransferCheckbox { get; set; }
     public bool IsChecked { get { return TransferCheckbox.IsChecked ?? false; }}
 
-    public PokemonModel(PartyPokemon pokemon, Game game)
+    public PokemonModel(PartyPokemon pokemon)
     {
         Pokemon = pokemon;
     }
 
-    public async Task<StackPanel> BuildCard(Game game)
+    public async Task<StackPanel> BuildCard()
     {
         var userControl = new UserControl
         {
@@ -59,7 +59,7 @@ public class PokemonModel
             Stretch = Stretch.Uniform,
             HorizontalAlignment = HorizontalAlignment.Center,
             VerticalAlignment = VerticalAlignment.Center,
-            Source = await GetImageFromUrl(BuildSpriteUrl(game))
+            Source = await GetImageFromUrl(BuildSpriteUrl(Pokemon.Origin.Game))
         };
         // mainSprite.Bind(Image.SourceProperty, new Avalonia.Data.Binding(GetImageFromUrl(BuildSpriteUrl(game))));
         RenderOptions.SetBitmapInterpolationMode(mainSprite, BitmapInterpolationMode.None);
@@ -152,11 +152,35 @@ public class PokemonModel
     {
         //https://img.pokemondb.net/sprites/heartgold-soulsilver/normal/pikachu-f.png
         string baseUrl = "https://img.pokemondb.net/sprites";
-        string versionRoot = Lookup.GetVersionGroupIdentifierByVersionGroupId(game.VersionGroupId);
+        string versionRoot = GetVersionRootName();
         string shiny = Pokemon.IsShinyPersonalityValue ? "shiny" : "normal";
-        string female = Lookup.DoesSpeciesHaveGenderDifference(Pokemon.PokemonIdentity.SpeciesId) ? "-f" : "";
+        string female = Lookup.DoesSpeciesHaveGenderDifference(Pokemon.PokemonIdentity.SpeciesId) && Pokemon.Origin.Game.VersionId > 6 ? "-f" : "";
 
         return $"{baseUrl}/{versionRoot}/{shiny}/{Pokemon.PokemonIdentity.SpeciesIdentifier}{female}.png";
+    }
+
+    private string GetVersionRootName()
+    {
+        switch (Pokemon.Origin.Game.VersionId)
+        {
+            case 1: return "red-blue";
+            case 2: return "red-blue";
+            case 3: return "yellow";
+            case 4: return "gold";
+            case 5: return "silver";
+            case 6: return "crystal";
+            case 7: return "ruby-sapphire";
+            case 8: return "ruby-sapphire";
+            case 9: return "emerald";
+            case 10: return "firered-leafgreen";
+            case 11: return "firered-leafgreen";
+            case 12: return "diamond-pearl";
+            case 13: return "diamond-pearl";
+            case 14: return "platinum";
+            case 15: return "heartgold-soulsilver";
+            case 16: return "heartgold-soulsilver";
+            default: return "heartgold-soulsilver";
+        }
     }
 
     private async Task<IImage?> GetImageFromUrl(string url)

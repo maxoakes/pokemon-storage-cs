@@ -130,7 +130,7 @@ public class SaveDataGeneration1 : SaveData
     public override PartyPokemon GetPartyPokemonFromBoxBytes(byte[] data)
     {
         PartyPokemon p = new(Game);
-        p.Origin = new Origin(Game.GameId);
+        p.Origin = new Origin(Game.VersionId);
         p.LanguageId = Lookup.GetLanguageIdByIdentifier(Language);
         p.PokemonIdentity = Lookup.GetPokemonByFormId(Lookup.GetPokemonFormIdByGameIndex(1, Utility.GetByte(data, 0x00)), p.LanguageId); 
         p.ExperiencePoints = Utility.GetUnsignedNumber<uint>(data, 0x0E, 3, true);

@@ -26,40 +26,53 @@
                     <ScrollViewer Name="FileGridParent">
                     </ScrollViewer>
                     <WrapPanel Grid.Row="1" Height="32" Background="Olive">
-                        <TextBlock Text="This panel is at the bottom" HorizontalAlignment="Right" VerticalAlignment="Center"/>
-                        <Button HorizontalAlignment="Right" VerticalAlignment="Center">Export</Button>
+                        <SplitButton 
+                            HorizontalAlignment="Right"
+                            Content="Export to Database" 
+                            Name="ExportToDatabaseButton"
+                            Click="ExportSelected_Click">
+                            <SplitButton.Flyout>
+                                <MenuFlyout Placement="RightEdgeAlignedTop">
+                                    <MenuItem 
+                                        Name="ExportToJsonButton"
+                                        Header="Export to JSON"
+                                        Click="ExportSelected_Click"/>
+                                    <MenuItem 
+                                        Name="ExportToPokemonShowdownButton"
+                                        Header="Export to PokemonShowdown"
+                                        Click="ExportSelected_Click"/>
+                                </MenuFlyout>
+                            </SplitButton.Flyout>
+                        </SplitButton>
                     </WrapPanel>
                 </Grid>
             </TabItem>
             <TabItem Header="DB">
                 <Grid RowDefinitions="*, Auto">
                     <ScrollViewer Name="DatabaseGridParent">
-                        <Grid Grid.Row="0" ColumnDefinitions="auto, auto, auto, auto, auto, auto" Name="DatabaseGrid" Background="Red" DockPanel.Dock="Top">
-                            <StackPanel>
-                                <UserControl Width="135" Height="250">
-                                    <Border BorderThickness="2" BorderBrush="Yellow" Background="Green" Padding="2">
-                                        <Grid RowDefinitions="*,*">
-                                            <Panel Grid.Row="0" ClipToBounds="False">
-                                                <Image Source="" Height="128" Width="128" RenderOptions.BitmapInterpolationMode="None" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                                <Image Source="" Height="48" Width="48" Stretch="Uniform" HorizontalAlignment="Left" VerticalAlignment="Bottom"/>
-                                            </Panel>
-                                            <StackPanel Grid.Row="1" VerticalAlignment="Center" Background="Blue">
-                                                <TextBlock Text="Bulbasaur" FontWeight="Bold" FontSize="12" HorizontalAlignment="Left" Background="Gray"/>
-                                                <TextBlock Text="Lv. 66 (M)" FontSize="12" HorizontalAlignment="Left" Background="Gray"/>
-                                                <TextBlock Text="Exp: 123456000" FontSize="12" HorizontalAlignment="Left" Background="Gray"/>
-                                                <TextBlock Text="Adament" FontSize="12" HorizontalAlignment="Left" Background="Gray"/>
-                                                <TextBlock Text="O/T: NOCTOWL" FontSize="12" HorizontalAlignment="Left" Background="Gray"/>
-                                                <CheckBox HorizontalAlignment="Right"></CheckBox>
-                                            </StackPanel>
-                                        </Grid>
-                                    </Border>
-                                </UserControl>
-                            </StackPanel>        
-                        </Grid>
+                        <WrapPanel Name="Database">
+                        </WrapPanel>
                     </ScrollViewer>
-                <StackPanel Grid.Row="1" Height="50" Background="LightGray">
-                    <TextBlock Text="This panel is at the bottom" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                </StackPanel>
+                    <WrapPanel Grid.Row="1" Height="32" Background="Olive">
+                        <SplitButton 
+                            HorizontalAlignment="Right"
+                            Content="Import from Database to Save File" 
+                            Name="ImportFromDatabaseButton"
+                            Click="ImportSelected_Click">
+                            <SplitButton.Flyout>
+                                <MenuFlyout Placement="RightEdgeAlignedTop">
+                                    <MenuItem 
+                                        Name="DatabaseExportToJsonButton"
+                                        Header="Export to JSON"
+                                        Click="ImportSelected_Click"/>
+                                    <MenuItem 
+                                        Name="DatabaseExportToPokemonShowdownButton"
+                                        Header="Export to PokemonShowdown"
+                                        Click="ImportSelected_Click"/>
+                                </MenuFlyout>
+                            </SplitButton.Flyout>
+                        </SplitButton>
+                    </WrapPanel>
                 </Grid>
             </TabItem>
         </TabControl>

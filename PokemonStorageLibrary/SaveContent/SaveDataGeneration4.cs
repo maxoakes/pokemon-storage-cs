@@ -296,7 +296,7 @@ public class SaveDataGeneration4 : SaveData
                 case 'C':
                     byte[] nicknameBytes = Utility.GetBytes(blockBytes, 0x0, 20);
                     p.Nickname = Utility.GetDecodedString(nicknameBytes, Game, Language);
-                    p.Origin.GameVersionId = Lookup.GetVersionIdByGameIndex(Utility.GetUnsignedNumber<byte>(blockBytes, 0x17, 1));
+                    p.Origin.Game = Lookup.GetGameByVersionId(Lookup.GetVersionIdByGameIndex(Utility.GetUnsignedNumber<byte>(blockBytes, 0x17, 1)));
                     p.Ribbons.SinnohSet2 = Utility.GetUnsignedNumber<uint>(blockBytes, 0x18, 4);
                     break;
 
@@ -534,7 +534,7 @@ public class SaveDataGeneration4 : SaveData
         byte[] nicknameData = Utility.GetEncodedString(p.Nickname, 10, Game, Language);
         Buffer.BlockCopy(nicknameData, 0, c, 0x00, 20);
 
-        c[0x15] = Lookup.GetGameGameIndexById(p.Origin.GameVersionId);
+        c[0x15] = Lookup.GetGameGameIndexById(p.Origin.Game.VersionId);
 
         byte[] sinnohRibbon2Data = BitConverter.GetBytes(p.Ribbons.SinnohSet2);
         Buffer.BlockCopy(sinnohRibbon2Data, 0, c, 0x18, 4);

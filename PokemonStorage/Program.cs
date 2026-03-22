@@ -154,8 +154,7 @@ public class Program
                 List<PartyPokemon> pokemonToStore = [];
                 foreach (int pk in primaryKeys)
                 {
-                    PartyPokemon pokemon = new(GameState.Game);
-                    pokemon.LoadFromDatabase(pk);
+                    PartyPokemon pokemon = new(pk);
                     pokemonToStore.Add(pokemon);
                     Console.WriteLine($"Loaded from database {pk}:\t{pokemon.GetSummaryString()}");
                     Console.WriteLine(SerializeObject(pokemon));

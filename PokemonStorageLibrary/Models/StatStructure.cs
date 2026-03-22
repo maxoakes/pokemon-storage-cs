@@ -1,13 +1,56 @@
+using System.Data;
+using Microsoft.Data.Sqlite;
+
 namespace PokemonStorageLibrary.Models;
 
 public class StatStructure
 {
-    public bool IsModernSystemByDefault { get; }
-    private StatHextuple BaseStats { get; }
-    public StatSet Modern { get; }
-    public StatSet Old { get; }
+    public bool IsModernSystemByDefault { get; private set; }
+    private StatHextuple BaseStats { get; set; }
+    public StatSet Modern { get; private set; }
+    public StatSet Old { get; private set; }
 
     public StatStructure(bool isModern, StatHextuple iv, StatHextuple ev, int speciesId, int level, Nature? nature = null)
+    {
+        BuildStats(isModern, iv, ev, speciesId, level, nature);
+    }
+
+    public StatStructure(Int64 statsPrimaryKey, int speciesId, int level, Nature? nature = null)
+    {
+        List<SqliteParameter> parameters = [
+            new SqliteParameter("Id", SqliteType.Integer) { Value = statsPrimaryKey }
+        ];
+
+        DataTable dataTable = DbInterface.RetrieveTable($"SELECT * FROM stats WHERE id = @Id", Lookup.StorageConnectionString, parameters);
+        if (dataTable.Rows.Count == 0)
+        {
+            throw new Exception($"No stats found with primary key {statsPrimaryKey}");
+        }
+
+        StatHextuple iv = new();
+        StatHextuple ev = new();
+        bool isModern = true;
+        foreach (DataRow row in dataTable.Rows)
+        {
+            isModern = row.Field<Int64>("is_modern") == 1;
+            iv.HP = (byte)row.Field<Int64>("hp_iv");
+            iv.Attack = (byte)row.Field<Int64>("att_iv");
+            iv.Defense = (byte)row.Field<Int64>("def_iv");
+            iv.Speed = (byte)row.Field<Int64>("spe_iv");
+            iv.SpecialAttack = (byte)row.Field<Int64>("spa_iv");
+            iv.SpecialDefense = (byte)row.Field<Int64>("spd_iv");
+            ev.HP = (byte)row.Field<Int64>("hp_ev");
+            ev.Attack = (ushort)row.Field<Int64>("att_ev");
+            ev.Defense = (ushort)row.Field<Int64>("def_ev");
+            ev.Speed = (ushort)row.Field<Int64>("spe_ev");
+            ev.SpecialAttack = (ushort)row.Field<Int64>("spa_ev");
+            ev.SpecialDefense = (ushort)row.Field<Int64>("spd_ev");
+        }
+        
+        BuildStats(isModern, iv, ev, speciesId, level, nature);
+    }
+
+    private void BuildStats(bool isModern, StatHextuple iv, StatHextuple ev, int speciesId, int level, Nature? nature = null)
     {
         IsModernSystemByDefault = isModern;
         BaseStats = Lookup.GetBaseStats(speciesId);
@@ -160,5 +203,28 @@ public class StatStructure
                 (ushort)Math.Floor((Math.Floor((2 * BaseStats.Speed + Modern.Speed.Iv + Math.Floor(Modern.Speed.Ev / 4.0)) * level / 100.0) + 5) * modifiedSpeed)
             )
         );
+    }
+
+    public int InsertIntoDatabase()
+    {
+        StatSet defaultSet = IsModernSystemByDefault ? Modern : Old;
+        List<SqliteParameterPair> parameterPairs =
+        [
+            new SqliteParameterPair("is_modern", SqliteType.Integer, IsModernSystemByDefault ? 1 : 0),
+            new SqliteParameterPair("hp_iv", SqliteType.Integer, defaultSet.HP.Iv),
+            new SqliteParameterPair("att_iv", SqliteType.Integer, defaultSet.Attack.Iv),
+            new SqliteParameterPair("def_iv", SqliteType.Integer, defaultSet.Defense.Iv),
+            new SqliteParameterPair("spe_iv", SqliteType.Integer, defaultSet.Speed.Iv),
+            new SqliteParameterPair("spa_iv", SqliteType.Integer, defaultSet.SpecialAttack.Iv),
+            new SqliteParameterPair("spd_iv", SqliteType.Integer, defaultSet.SpecialDefense.Iv),
+            new SqliteParameterPair("hp_ev", SqliteType.Integer, defaultSet.HP.Ev),
+            new SqliteParameterPair("att_ev", SqliteType.Integer, defaultSet.Attack.Ev),
+            new SqliteParameterPair("def_ev", SqliteType.Integer, defaultSet.Defense.Ev),
+            new SqliteParameterPair("spe_ev", SqliteType.Integer, defaultSet.Speed.Ev),
+            new SqliteParameterPair("spa_ev", SqliteType.Integer, defaultSet.SpecialAttack.Ev),
+            new SqliteParameterPair("spd_ev", SqliteType.Integer, defaultSet.SpecialDefense.Ev)
+        ];
+
+        return DbInterface.InsertIntoDatabase("stats", parameterPairs, Lookup.StorageConnectionString);
     }
 }

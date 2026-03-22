@@ -13,6 +13,7 @@ using Avalonia.VisualTree;
 using PokemonStorageDesktop.Models;
 using PokemonStorageLibrary;
 using PokemonStorageLibrary.Models;
+using Newtonsoft.Json;
 
 namespace PokemonStorageDesktop.Views;
 
@@ -29,8 +30,7 @@ public partial class MainWindow : Window
     public string SelectedLanguage { get; set; }
     public string SelectedVersionGroup { get; set; }
     public ScrollViewer FileViewerControl { get { return this.GetControl<ScrollViewer>("FileGridParent"); } }
-    public ScrollViewer DatabaseViewerControl { get; set; }
-    public Task<Bitmap?> ImageFromWebsite { get; } = LoadFromWeb(new Uri("https://veekun.com/dex/media/pokemon/main-sprites/heartgold-soulsilver/1.png"));
+    public ScrollViewer DatabaseViewerControl { get { return this.GetControl<ScrollViewer>("DatabaseGridParent"); } }
 
     public MainWindow()
     {
@@ -39,9 +39,13 @@ public partial class MainWindow : Window
         MainModel = new();
     }
 
-    private void OpenSaveFile_OnClick(object? sender, RoutedEventArgs e)
+    protected override async void OnOpened(EventArgs e)
     {
-        Console.WriteLine("Click!");
+        foreach (PokemonModel pokemonModel in MainModel.DatabasePokemon)
+        {
+            Control card = await pokemonModel.BuildCard();
+            (DatabaseViewerControl.Content as WrapPanel).Children.Add(card);
+        }
     }
 
     private WrapPanel GetNewPokemonGrid(TabType tabType)
@@ -209,9 +213,125 @@ public partial class MainWindow : Window
 
         foreach (PokemonModel pokemonModel in MainModel.SaveFilePokemon)
         {
-            Control card = await pokemonModel.BuildCard(MainModel.Game);
+            Control card = await pokemonModel.BuildCard();
             (FileGridParent.Content as WrapPanel).Children.Add(card);
         }
+    }
+
+    private async void ExportSelected_Click(object? sender, RoutedEventArgs e)
+    {
+        Control? senderControl = sender as Control;
+        switch (senderControl?.Name)
+        {
+            case "ExportToDatabaseButton":
+                Console.WriteLine("Database export");
+                foreach (PartyPokemon partyPokemon in MainModel.SaveFilePokemon.Where(x => x.IsChecked).Select(x => x.Pokemon))
+                {
+                    int pk = partyPokemon.InsertIntoDatabase();
+                    Console.WriteLine($"Inserted {partyPokemon.Nickname} as {pk}");
+                }
+                // Refresh DB tab
+                break;
+            case "ExportToJsonButton":
+                Console.WriteLine("Json export");
+                string suggestedJsonName = $"{MainModel.Game.GameName}.{DateTime.Now:s}.json";
+                var jsonFileOutput = await GetTopLevel(this).StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+                {
+                    Title = "Save JSON Export",
+                    SuggestedFileName = suggestedJsonName,
+                    FileTypeChoices = new[] {
+                        new FilePickerFileType("JSON File") { Patterns = ["*.json"] }
+                    },
+                });
+                if (jsonFileOutput?.Path.AbsoluteUri is not null)
+                {
+                    Console.WriteLine($"Write path: {jsonFileOutput?.Path.AbsolutePath}");
+                    File.WriteAllText(
+                        jsonFileOutput?.Path.AbsolutePath ?? $"./{suggestedJsonName}", 
+                        JsonConvert.SerializeObject(MainModel.SaveFilePokemon.Where(x => x.IsChecked).Select(x => x.Pokemon), Formatting.Indented)
+                    );
+                }
+                break;
+            case "ExportToPokemonShowdownButton":
+                Console.WriteLine("Pokemon Showdown export");
+                string suggestedShowdownName = $"{MainModel.Game.GameName}.{DateTime.Now:s}.txt";
+                var showdownFileOutput = await GetTopLevel(this).StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+                {
+                    Title = "Save JSON Export",
+                    SuggestedFileName = suggestedShowdownName,
+                    FileTypeChoices = new[] {
+                        new FilePickerFileType("Plain text File") { Patterns = ["*.txt"] }
+                    },
+                });
+                if (showdownFileOutput?.Path.AbsoluteUri is not null)
+                {
+                    Console.WriteLine($"Write path: {showdownFileOutput?.Path.AbsolutePath}");
+                    File.WriteAllText(
+                        showdownFileOutput?.Path.AbsolutePath ?? $"./{suggestedShowdownName}", 
+                        string.Join("\n\n\n", MainModel.SaveFilePokemon.Where(x => x.IsChecked).Select(x => x.Pokemon.GetPokemonShowdownString()))
+                    );
+                }
+                break;
+        }
+        Console.WriteLine($"{MainModel.SaveFilePokemon.Count(x => x.IsChecked)} selected");
+    }
+
+    private async void ImportSelected_Click(object? sender, RoutedEventArgs e)
+    {
+        Control? senderControl = sender as Control;
+        switch (senderControl?.Name)
+        {
+            case "ImportFromDatabaseButton":
+                Console.WriteLine("Database export");
+                foreach (PartyPokemon partyPokemon in MainModel.DatabasePokemon.Where(x => x.IsChecked).Select(x => x.Pokemon))
+                {
+                    int slot = MainModel.GameState.AddPokemonToNextOpenBox(partyPokemon);
+                    Console.WriteLine($"Wrote {partyPokemon.Nickname} into slot {slot}");
+                }
+                // Refresh Save file tab
+                break;
+            case "DatabaseExportToJsonButton":
+                Console.WriteLine("Json export");
+                string suggestedJsonName = $"{MainModel.Game.GameName}.{DateTime.Now:s}.json";
+                var jsonFileOutput = await GetTopLevel(this).StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+                {
+                    Title = "Save JSON Export",
+                    SuggestedFileName = suggestedJsonName,
+                    FileTypeChoices = new[] {
+                        new FilePickerFileType("JSON File") { Patterns = ["*.json"] }
+                    },
+                });
+                if (jsonFileOutput?.Path.AbsoluteUri is not null)
+                {
+                    Console.WriteLine($"Write path: {jsonFileOutput?.Path.AbsolutePath}");
+                    File.WriteAllText(
+                        jsonFileOutput?.Path.AbsolutePath ?? $"./{suggestedJsonName}", 
+                        JsonConvert.SerializeObject(MainModel.DatabasePokemon.Where(x => x.IsChecked).Select(x => x.Pokemon), Formatting.Indented)
+                    );
+                }
+                break;
+            case "DatabaseExportToPokemonShowdownButton":
+                Console.WriteLine("Pokemon Showdown export");
+                string suggestedShowdownName = $"{MainModel.Game.GameName}.{DateTime.Now:s}.txt";
+                var showdownFileOutput = await GetTopLevel(this).StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+                {
+                    Title = "Save JSON Export",
+                    SuggestedFileName = suggestedShowdownName,
+                    FileTypeChoices = new[] {
+                        new FilePickerFileType("Plain text File") { Patterns = ["*.txt"] }
+                    },
+                });
+                if (showdownFileOutput?.Path.AbsoluteUri is not null)
+                {
+                    Console.WriteLine($"Write path: {showdownFileOutput?.Path.AbsolutePath}");
+                    File.WriteAllText(
+                        showdownFileOutput?.Path.AbsolutePath ?? $"./{suggestedShowdownName}", 
+                        string.Join("\n\n\n", MainModel.DatabasePokemon.Where(x => x.IsChecked).Select(x => x.Pokemon.GetPokemonShowdownString()))
+                    );
+                }
+                break;
+        }
+        Console.WriteLine($"{MainModel.DatabasePokemon.Count(x => x.IsChecked)} selected");
     }
 
     public static async Task<Bitmap?> LoadFromWeb(Uri url)

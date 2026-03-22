@@ -11,8 +11,7 @@ public class Origin
     public string EncounterTypeIdentifier { get { return Lookup.GetEncounterTypeGameIndex(EncounterTypeId); } }
     public byte PokeballId { get; set; }
     public string PokeballIdentifier { get { return Lookup.GetIdentifierById("items", PokeballId, Lookup.VeekunConnectionString); } }
-    public byte GameVersionId { get; set; }
-    public string GameVersionIdentifier { get { return Lookup.GetIdentifierById("versions", GameVersionId, Lookup.VeekunConnectionString); } }
+    public Game Game { get; set; }
 
     // Egg
     public DateTime? EggReceiveDate { get; set; }
@@ -35,7 +34,7 @@ public class Origin
         FatefulEncounter = false;
         EncounterTypeId = 0;
         PokeballId = 0;
-        GameVersionId = versionId;
+        Game = Lookup.GetGameByVersionId(versionId);
         EggReceiveDate = null;
         EggHatchLocationId = 0;
         EggHatchLocationPlatinumId = 0;
@@ -45,36 +44,16 @@ public class Origin
         MetDateTime = null;
     }
 
-    public int InsertIntoDatabase()
-    {
-        List<SqliteParameterPair> parameterPairs =
-        [
-            new SqliteParameterPair("fateful_encounter_id", SqliteType.Integer, FatefulEncounter ? 1 : 0),
-            new SqliteParameterPair("encounter_type_id", SqliteType.Integer, EncounterTypeId),
-            new SqliteParameterPair("catch_ball_item_id", SqliteType.Integer, PokeballId),
-            new SqliteParameterPair("origin_version_id", SqliteType.Integer, GameVersionId),
-            new SqliteParameterPair("egg_receive_datetime", SqliteType.Text, EggReceiveDate?.ToString("yyyy-MM-dd HH:mm:ss") ?? ""),
-            new SqliteParameterPair("egg_hatch_location_id", SqliteType.Integer, EggHatchLocationId),
-            new SqliteParameterPair("egg_hatch_location_platinum_id", SqliteType.Integer, EggHatchLocationPlatinumId),
-            new SqliteParameterPair("met_level", SqliteType.Integer, MetLevel),
-            new SqliteParameterPair("met_datetime", SqliteType.Text, MetDateTime?.ToString("yyyy-MM-dd HH:mm:ss") ?? ""),
-            new SqliteParameterPair("met_location_id", SqliteType.Integer, MetLocationId),
-            new SqliteParameterPair("met_location_platinum_id", SqliteType.Integer, MetLocationPlatinumId)
-        ];
-
-        return DbInterface.InsertIntoDatabase("origin", parameterPairs, "storage");
-    }
-
-    public void LoadFromDatabase(int primaryKey)
+    public Origin(Int64 pokemonPrimaryKey)
     {
         List<SqliteParameter> parameters = [
-            new SqliteParameter("Id", SqliteType.Integer) { Value = primaryKey }
+            new SqliteParameter("Id", SqliteType.Integer) { Value = pokemonPrimaryKey }
         ];
 
-        DataTable dataTable = DbInterface.RetrieveTable($"SELECT * FROM origin WHERE id = @Id", "storage", parameters);
+        DataTable dataTable = DbInterface.RetrieveTable($"SELECT * FROM origin WHERE id = @Id", Lookup.StorageConnectionString, parameters);
         if (dataTable.Rows.Count == 0)
         {
-            throw new Exception($"No origin found with primary key {primaryKey}");
+            throw new Exception($"No origin found with primary key {pokemonPrimaryKey}");
         }
 
         foreach (DataRow row in dataTable.Rows)
@@ -82,7 +61,7 @@ public class Origin
             FatefulEncounter = row.Field<Int64>("fateful_encounter_id") == 1;
             EncounterTypeId = (byte)row.Field<Int64>("encounter_type_id");
             PokeballId = (byte)row.Field<Int64>("catch_ball_item_id");
-            GameVersionId = (byte)row.Field<Int64>("origin_version_id");
+            Game = Lookup.GetGameByVersionId((byte)row.Field<Int64>("origin_version_id"));
             string eggReceiveDateTimeString = row.Field<string>("egg_receive_datetime") ?? "";
             if (string.IsNullOrEmpty(eggReceiveDateTimeString))
             {
@@ -111,8 +90,28 @@ public class Origin
         }
     }
 
+    public int InsertIntoDatabase()
+    {
+        List<SqliteParameterPair> parameterPairs =
+        [
+            new SqliteParameterPair("fateful_encounter_id", SqliteType.Integer, FatefulEncounter ? 1 : 0),
+            new SqliteParameterPair("encounter_type_id", SqliteType.Integer, EncounterTypeId),
+            new SqliteParameterPair("catch_ball_item_id", SqliteType.Integer, PokeballId),
+            new SqliteParameterPair("origin_version_id", SqliteType.Integer, Game.VersionId),
+            new SqliteParameterPair("egg_receive_datetime", SqliteType.Text, EggReceiveDate?.ToString("yyyy-MM-dd HH:mm:ss") ?? ""),
+            new SqliteParameterPair("egg_hatch_location_id", SqliteType.Integer, EggHatchLocationId),
+            new SqliteParameterPair("egg_hatch_location_platinum_id", SqliteType.Integer, EggHatchLocationPlatinumId),
+            new SqliteParameterPair("met_level", SqliteType.Integer, MetLevel),
+            new SqliteParameterPair("met_datetime", SqliteType.Text, MetDateTime?.ToString("yyyy-MM-dd HH:mm:ss") ?? ""),
+            new SqliteParameterPair("met_location_id", SqliteType.Integer, MetLocationId),
+            new SqliteParameterPair("met_location_platinum_id", SqliteType.Integer, MetLocationPlatinumId)
+        ];
+
+        return DbInterface.InsertIntoDatabase("origin", parameterPairs, Lookup.StorageConnectionString);
+    }
+
     public override string ToString()
     {
-        return $"Met at Lv.{MetLevel} at {MetLocationIdentifier}/{MetLocationPlatinumIdentifier} in game {GameVersionId} via {PokeballIdentifier}";
+        return $"Met at Lv.{MetLevel} at {MetLocationIdentifier}/{MetLocationPlatinumIdentifier} in game {Game} via {PokeballIdentifier}";
     }
 }

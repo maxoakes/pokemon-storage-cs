@@ -190,7 +190,7 @@ public static class DbInterface
 
     #region Statement Building
 
-    public static int InsertIntoDatabase(string tableName, List<SqliteParameterPair> parameters, string connectionName)
+    public static int InsertIntoDatabase(string tableName, List<SqliteParameterPair> parameters, string connectionString)
     {
         string columnNames = string.Join(", ", parameters.Select(p => p.ColumnName));
         string parameterNames = string.Join(", ", parameters.Select(p => "@" + p.ColumnName));
@@ -204,7 +204,7 @@ public static class DbInterface
         """;
 
         List<SqliteParameter> preparedParameters = [.. parameters.Select(p => PrepareParameterValue(p.SqliteParameter))];
-        return Convert.ToInt32(RetrieveScalar(statement, connectionName, preparedParameters));
+        return Convert.ToInt32(RetrieveScalar(statement, connectionString, preparedParameters));
     }
 
     #endregion

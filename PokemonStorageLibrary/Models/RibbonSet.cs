@@ -94,24 +94,6 @@ public class RibbonSet
     public bool National { get { return (HoennSet & 0x20000000) > 0; } }
     public bool Earth { get { return (HoennSet & 0x40000000) > 0; } }
     public bool World { get { return (HoennSet & 0x80000000) > 0; } }
-
-    public RibbonSet()
-    {
-
-    }
-
-    public int InsertIntoDatabase()
-    {
-        List<SqliteParameterPair> parameterPairs =
-        [
-            new SqliteParameterPair("sinnoh_set_1", SqliteType.Integer, SinnohSet1),
-            new SqliteParameterPair("sinnoh_set_2", SqliteType.Integer, SinnohSet2),
-            new SqliteParameterPair("hoenn_set", SqliteType.Integer, HoennSet)
-        ];
-
-        return DbInterface.InsertIntoDatabase("ribbon", parameterPairs, "storage");
-    }
-
         
     public override string ToString()
     {

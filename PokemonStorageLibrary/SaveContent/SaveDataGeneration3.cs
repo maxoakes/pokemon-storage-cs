@@ -109,7 +109,7 @@ public class SaveDataGeneration3 : SaveData
     public override PartyPokemon GetPartyPokemonFromBoxBytes(byte[] data)
     {
         PartyPokemon p = new(Game);
-        p.Origin = new Origin(Game.GameId);
+        p.Origin = new Origin(Game.VersionId);
         p.PersonalityValue = Utility.GetUnsignedNumber<uint>(data, 0x00, 4);
         uint otId = Utility.GetUnsignedNumber<uint>(data, 0x04, 4);
         p.OriginalTrainer = new Trainer(
@@ -219,7 +219,7 @@ public class SaveDataGeneration3 : SaveData
 
                     p.OriginalTrainer.Gender = originBinary[0] == '1' ? Gender.FEMALE : Gender.MALE;
                     p.Origin.PokeballId = Convert.ToByte(originBinary.Substring(1, 4), 2);
-                    p.Origin.GameVersionId = Lookup.GetVersionIdByGameIndex(Convert.ToUInt16(originBinary.Substring(5, 4), 2));
+                    p.Origin.Game = Lookup.GetGameByVersionId(Lookup.GetVersionIdByGameIndex(Convert.ToUInt16(originBinary.Substring(5, 4), 2)));
                     p.Origin.MetLevel = Convert.ToByte(originBinary.Substring(9, 7), 2);
 
                     // IVs, Egg, Ability
@@ -411,7 +411,7 @@ public class SaveDataGeneration3 : SaveData
         m[0x01] = (byte)Lookup.GetLocationGameIndexById(3, p.Origin.MetLocationId);
         ushort origin = (ushort)(
             p.Origin.MetLevel + 
-            (Lookup.GetGameGameIndexById(p.Origin.GameVersionId) << 7) + 
+            (Lookup.GetGameGameIndexById(p.Origin.Game.VersionId) << 7) + 
             (Lookup.GetBallGameIndexByItemId(p.Origin.PokeballId) << 11) +
             (((byte)p.OriginalTrainer.Gender) << 15)
         );
