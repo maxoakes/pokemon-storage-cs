@@ -25,18 +25,14 @@ public partial class AboutPanel : UserControl
         }
 
         // Clear the overview badges
-        WrapPanel? overviewBadgePanel = this.FindControl<WrapPanel>("OverviewBadges");
+        WrapPanel? overviewBadgePanel = this.FindControl<WrapPanel>("OverviewBadgeBanner");
         if (overviewBadgePanel != null)
         {
-            List<Border> overviewBadges = overviewBadgePanel.Children.OfType<Border>().ToList() ?? new List<Border>();
-            foreach (var badge in overviewBadges)
-            {
-                overviewBadges.Remove(badge);
-            }
+            overviewBadgePanel.Children.RemoveAll(overviewBadgePanel.Children.OfType<Border>());
 
             // Add badges to the overview section
-            overviewBadgePanel.Children.Add(NewBadge("Language", pokemon.LanguageId.ToString(), "Language"));
-            overviewBadgePanel.Children.Add(NewBadge("Gender", pokemon.Gender.ToString(), pokemon.Gender.ToString()));
+            overviewBadgePanel.Children.Add(NewBadge("Language", pokemon.LanguageId.ToString(), "Badge Language"));
+            overviewBadgePanel.Children.Add(NewBadge("Gender", pokemon.Gender.ToString(), $"Badge {pokemon.Gender.ToString()}"));
             if ((pokemon.IsShinyPersonalityValue && pokemon.Origin.Game.GenerationId > 2) 
                 || (pokemon.IsShinyAttackIv && pokemon.Origin.Game.GenerationId < 3))
             {
@@ -44,7 +40,7 @@ public partial class AboutPanel : UserControl
             }
             if (pokemon.AlternateFormId > 0)
             {
-                overviewBadgePanel.Children.Add(NewBadge("FormValue", pokemon.AlternateFormId.ToString("X"), "Form"));
+                overviewBadgePanel.Children.Add(NewBadge("FormValue", pokemon.AlternateFormId.ToString("X"), "Badge Form"));
             }
             if (pokemon.IsEgg)
             {
@@ -65,14 +61,10 @@ public partial class AboutPanel : UserControl
         WrapPanel? ribbonBadgePanel = this.FindControl<WrapPanel>("RibbonBadgeBanner");
         if (ribbonBadgePanel != null)
         {
-            List<Border> ribbonBadges = ribbonBadgePanel?.Children.OfType<Border>().ToList() ?? new List<Border>();
-            foreach (var badge in ribbonBadges)
-            {
-                ribbonBadges.Remove(badge);
-            }
+            ribbonBadgePanel?.Children.RemoveAll(ribbonBadgePanel.Children.OfType<Border>());
 
             List<Border> newRibbonBadges = new List<Border>();
-            foreach (var item in pokemon.Ribbons.Ribbons)
+            foreach (var item in pokemon.Ribbons.Ribbons.Where(x => x.Value))
             {
                 bool isHoenn = item.Key.Contains("Hoenn") || 
                     item.Key.Equals("Champion") || 
@@ -218,11 +210,14 @@ public partial class AboutPanel : UserControl
 
     private Border NewBadge(string name, string content, string className)
     {
-        Border border = new Border();
+        Border border = new Border
+        {
+            Name=$"{name}Badge",
+        };
         border.Classes.AddRange(className.Split(" "));
         TextBlock text = new TextBlock
         {
-            Name = name,
+            Name = $"{name}Value",
             Text = content
         };
         border.Child = text;

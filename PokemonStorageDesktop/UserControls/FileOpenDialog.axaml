@@ -1,0 +1,57 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="500" d:DesignHeight="300"
+             x:Class="PokemonStorageDesktop.UserControls.FileOpenDialog">
+    <UserControl.Styles>
+        <Style Selector="Grid#OpenFileDialogGrid">
+            <Setter Property="Background" Value="Gainsboro"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Width" Value="500"/>
+            <Setter Property="Height" Value="200"/>
+        </Style>
+
+        <Style Selector="TextBlock">
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Margin" Value="4"/>
+            <Setter Property="Foreground" Value="#222"/>
+        </Style>
+
+        <Style Selector="TextBox#OpenFileTextBox">
+            <Setter Property="MinWidth" Value="220"/>
+            <Setter Property="Margin" Value="4"/>
+        </Style>
+
+        <Style Selector="ComboBox">
+            <Setter Property="Margin" Value="4"/>
+            <Setter Property="Width" Value="200"/>
+            <Setter Property="MaxDropDownHeight" Value="300"/>
+        </Style>
+
+        <Style Selector="Button">
+            <Setter Property="MinWidth" Value="90"/>
+            <Setter Property="Margin" Value="4"/>
+            <Setter Property="Padding" Value="6,2"/>
+        </Style>
+
+        <Style Selector="TextBlock#HelpText">
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Margin" Value="8"/>
+        </Style>
+    </UserControl.Styles>
+
+    <Grid Name="OpenFileDialogGrid" ColumnDefinitions="Auto,Auto,Auto" RowDefinitions="32,Auto,Auto,Auto,64">
+        <TextBlock Name="HelpText" Text="Find the .sav file you would like to open." Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3"/>
+        <TextBlock Text="Save File:" Grid.Row="1" Grid.Column="0"/>
+        <TextBox Name="OpenFileTextBox" Grid.Row="1" Grid.Column="1"/>
+        <Button Name="BrowseButton" Content="Browse..." Click="BrowseSaveFile_Click" Grid.Row="1" Grid.Column="2"/>
+        <TextBlock Text="Version:" Grid.Row="2" Grid.Column="0"/>
+        <ComboBox Name="OpenFileVersionDropdown" Grid.Row="2" Grid.Column="1" SelectedIndex="0"/>
+        <TextBlock Text="Language:" Grid.Row="3" Grid.Column="0"/>
+        <ComboBox Name="OpenFileLanguageDropdown" Grid.Row="3" Grid.Column="1" SelectedIndex="0"/>
+        <Button Name="OpenButton" Content="Open" Click="OpenSaveFile_Click" Grid.Row="4" Grid.Column="2"/>
+    </Grid>
+</UserControl>

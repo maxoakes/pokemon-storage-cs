@@ -82,7 +82,6 @@ sealed class Program
         // Http client for sprite retrieval
         HttpClient = new();
 
-
         BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
     }
 
