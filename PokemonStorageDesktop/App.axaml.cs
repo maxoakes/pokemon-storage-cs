@@ -6,6 +6,7 @@ using System.Linq;
 using Avalonia.Markup.Xaml;
 using PokemonStorageDesktop.Views;
 using PokemonStorageDesktop.ViewModels;
+using Avalonia.Controls;
 
 namespace PokemonStorageDesktop;
 

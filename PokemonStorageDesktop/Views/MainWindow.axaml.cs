@@ -14,6 +14,7 @@ using PokemonStorageDesktop.Models;
 using PokemonStorageLibrary;
 using PokemonStorageLibrary.Models;
 using Newtonsoft.Json;
+using PokemonStorageDesktop.UserControls;
 
 namespace PokemonStorageDesktop.Views;
 
@@ -31,20 +32,27 @@ public partial class MainWindow : Window
     public string SelectedVersionGroup { get; set; }
     public ScrollViewer FileViewerControl { get { return this.GetControl<ScrollViewer>("FileGridParent"); } }
     public ScrollViewer DatabaseViewerControl { get { return this.GetControl<ScrollViewer>("DatabaseGridParent"); } }
+    public AboutPanel AboutPanelControl { get { return this.GetControl<AboutPanel>("AboutPanel"); } }
 
     public MainWindow()
     {
         InitializeComponent();
-        FileViewerControl.Content = GetNewOpenFileMenu();
-        MainModel = new();
+        if (!Design.IsDesignMode)
+        {
+            FileViewerControl.Content = GetNewOpenFileMenu();
+            MainModel = new();
+        }
     }
 
     protected override async void OnOpened(EventArgs e)
     {
         foreach (PokemonModel pokemonModel in MainModel.DatabasePokemon)
         {
-            Control card = await pokemonModel.BuildCard();
-            (DatabaseViewerControl.Content as WrapPanel).Children.Add(card);
+            Control card = await pokemonModel.BuildCard((s, e) => AboutPanelControl.OnNewSelection(pokemonModel.Pokemon));
+            if (DatabaseViewerControl.Content is WrapPanel wrapPanel)
+            {
+                wrapPanel.Children.Add(card);
+            }
         }
     }
 
@@ -211,15 +219,26 @@ public partial class MainWindow : Window
         MainModel.LoadSaveFile(SelectedFilepath, SelectedVersionGroup, SelectedLanguage);
         FileGridParent.Content = GetNewPokemonGrid(TabType.File);
 
+        var aboutPanel = this.GetControl<UserControls.AboutPanel>("AboutPanel");
         foreach (PokemonModel pokemonModel in MainModel.SaveFilePokemon)
         {
-            Control card = await pokemonModel.BuildCard();
-            (FileGridParent.Content as WrapPanel).Children.Add(card);
+            Control card = await pokemonModel.BuildCard((s, e) => aboutPanel.OnNewSelection(pokemonModel.Pokemon));
+            var wrapPanel = FileGridParent.Content as WrapPanel;
+            if (wrapPanel != null)
+            {
+                wrapPanel.Children.Add(card);
+            }
         }
     }
 
     private async void ExportSelected_Click(object? sender, RoutedEventArgs e)
     {
+        TopLevel? topLevel = GetTopLevel(this);
+        if (topLevel == null)
+        {
+            throw new InvalidOperationException("Unable to access TopLevel for file dialog.");
+        }
+
         Control? senderControl = sender as Control;
         switch (senderControl?.Name)
         {
@@ -235,7 +254,7 @@ public partial class MainWindow : Window
             case "ExportToJsonButton":
                 Console.WriteLine("Json export");
                 string suggestedJsonName = $"{MainModel.Game.GameName}.{DateTime.Now:s}.json";
-                var jsonFileOutput = await GetTopLevel(this).StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+                var jsonFileOutput = await topLevel.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
                 {
                     Title = "Save JSON Export",
                     SuggestedFileName = suggestedJsonName,
@@ -255,7 +274,7 @@ public partial class MainWindow : Window
             case "ExportToPokemonShowdownButton":
                 Console.WriteLine("Pokemon Showdown export");
                 string suggestedShowdownName = $"{MainModel.Game.GameName}.{DateTime.Now:s}.txt";
-                var showdownFileOutput = await GetTopLevel(this).StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+                var showdownFileOutput = await topLevel.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
                 {
                     Title = "Save JSON Export",
                     SuggestedFileName = suggestedShowdownName,
@@ -278,6 +297,16 @@ public partial class MainWindow : Window
 
     private async void ImportSelected_Click(object? sender, RoutedEventArgs e)
     {
+        TopLevel? topLevel = GetTopLevel(this);
+        if (topLevel == null)
+        {
+            throw new InvalidOperationException("Unable to access TopLevel for file dialog.");
+        }
+        if (MainModel.GameState == null)
+        {
+            Console.WriteLine("No game loaded, cannot import");
+            return;
+        }
         Control? senderControl = sender as Control;
         switch (senderControl?.Name)
         {
@@ -293,7 +322,7 @@ public partial class MainWindow : Window
             case "DatabaseExportToJsonButton":
                 Console.WriteLine("Json export");
                 string suggestedJsonName = $"{MainModel.Game.GameName}.{DateTime.Now:s}.json";
-                var jsonFileOutput = await GetTopLevel(this).StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+                var jsonFileOutput = await topLevel.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
                 {
                     Title = "Save JSON Export",
                     SuggestedFileName = suggestedJsonName,
@@ -313,7 +342,7 @@ public partial class MainWindow : Window
             case "DatabaseExportToPokemonShowdownButton":
                 Console.WriteLine("Pokemon Showdown export");
                 string suggestedShowdownName = $"{MainModel.Game.GameName}.{DateTime.Now:s}.txt";
-                var showdownFileOutput = await GetTopLevel(this).StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+                var showdownFileOutput = await topLevel.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
                 {
                     Title = "Save JSON Export",
                     SuggestedFileName = suggestedShowdownName,

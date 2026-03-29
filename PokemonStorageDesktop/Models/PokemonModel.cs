@@ -24,7 +24,7 @@ public class PokemonModel
         Pokemon = pokemon;
     }
 
-    public async Task<StackPanel> BuildCard()
+    public async Task<StackPanel> BuildCard(EventHandler? onClicked = null)
     {
         var userControl = new UserControl
         {
@@ -37,8 +37,14 @@ public class PokemonModel
             BorderThickness = new Thickness(2),
             BorderBrush = Brushes.Yellow,
             Background = Brushes.Green,
-            Padding = new Thickness(2)
+            Padding = new Thickness(2),
+            Cursor = new Avalonia.Input.Cursor(Avalonia.Input.StandardCursorType.Hand)
         };
+        
+        if (onClicked != null)
+        {
+            border.PointerPressed += onClicked.Invoke;
+        }
 
         var grid = new Grid
         {
