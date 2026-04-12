@@ -2,14 +2,46 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="PokemonStorageDesktop.App"
              xmlns:local="using:PokemonStorageDesktop"
-             RequestedThemeVariant="Default">
+             RequestedThemeVariant="Dark">
              <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
 
     <Application.DataTemplates>
         <local:ViewLocator/>
     </Application.DataTemplates>
+
+    <Application.Resources>
+        <SolidColorBrush x:Key="PrimaryVariableColor">Red</SolidColorBrush>
+        <SolidColorBrush x:Key="SecondaryVariableColor">Orange</SolidColorBrush>
+        <SolidColorBrush x:Key="PrimaryDarkTextColor">Black</SolidColorBrush>
+        <SolidColorBrush x:Key="SecondaryDarkTextColor">#222</SolidColorBrush>
+        <SolidColorBrush x:Key="PrimaryLightTextColor">White</SolidColorBrush>
+        <SolidColorBrush x:Key="SecondaryLightTextColor">LightGray</SolidColorBrush>
+        <SolidColorBrush x:Key="DarkAccentColor">#6366F1</SolidColorBrush>
+        <SolidColorBrush x:Key="LightAccentColor">#6366F1</SolidColorBrush>
+        <SolidColorBrush x:Key="PrimaryDarkBackgroundColor">DarkGray</SolidColorBrush>
+        <SolidColorBrush x:Key="SecondaryDarkBackgroundColor">Black</SolidColorBrush>
+        <SolidColorBrush x:Key="WhiteBackgroundColor">White</SolidColorBrush>
+        <SolidColorBrush x:Key="LightBackgroundColor">LightGray</SolidColorBrush>
+        <x:String x:Key="AboutPanelBoxShadow">0 4 12 #200000</x:String>
+        <SolidColorBrush x:Key="UNSET_COLOR">Magenta</SolidColorBrush>
+        <x:Double x:Key="HeaderTextSize">22</x:Double>
+        <x:Double x:Key="SubheaderTextSize">18</x:Double>
+        <x:Double x:Key="PrimaryTextSize">14</x:Double>
+        <x:Double x:Key="SecondaryTextSize">14</x:Double>
+    </Application.Resources>
   
     <Application.Styles>
         <FluentTheme />
+        <Style Selector="Border.VerticalShadow">
+            <Setter Property="BoxShadow" Value="0 4 12 rgba(15, 15, 15, 0.75)"/>
+        </Style>
+        <Style Selector="Border.PanelShadow">
+            <Setter Property="BoxShadow" Value="4 4 8 rgba(15, 15, 15, .75)"/>
+        </Style>
+        <Style Selector="Border.SmallShadow">
+            <Setter Property="BoxShadow" Value="2 2 4 rgba(15, 15, 15, 0.75)"/>
+        </Style>
+
     </Application.Styles>
+
 </Application>

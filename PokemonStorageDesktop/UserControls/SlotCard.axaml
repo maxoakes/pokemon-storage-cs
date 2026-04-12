@@ -2,22 +2,29 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             mc:Ignorable="d" d:DesignWidth="135" d:DesignHeight="250"
+             mc:Ignorable="d" d:DesignWidth="200" d:DesignHeight="300"
              x:Class="PokemonStorageDesktop.UserControls.SlotCard">
     <!-- Styles -->
     <UserControl.Styles>
+        <Style Selector="Border.Spacing">
+            <Setter Property="Margin" Value="0"/>
+            <Setter Property="Padding" Value="8"/>
+            <Setter Property="Background" Value="{StaticResource UNSET_COLOR}"/>
+        </Style>
         <Style Selector="Border.CardBorder">
             <Setter Property="Margin" Value="0"/>
-            <Setter Property="Width" Value="135"/>
-            <Setter Property="Background" Value="LightGray"/>
-            <Setter Property="BoxShadow" Value="0 4 12 #2000"/>
             <Setter Property="Padding" Value="0"/>
+            <Setter Property="Width" Value="145"/>
+            <Setter Property="Height" Value="215"/>
+            <Setter Property="Background" Value="{StaticResource LightBackgroundColor}"/>
+            <Setter Property="CornerRadius" Value="8"/>
             <Setter Property="Cursor" Value="Hand"/>
         </Style>
 
         <Style Selector="Border.SpriteFrame">
-            <Setter Property="ClipToBounds" Value="false"/>
+            <Setter Property="ClipToBounds" Value="true"/>
             <Setter Property="Background" Value="White"/>
+            <Setter Property="CornerRadius" Value="8 8 0 0"/>
         </Style>
 
         <Style Selector="Image.Sprite">
@@ -31,14 +38,13 @@
         <Style Selector="Border.HeaderTitle">
             <Setter Property="Background" Value="White"/>
             <Setter Property="Padding" Value="0 4"/>
-            <Setter Property="BoxShadow" Value="0 4 4 #5f5151"/>
         </Style>
 
         <Style Selector="TextBlock.Nickname">
             <Setter Property="FontWeight" Value="Bold"/>
-            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontSize" Value="{StaticResource SecondaryTextSize}"/>
             <Setter Property="HorizontalAlignment" Value="Center"/>
-            <Setter Property="Foreground" Value="#222"/>
+            <Setter Property="Foreground" Value="{StaticResource SecondaryDarkTextColor}"/>
         </Style>
 
         <Style Selector="StackPanel.InfoPanel">
@@ -46,9 +52,9 @@
         </Style>
 
         <Style Selector="TextBlock.Info">
-            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontSize" Value="{StaticResource SecondaryTextSize}"/>
             <Setter Property="HorizontalAlignment" Value="Left"/>
-            <Setter Property="Foreground" Value="#222"/>
+            <Setter Property="Foreground" Value="{StaticResource SecondaryDarkTextColor}"/>
         </Style>
 
         <Style Selector="Border.Footer">
@@ -61,26 +67,28 @@
         </Style>
     </UserControl.Styles>
 
-    <Border Classes="CardBorder" Name="CardBorder">
-        <DockPanel>
-            <Border Classes="Footer" DockPanel.Dock="Bottom">
-                <CheckBox Name="TransferCheckbox" Classes="Transfer"/>
-            </Border>
-
-            <StackPanel DockPanel.Dock="Top">
-                <Border Classes="SpriteFrame">
-                    <Image Name="PokemonSprite" Classes="Sprite"/>
+    <Border Classes="Spacing">
+        <Border Classes="CardBorder PanelShadow" Name="CardBorder">
+            <DockPanel>
+                <Border Classes="Footer" DockPanel.Dock="Bottom">
+                    <CheckBox Name="TransferCheckbox" Classes="Transfer"/>
                 </Border>
-                <Border Classes="HeaderTitle">
-                    <TextBlock Name="NicknameValue" Classes="Nickname" Text="Nickname"/>
-                </Border>
-            </StackPanel>
 
-            <StackPanel Classes="InfoPanel">
-                <TextBlock Name="OriginalTrainerValue" Classes="Info" Text="O/T: Ash"/>
-                <TextBlock Name="LevelGenderValue" Classes="Info" Text="Lv. 56 (M)"/>
-                <TextBlock Name="NatureValue" Classes="Info" Text="Impish"/>
-            </StackPanel>
-        </DockPanel>
+                <StackPanel DockPanel.Dock="Top">
+                    <Border Classes="SpriteFrame">
+                        <Image Name="PokemonSprite" Classes="Sprite"/>
+                    </Border>
+                    <Border Classes="HeaderTitle">
+                        <TextBlock Name="NicknameValue" Classes="Nickname" Text="Nickname"/>
+                    </Border>
+                </StackPanel>
+
+                <StackPanel Classes="InfoPanel">
+                    <TextBlock Name="OriginalTrainerValue" Classes="Info" Text="O/T: Ash"/>
+                    <TextBlock Name="LevelGenderValue" Classes="Info" Text="Lv. 56 (M)"/>
+                    <TextBlock Name="NatureValue" Classes="Info" Text="Impish"/>
+                </StackPanel>
+            </DockPanel>
+        </Border>
     </Border>
 </UserControl>

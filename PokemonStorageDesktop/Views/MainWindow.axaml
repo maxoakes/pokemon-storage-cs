@@ -11,22 +11,73 @@
         Width="1600" 
         Height="900">
     <Window.Styles>
+        <!-- Export Panel and Button -->
+        <Style Selector="WrapPanel.ExportPanel">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="HorizontalAlignment" Value="Stretch"/>
+            <Setter Property="VerticalAlignment" Value="Bottom"/>
+        </Style>
+        <Style Selector="SplitButton.ExportButton">
+            <Setter Property="Background" Value="{StaticResource LightAccentColor}"/>
+            <Setter Property="HorizontalAlignment" Value="Right"/>
+            <Setter Property="Margin" Value="8"/>
+        </Style>
+        <Style Selector="SplitButton.ExportButton /template/ Button#PART_PrimaryButton /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Padding" Value="8"/>
+        </Style>
+        <!-- Tabs -->
+        <Style Selector="TabControl.PrimaryTabControl > TabItem">
+            <Setter Property="Padding" Value="8"/>
+        </Style>
+        <Style Selector="TabControl.PrimaryTabControl > TabItem TextBlock">
+            <Setter Property="Foreground" Value="{StaticResource PrimaryDarkTextColor}"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="FontSize" Value="16"/>
+        </Style>
+
+        <Style Selector="TabControl.PrimaryTabControl > TabItem:selected">
+            <Setter Property="Background" Value="{StaticResource PrimaryDarkBackgroundColor}"/>
+        </Style>
+        <Style Selector="TabControl.PrimaryTabControl > TabItem:pointerover /template/ Border#PART_LayoutRoot">
+            <Setter Property="Background" Value="{StaticResource LightAccentColor}"/>
+        </Style>
+        <Style Selector="TabControl.PrimaryTabControl > TabItem:selected /template/ Border#PART_SelectedPipe">
+            <Setter Property="Background" Value="{StaticResource LightAccentColor}"/>
+        </Style>
+        <Style Selector="Image.Tab">
+            <Setter Property="Width" Value="32"/>
+            <Setter Property="Height" Value="32"/>
+        </Style>
+        <!-- Tab Content -->
+        <Style Selector="TabControl.PrimaryTabControl">
+            <Setter Property="Background" Value="{StaticResource WhiteBackgroundColor}"/>
+        </Style>
+        <Style Selector="TabControl.PrimaryTabControl /template/ ContentPresenter#PART_SelectedContentHost">
+            <Setter Property="Background" Value="{StaticResource LightBackgroundColor}"/>
+            <Setter Property="Margin" Value="0"/>
+            <Setter Property="Padding" Value="0"/>
+        </Style>
     </Window.Styles>
     <Design.DataContext>
         <vm:MainWindowViewModel/>
     </Design.DataContext>
     <DockPanel LastChildFill="True">
-        <Border DockPanel.Dock="Right" Background="Magenta">
+        <Border DockPanel.Dock="Right">
             <local:AboutPanel Name="AboutPanel" />
         </Border>
-        <TabControl TabStripPlacement="Left">
-            <TabItem Header="File">
-                <Grid RowDefinitions="*, Auto">
-                    <ScrollViewer Name="FileGridParent">
-                    </ScrollViewer>
-                    <WrapPanel Grid.Row="1" Height="32" Background="Olive">
+        <TabControl Classes="PrimaryTabControl" TabStripPlacement="Left">
+            <TabItem>
+                <TabItem.Header>
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Image Classes="Tab" Source="/Assets/file-solid.png" RenderOptions.BitmapInterpolationMode="MediumQuality"/>
+                        <TextBlock Text="New File"/>
+                    </StackPanel>
+                </TabItem.Header>
+                <Grid>
+                    <ScrollViewer Name="FileGridParent" />
+                    <WrapPanel Classes="ExportPanel">
                         <SplitButton 
-                            HorizontalAlignment="Right"
+                            Classes="ExportButton"
                             Content="Export to Database" 
                             Name="ExportToDatabaseButton"
                             Click="ExportSelected_Click">
@@ -46,15 +97,21 @@
                     </WrapPanel>
                 </Grid>
             </TabItem>
-            <TabItem Header="DB">
-                <Grid RowDefinitions="*, Auto">
-                    <ScrollViewer Name="DatabaseGridParent">
+            <TabItem>
+                <TabItem.Header>
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Image Classes="Tab" Source="/Assets/database-solid.png" RenderOptions.BitmapInterpolationMode="MediumQuality"/>
+                        <TextBlock Text="Database"/>
+                    </StackPanel>
+                </TabItem.Header>
+                <Grid>
+                    <ScrollViewer Classes="MainBackground" Name="DatabaseGridParent">
                         <WrapPanel Name="Database">
                         </WrapPanel>
                     </ScrollViewer>
-                    <WrapPanel Grid.Row="1" Height="32" Background="Olive">
+                    <WrapPanel Classes="ExportPanel">
                         <SplitButton 
-                            HorizontalAlignment="Right"
+                            Classes="ExportButton"
                             Content="Import from Database to Save File" 
                             Name="ImportFromDatabaseButton"
                             Click="ImportSelected_Click">

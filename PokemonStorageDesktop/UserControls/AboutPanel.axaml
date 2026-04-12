@@ -4,63 +4,60 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d" d:DesignWidth="350" d:DesignHeight="600"
              x:Class="PokemonStorageDesktop.UserControls.AboutPanel">
-    <!-- Styles -->
     <UserControl.Styles>
+        <!-- root -->
         <Style Selector="Border.root">
-            <Setter Property="Background" Value="Magenta"/>
+            <Setter Property="Background" Value="{StaticResource UNSET_COLOR}"/>
             <Setter Property="Padding" Value="2"/>
         </Style>
-
         <Style Selector="Border.AboutCard">
+            <Setter Property="Background" Value="{StaticResource WhiteBackgroundColor}"/>
             <Setter Property="Width" Value="350"/>
             <Setter Property="HorizontalAlignment" Value="Center"/>
-            <Setter Property="Background" Value="White"/>
-            <Setter Property="BoxShadow" Value="0 4 12 #200000"/>
         </Style>
 
+        <!-- Banner -->
         <Style Selector="Border.Header">
-            <Setter Property="Background" Value="Magenta"/>
+            <Setter Property="Background" Value="{StaticResource PrimaryVariableColor}"/>
             <Setter Property="Padding" Value="12"/>
         </Style>
-
         <Style Selector="Border.Subheader">
-            <Setter Property="Background" Value="BlueViolet"/>
+            <Setter Property="Background" Value="{StaticResource SecondaryVariableColor}"/>
             <Setter Property="Padding" Value="12"/>
-            <Setter Property="BoxShadow" Value="0 4 4 0 rgba(32, 0, 0, 0.5)"/>
         </Style>
-
         <Style Selector="TextBlock.HeaderTitle">
-            <Setter Property="Foreground" Value="White"/>
-            <Setter Property="FontSize" Value="22"/>
+            <Setter Property="Foreground" Value="{StaticResource PrimaryLightTextColor}"/>
+            <Setter Property="FontSize" Value="{StaticResource HeaderTextSize}"/>
             <Setter Property="FontWeight" Value="Bold"/>
             <Setter Property="HorizontalAlignment" Value="Center"/>
         </Style>
-
         <Style Selector="TextBlock.HeaderSubtitle">
-            <Setter Property="Foreground" Value="White"/>
-            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Foreground" Value="{StaticResource PrimaryLightTextColor}"/>
+            <Setter Property="FontSize" Value="{StaticResource SubheaderTextSize}"/>
             <Setter Property="FontWeight" Value="Regular"/>
             <Setter Property="FontStyle" Value="Italic"/>
+            <Setter Property="ClipToBounds" Value="false"/>
             <Setter Property="HorizontalAlignment" Value="Center"/>
         </Style>
-
         <Style Selector="TextBlock.SubheaderTitle">
-            <Setter Property="Foreground" Value="White"/>
-            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Foreground" Value="{StaticResource PrimaryLightTextColor}"/>
+            <Setter Property="FontSize" Value="{StaticResource PrimaryTextSize}"/>
             <Setter Property="FontWeight" Value="Regular"/>
             <Setter Property="HorizontalAlignment" Value="Center"/>
         </Style>
 
-        <Style Selector="WrapPanel.BadgeBanner">
-            <Setter Property="Margin" Value="4 8"/>
-        </Style>
-
-        <Style Selector="StackPanel.Section">
-            <Setter Property="Margin" Value="16, 8"/>
+        <!-- Sections -->
+        <Style Selector="Border.Section">
+            <Setter Property="Background" Value="{StaticResource LightBackgroundColor}"/>
+            <Setter Property="Margin" Value="8, 4"/>
+            <Setter Property="Padding" Value="8"/>
+            <Setter Property="CornerRadius" Value="8"/>
         </Style>
 
         <Style Selector="TextBlock.SectionTitle">
-            <Setter Property="FontSize" Value="16"/>
+            <Setter Property="Foreground" Value="{StaticResource PrimaryDarkTextColor}"/>
+            <Setter Property="FontSize" Value="{StaticResource SubheaderTextSize}"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
             <Setter Property="FontWeight" Value="Bold"/>
             <Setter Property="Margin" Value="0,0,0,4"/>
         </Style>
@@ -71,48 +68,45 @@
 
         <Style Selector="TextBlock.Label">
             <Setter Property="FontWeight" Value="Bold"/>
-            <Setter Property="Foreground" Value="#555"/>
+            <Setter Property="Foreground" Value="{StaticResource PrimaryDarkTextColor}"/>
         </Style>
 
         <Style Selector="TextBlock.Value">
             <Setter Property="HorizontalAlignment" Value="Right"/>
-            <Setter Property="Foreground" Value="#222"/>
+            <Setter Property="Foreground" Value="{StaticResource SecondaryDarkTextColor}"/>
         </Style>
 
         <Style Selector="TextBlock.TableHeader">
             <Setter Property="FontWeight" Value="Bold"/>
             <Setter Property="HorizontalAlignment" Value="Center"/>
-            <Setter Property="Foreground" Value="#555"/>
+            <Setter Property="Foreground" Value="{StaticResource SecondaryDarkTextColor}"/>
         </Style>
 
         <Style Selector="TextBlock.TableKey">
             <Setter Property="FontWeight" Value="Regular"/>
             <Setter Property="HorizontalAlignment" Value="Left"/>
-            <Setter Property="Foreground" Value="#555"/>
+            <Setter Property="Foreground" Value="{StaticResource SecondaryDarkTextColor}"/>
         </Style>
 
         <Style Selector="TextBlock.TableValue">
             <Setter Property="HorizontalAlignment" Value="Center"/>
-            <Setter Property="Foreground" Value="#222"/>
+            <Setter Property="Foreground" Value="{StaticResource PrimaryDarkTextColor}"/>
         </Style>
 
-        <Style Selector="Border.divider">
-            <Setter Property="Height" Value="1"/>
-            <Setter Property="Background" Value="#eee"/>
+        <!-- Badges -->
+        <Style Selector="WrapPanel.BadgeBanner">
+            <Setter Property="Margin" Value="4 8"/>
         </Style>
-
         <Style Selector="Border.Badge">
             <Setter Property="Margin" Value="2"/>
             <Setter Property="Padding" Value="8,4"/>
             <Setter Property="CornerRadius" Value="6"/>
-            <Setter Property="Background" Value="Magenta"/>
+            <Setter Property="Background" Value="{StaticResource UNSET_COLOR}"/>
         </Style>
-
         <Style Selector="Border.Badge > TextBlock">
             <Setter Property="Foreground" Value="White"/>
             <Setter Property="FontSize" Value="10"/>
         </Style>
-
         <Style Selector="Border.MALE">
             <Setter Property="Background" Value="Blue"/>
         </Style>
@@ -157,7 +151,7 @@
                         <TextBlock Name="HeaderSubtitle" Classes="HeaderSubtitle" Text="Nickname"/>
                     </StackPanel>
                 </Border>
-                <Border Classes="Subheader">
+                <Border Classes="Subheader VerticalShadow">
                     <StackPanel>
                         <TextBlock Name="OriginalTrainer" Classes="SubheaderTitle" Text="Ash (12345-01234)"/>
                     </StackPanel>
@@ -188,150 +182,159 @@
                 </WrapPanel>
                 
                 <!-- Overview -->
-                <StackPanel Name="OverviewSection" Classes="Section">
-                    <TextBlock Classes="SectionTitle" Text="Overview"/>
-                    <Grid Classes="FieldRow">
-                        <TextBlock Classes="Label" Text="Personality Value"/>
+                <Border Classes="Section">
+                    <StackPanel Name="OverviewSection">
+                        <TextBlock Classes="SectionTitle" Text="Overview"/>
+                        <Grid Classes="FieldRow">
+                            <TextBlock Classes="Label" Text="Personality Value"/>
                         <TextBlock Name="PersonalityValue" Classes="Value" Text="2147483647" Grid.Column="1"/>
-                    </Grid>
-                    <Grid Classes="FieldRow">
-                        <TextBlock Classes="Label" Text="Nature"/>
-                        <TextBlock Name="NatureValue" Classes="Value" Text="Modest" Grid.Column="1"/>
-                    </Grid>
-                    <Grid Classes="FieldRow">
-                        <TextBlock Classes="Label" Text="Ability"/>
-                        <TextBlock Name="AbilityValue" Classes="Value" Text="Overgrow (0)" Grid.Column="1"/>
-                    </Grid>
-                    <Grid Classes="FieldRow">
-                        <TextBlock Classes="Label" Text="Level"/>
-                        <TextBlock Name="LevelValue" Classes="Value" Text="15" Grid.Column="1"/>
-                    </Grid>
-                    <Grid Classes="FieldRow">
-                        <TextBlock Classes="Label" Text="Experience"/>
-                        <TextBlock Name="ExperienceValue" Classes="Value" Text="3375" Grid.Column="1"/>
-                    </Grid>
-                    <Grid Classes="FieldRow">
-                        <TextBlock Classes="Label" Text="Friendship"/>
-                        <TextBlock Name="FriendshipValue" Classes="Value" Text="120" Grid.Column="1"/>
-                    </Grid>
-                    <Grid Classes="FieldRow">
-                        <TextBlock Classes="Label" Text="Held Item"/>
-                        <TextBlock Name="HeldItemValue" Classes="Value" Text="None" Grid.Column="1"/>
-                    </Grid>
-                    <Grid Classes="FieldRow">
-                        <TextBlock Classes="Label" Text="Pokerus"/>
-                        <TextBlock Name="PokerusValue" Classes="Value" Text="Yes (2 days remaining)" Grid.Column="1"/>
-                    </Grid>
-                </StackPanel>
+                        </Grid>
+                        <Grid Classes="FieldRow">
+                            <TextBlock Classes="Label" Text="Nature"/>
+                            <TextBlock Name="NatureValue" Classes="Value" Text="Modest" Grid.Column="1"/>
+                        </Grid>
+                        <Grid Classes="FieldRow">
+                            <TextBlock Classes="Label" Text="Ability"/>
+                            <TextBlock Name="AbilityValue" Classes="Value" Text="Overgrow (0)" Grid.Column="1"/>
+                        </Grid>
+                        <Grid Classes="FieldRow">
+                            <TextBlock Classes="Label" Text="Level"/>
+                            <TextBlock Name="LevelValue" Classes="Value" Text="15" Grid.Column="1"/>
+                        </Grid>
+                        <Grid Classes="FieldRow">
+                            <TextBlock Classes="Label" Text="Experience"/>
+                            <TextBlock Name="ExperienceValue" Classes="Value" Text="3375" Grid.Column="1"/>
+                        </Grid>
+                        <Grid Classes="FieldRow">
+                            <TextBlock Classes="Label" Text="Friendship"/>
+                            <TextBlock Name="FriendshipValue" Classes="Value" Text="120" Grid.Column="1"/>
+                        </Grid>
+                        <Grid Classes="FieldRow">
+                            <TextBlock Classes="Label" Text="Held Item"/>
+                            <TextBlock Name="HeldItemValue" Classes="Value" Text="None" Grid.Column="1"/>
+                        </Grid>
+                        <Grid Classes="FieldRow">
+                            <TextBlock Classes="Label" Text="Pokerus"/>
+                            <TextBlock Name="PokerusValue" Classes="Value" Text="Yes (2 days remaining)" Grid.Column="1"/>
+                        </Grid>
+                    </StackPanel>
+                </Border>
                 
                 <!-- Origin -->
-                <StackPanel Name="OriginSection" Classes="Section">
-                    <TextBlock Classes="SectionTitle" Text="Origin"/>
-                    <Grid Classes="FieldRow">
-                        <TextBlock Classes="Label" Text="Game"/>
+                <Border Classes="Section">
+                    <StackPanel Name="OriginSection">
+                        <TextBlock Classes="SectionTitle" Text="Origin"/>
+                        <Grid Classes="FieldRow">
+                            <TextBlock Classes="Label" Text="Game"/>
                         <TextBlock Name="OriginGameValue" Classes="Value" Text="HeartGold" Grid.Column="1"/>
-                    </Grid>
-                    <Grid Classes="FieldRow">
-                        <TextBlock Classes="Label" Text="Met Level"/>
-                        <TextBlock Name="OriginMetLevelValue" Classes="Value" Text="2" Grid.Column="1"/>
-                    </Grid>
-                    <Grid Classes="FieldRow">
-                        <TextBlock Classes="Label" Text="Met Date"/>
-                        <TextBlock Name="OriginMetDateValue" Classes="Value" Text="2/5/2020" Grid.Column="1"/>
-                    </Grid>
-                    <Grid Classes="FieldRow">
-                        <TextBlock Classes="Label" Text="Met Location"/>
-                        <TextBlock Name="OriginMetLocationValue" Classes="Value" Text="Victory Road" Grid.Column="1"/>
-                    </Grid>
-                    <Grid Classes="FieldRow">
-                        <TextBlock Classes="Label" Text="Pokéball"/>
-                        <TextBlock Name="OriginPokeballValue" Classes="Value" Text="Nest Ball" Grid.Column="1"/>
-                    </Grid>
-                    <Grid Classes="FieldRow">
-                        <TextBlock Classes="Label" Text="Encounter"/>
-                        <TextBlock Name="OriginEncounterTypeValue" Classes="Value" Text="Grass" Grid.Column="1"/>
-                    </Grid>
-                    <Grid Classes="FieldRow">
-                        <TextBlock Classes="Label" Text="Egg Receive"/>
-                        <TextBlock Name="OriginEggReceiveValue" Classes="Value" Text="2/1/2020" Grid.Column="1"/>
-                    </Grid>
-                    <Grid Classes="FieldRow">
-                        <TextBlock Classes="Label" Text="Egg Hatch Location"/>
-                        <TextBlock Name="OriginEggHatchLocationValue" Classes="Value" Text="Daycare Couple" Grid.Column="1"/>
-                    </Grid>
-                </StackPanel>
+                        </Grid>
+                        <Grid Classes="FieldRow">
+                            <TextBlock Classes="Label" Text="Met Level"/>
+                            <TextBlock Name="OriginMetLevelValue" Classes="Value" Text="2" Grid.Column="1"/>
+                        </Grid>
+                        <Grid Classes="FieldRow">
+                            <TextBlock Classes="Label" Text="Met Date"/>
+                            <TextBlock Name="OriginMetDateValue" Classes="Value" Text="2/5/2020" Grid.Column="1"/>
+                        </Grid>
+                        <Grid Classes="FieldRow">
+                            <TextBlock Classes="Label" Text="Met Location"/>
+                            <TextBlock Name="OriginMetLocationValue" Classes="Value" Text="Victory Road" Grid.Column="1"/>
+                        </Grid>
+                        <Grid Classes="FieldRow">
+                            <TextBlock Classes="Label" Text="Pokéball"/>
+                            <TextBlock Name="OriginPokeballValue" Classes="Value" Text="Nest Ball" Grid.Column="1"/>
+                        </Grid>
+                        <Grid Classes="FieldRow">
+                            <TextBlock Classes="Label" Text="Encounter"/>
+                            <TextBlock Name="OriginEncounterTypeValue" Classes="Value" Text="Grass" Grid.Column="1"/>
+                        </Grid>
+                        <Grid Classes="FieldRow">
+                            <TextBlock Classes="Label" Text="Egg Receive"/>
+                            <TextBlock Name="OriginEggReceiveValue" Classes="Value" Text="2/1/2020" Grid.Column="1"/>
+                        </Grid>
+                        <Grid Classes="FieldRow">
+                            <TextBlock Classes="Label" Text="Egg Hatch Location"/>
+                            <TextBlock Name="OriginEggHatchLocationValue" Classes="Value" Text="Daycare Couple" Grid.Column="1"/>
+                        </Grid>
+                    </StackPanel>
+                </Border>
                 
                 <!-- Stats -->
-                <StackPanel Name="StatsSection" Classes="Section">
-                    <TextBlock Name="StatsSectionTitle" Classes="SectionTitle" Text="Stats"/>
-                    <Grid Name="StatsGrid" Classes="FieldRow" ColumnDefinitions="*,*,*,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto">
-                        <TextBlock Classes="Label" Text="Stat" Grid.Row="0" Grid.Column="0"/>
-                        <TextBlock Classes="TableHeader" Text="Calculated" Grid.Row="0" Grid.Column="1"/>
-                        <TextBlock Classes="TableHeader" Text="IV" Grid.Row="0" Grid.Column="2"/>
-                        <TextBlock Classes="TableHeader" Text="EV" Grid.Row="0" Grid.Column="3"/>
+                <Border Classes="Section">
+                    <StackPanel Name="StatsSection">
+                        <TextBlock Name="StatsSectionTitle" Classes="SectionTitle" Text="Stats"/>
+                        <Grid Name="StatsGrid" Classes="FieldRow" ColumnDefinitions="*,*,*,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto">
+                            <TextBlock Classes="Label" Text="Stat" Grid.Row="0" Grid.Column="0"/>
+                            <TextBlock Classes="TableHeader" Text="Calculated" Grid.Row="0" Grid.Column="1"/>
+                            <TextBlock Classes="TableHeader" Text="IV" Grid.Row="0" Grid.Column="2"/>
+                            <TextBlock Classes="TableHeader" Text="EV" Grid.Row="0" Grid.Column="3"/>
 
-                        <TextBlock Classes="TableKey" Text="HP" Grid.Row="1" Grid.Column="0"/>
-                        <TextBlock Name="HPCalcValue" Classes="TableValue" Text="45" Grid.Row="1" Grid.Column="1"/>
-                        <TextBlock Name="HPIVValue" Classes="TableValue" Text="31" Grid.Row="1" Grid.Column="2"/>
-                        <TextBlock Name="HPEVValue" Classes="TableValue" Text="252" Grid.Row="1" Grid.Column="3"/>
+                            <TextBlock Classes="TableKey" Text="HP" Grid.Row="1" Grid.Column="0"/>
+                            <TextBlock Name="HPCalcValue" Classes="TableValue" Text="45" Grid.Row="1" Grid.Column="1"/>
+                            <TextBlock Name="HPIVValue" Classes="TableValue" Text="31" Grid.Row="1" Grid.Column="2"/>
+                            <TextBlock Name="HPEVValue" Classes="TableValue" Text="252" Grid.Row="1" Grid.Column="3"/>
 
-                        <TextBlock Classes="TableKey" Text="Attack" Grid.Row="2" Grid.Column="0"/>
-                        <TextBlock Name="AttackCalcValue" Classes="TableValue" Text="49" Grid.Row="2" Grid.Column="1"/>
-                        <TextBlock Name="AttackIVValue" Classes="TableValue" Text="31" Grid.Row="2" Grid.Column="2"/>
-                        <TextBlock Name="AttackEVValue" Classes="TableValue" Text="252" Grid.Row="2" Grid.Column="3"/>
+                            <TextBlock Classes="TableKey" Text="Attack" Grid.Row="2" Grid.Column="0"/>
+                            <TextBlock Name="AttackCalcValue" Classes="TableValue" Text="49" Grid.Row="2" Grid.Column="1"/>
+                            <TextBlock Name="AttackIVValue" Classes="TableValue" Text="31" Grid.Row="2" Grid.Column="2"/>
+                            <TextBlock Name="AttackEVValue" Classes="TableValue" Text="252" Grid.Row="2" Grid.Column="3"/>
 
-                        <TextBlock Classes="TableKey" Text="Defense" Grid.Row="3" Grid.Column="0"/>
-                        <TextBlock Name="DefenseCalcValue" Classes="TableValue" Text="49" Grid.Row="3" Grid.Column="1"/>
-                        <TextBlock Name="DefenseIVValue" Classes="TableValue" Text="31" Grid.Row="3" Grid.Column="2"/>
-                        <TextBlock Name="DefenseEVValue" Classes="TableValue" Text="252" Grid.Row="3" Grid.Column="3"/>
+                            <TextBlock Classes="TableKey" Text="Defense" Grid.Row="3" Grid.Column="0"/>
+                            <TextBlock Name="DefenseCalcValue" Classes="TableValue" Text="49" Grid.Row="3" Grid.Column="1"/>
+                            <TextBlock Name="DefenseIVValue" Classes="TableValue" Text="31" Grid.Row="3" Grid.Column="2"/>
+                            <TextBlock Name="DefenseEVValue" Classes="TableValue" Text="252" Grid.Row="3" Grid.Column="3"/>
 
-                        <TextBlock Classes="TableKey" Text="Sp. Atk" Grid.Row="4" Grid.Column="0"/>
-                        <TextBlock Name="SpAtkCalcValue" Classes="TableValue" Text="65" Grid.Row="4" Grid.Column="1"/>
-                        <TextBlock Name="SpAtkIVValue" Classes="TableValue" Text="31" Grid.Row="4" Grid.Column="2"/>
-                        <TextBlock Name="SpAtkEVValue" Classes="TableValue" Text="252" Grid.Row="4" Grid.Column="3"/>
+                            <TextBlock Classes="TableKey" Text="Sp. Atk" Grid.Row="4" Grid.Column="0"/>
+                            <TextBlock Name="SpAtkCalcValue" Classes="TableValue" Text="65" Grid.Row="4" Grid.Column="1"/>
+                            <TextBlock Name="SpAtkIVValue" Classes="TableValue" Text="31" Grid.Row="4" Grid.Column="2"/>
+                            <TextBlock Name="SpAtkEVValue" Classes="TableValue" Text="252" Grid.Row="4" Grid.Column="3"/>
 
-                        <TextBlock Classes="TableKey" Text="Sp. Def" Grid.Row="5" Grid.Column="0"/>
-                        <TextBlock Name="SpDefCalcValue" Classes="TableValue" Text="65" Grid.Row="5" Grid.Column="1"/>
-                        <TextBlock Name="SpDefIVValue" Classes="TableValue" Text="31" Grid.Row="5" Grid.Column="2"/>
-                        <TextBlock Name="SpDefEVValue" Classes="TableValue" Text="252" Grid.Row="5" Grid.Column="3"/>
+                            <TextBlock Classes="TableKey" Text="Sp. Def" Grid.Row="5" Grid.Column="0"/>
+                            <TextBlock Name="SpDefCalcValue" Classes="TableValue" Text="65" Grid.Row="5" Grid.Column="1"/>
+                            <TextBlock Name="SpDefIVValue" Classes="TableValue" Text="31" Grid.Row="5" Grid.Column="2"/>
+                            <TextBlock Name="SpDefEVValue" Classes="TableValue" Text="252" Grid.Row="5" Grid.Column="3"/>
 
-                        <TextBlock Classes="TableKey" Text="Speed" Grid.Row="6" Grid.Column="0"/>
-                        <TextBlock Name="SpeedCalcValue" Classes="TableValue" Text="45" Grid.Row="6" Grid.Column="1"/>
-                        <TextBlock Name="SpeedIVValue" Classes="TableValue" Text="31" Grid.Row="6" Grid.Column="2"/>
-                        <TextBlock Name="SpeedEVValue" Classes="TableValue" Text="252" Grid.Row="6" Grid.Column="3"/>
-                    </Grid>
-                </StackPanel>
+                            <TextBlock Classes="TableKey" Text="Speed" Grid.Row="6" Grid.Column="0"/>
+                            <TextBlock Name="SpeedCalcValue" Classes="TableValue" Text="45" Grid.Row="6" Grid.Column="1"/>
+                            <TextBlock Name="SpeedIVValue" Classes="TableValue" Text="31" Grid.Row="6" Grid.Column="2"/>
+                            <TextBlock Name="SpeedEVValue" Classes="TableValue" Text="252" Grid.Row="6" Grid.Column="3"/>
+                        </Grid>
+                    </StackPanel>
+                </Border>
 
                 <!-- Moves -->
-                <StackPanel Name="MoveSection" Classes="Section">
-                    <TextBlock Classes="SectionTitle" Text="Moves"/>
-                    <Grid Name="MovesGrid" Classes="FieldRow" ColumnDefinitions="*,*,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto">
-                        <TextBlock Classes="Label" Text="Move" Grid.Row="0" Grid.Column="0"/>
-                        <TextBlock Classes="TableHeader" Text="PP" Grid.Row="0" Grid.Column="1"/>
-                        <TextBlock Classes="TableHeader" Text="Power Ups" Grid.Row="0" Grid.Column="2"/>
+                <Border Classes="Section">
+                    <StackPanel Name="MoveSection">
+                        <TextBlock Classes="SectionTitle" Text="Moves"/>
+                        <Grid Name="MovesGrid" Classes="FieldRow" ColumnDefinitions="*,*,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto">
+                            <TextBlock Classes="Label" Text="Move" Grid.Row="0" Grid.Column="0"/>
+                            <TextBlock Classes="TableHeader" Text="PP" Grid.Row="0" Grid.Column="1"/>
+                            <TextBlock Classes="TableHeader" Text="Power Ups" Grid.Row="0" Grid.Column="2"/>
 
-                        <TextBlock Name="Move1Name" Classes="TableKey" Text="Tackle" Grid.Row="1" Grid.Column="0"/>
-                        <TextBlock Name="Move1PP" Classes="TableValue" Text="42" Grid.Row="1" Grid.Column="1"/>
-                        <TextBlock Name="Move1PowerUps" Classes="TableValue" Text="3" Grid.Row="1" Grid.Column="2"/>
+                            <TextBlock Name="Move1Name" Classes="TableKey" Text="Tackle" Grid.Row="1" Grid.Column="0"/>
+                            <TextBlock Name="Move1PP" Classes="TableValue" Text="42" Grid.Row="1" Grid.Column="1"/>
+                            <TextBlock Name="Move1PowerUps" Classes="TableValue" Text="3" Grid.Row="1" Grid.Column="2"/>
 
-                        <TextBlock Name="Move2Name" Classes="TableKey" Text="Vine Whip" Grid.Row="2" Grid.Column="0"/>
-                        <TextBlock Name="Move2PP" Classes="TableValue" Text="10" Grid.Row="2" Grid.Column="1"/>
-                        <TextBlock Name="Move2PowerUps" Classes="TableValue" Text="0" Grid.Row="2" Grid.Column="2"/>
+                            <TextBlock Name="Move2Name" Classes="TableKey" Text="Vine Whip" Grid.Row="2" Grid.Column="0"/>
+                            <TextBlock Name="Move2PP" Classes="TableValue" Text="10" Grid.Row="2" Grid.Column="1"/>
+                            <TextBlock Name="Move2PowerUps" Classes="TableValue" Text="0" Grid.Row="2" Grid.Column="2"/>
 
-                        <TextBlock Name="Move3Name" Classes="TableKey" Text="Leech Seed" Grid.Row="3" Grid.Column="0"/>
-                        <TextBlock Name="Move3PP" Classes="TableValue" Text="12" Grid.Row="3" Grid.Column="1"/>
-                        <TextBlock Name="Move3PowerUps" Classes="TableValue" Text="1" Grid.Row="3" Grid.Column="2"/>
+                            <TextBlock Name="Move3Name" Classes="TableKey" Text="Leech Seed" Grid.Row="3" Grid.Column="0"/>
+                            <TextBlock Name="Move3PP" Classes="TableValue" Text="12" Grid.Row="3" Grid.Column="1"/>
+                            <TextBlock Name="Move3PowerUps" Classes="TableValue" Text="1" Grid.Row="3" Grid.Column="2"/>
 
-                        <TextBlock Name="Move4Name" Classes="TableKey" Text="Roar" Grid.Row="4" Grid.Column="0"/>
-                        <TextBlock Name="Move4PP" Classes="TableValue" Text="15" Grid.Row="4" Grid.Column="1"/>
-                        <TextBlock Name="Move4PowerUps" Classes="TableValue" Text="0" Grid.Row="4" Grid.Column="2"/>
-                    </Grid>
-                </StackPanel>
+                            <TextBlock Name="Move4Name" Classes="TableKey" Text="Roar" Grid.Row="4" Grid.Column="0"/>
+                            <TextBlock Name="Move4PP" Classes="TableValue" Text="15" Grid.Row="4" Grid.Column="1"/>
+                            <TextBlock Name="Move4PowerUps" Classes="TableValue" Text="0" Grid.Row="4" Grid.Column="2"/>
+                        </Grid>
+                    </StackPanel>
+                </Border>
 
                 <!-- Ribbons -->
-                <StackPanel Name="RibbonSection" Classes="Section">
-                    <TextBlock Classes="SectionTitle" Text="Ribbons"/>
-                    <WrapPanel Name="RibbonBadgeBanner" Classes="BadgeBanner">
+                <Border Classes="Section">
+                    <StackPanel Name="RibbonSection">
+                        <TextBlock Classes="SectionTitle" Text="Ribbons"/>
+                        <WrapPanel Name="RibbonBadgeBanner" Classes="BadgeBanner">
                         <Border Classes="Badge HoennRibbon">
                             <TextBlock Name="RibbonName" Text="Champion"/>
                         </Border>
@@ -339,52 +342,55 @@
                             <TextBlock Name="RibbonName2" Text="Champion"/>
                         </Border>
                     </WrapPanel>
-                </StackPanel>
+                    </StackPanel>
+                </Border>
 
                 <!-- Additional Info -->
-                <StackPanel Classes="Section">
-                    <TextBlock Classes="SectionTitle" Text="Additional Info"/>
-                    <Grid Classes="FieldRow">
-                        <TextBlock Classes="Label" Text="PC Markings"/>
-                        <TextBlock Name="MarkingsValue" Classes="Value" Text="SSCQW" Grid.Column="1"/>
-                    </Grid>
-                    <Grid Classes="FieldRow">
-                        <TextBlock Classes="Label" Text="Shiny Leaves Data"/>
-                        <TextBlock Name="ShinyLeavesValue" Classes="Value" Text="25" Grid.Column="1"/>
-                    </Grid>
-                    <Grid Classes="FieldRow">
-                        <TextBlock Classes="Label" Text="Gen3Misc Data"/>
-                        <TextBlock Name="Gen3MiscValue" Classes="Value" Text="2" Grid.Column="1"/>
-                    </Grid>
-                    <Grid Classes="FieldRow">
-                        <TextBlock Classes="Label" Text="Walking Mood"/>
-                        <TextBlock Name="WalkingMoodValue" Classes="Value" Text="100" Grid.Column="1"/>
-                    </Grid>
-                    <Grid Classes="FieldRow">
-                        <TextBlock Classes="Label" Text="Coolness"/>
-                        <TextBlock Name="CoolnessValue" Classes="Value" Text="0" Grid.Column="1"/>
-                    </Grid>
-                    <Grid Classes="FieldRow">
-                        <TextBlock Classes="Label" Text="Beauty"/>
-                        <TextBlock Name="BeautyValue" Classes="Value" Text="0" Grid.Column="1"/>
-                    </Grid>
-                    <Grid Classes="FieldRow">
-                        <TextBlock Classes="Label" Text="Cuteness"/>
-                        <TextBlock Name="CutenessValue" Classes="Value" Text="0" Grid.Column="1"/>
-                    </Grid>
-                    <Grid Classes="FieldRow">
-                        <TextBlock Classes="Label" Text="Smartness"/>
-                        <TextBlock Name="SmartinessValue" Classes="Value" Text="0" Grid.Column="1"/>
-                    </Grid>
-                    <Grid Classes="FieldRow">
-                        <TextBlock Classes="Label" Text="Toughness"/>
-                        <TextBlock Name="ToughnessValue" Classes="Value" Text="0" Grid.Column="1"/>
-                    </Grid>
-                    <Grid Classes="FieldRow">
-                        <TextBlock Classes="Label" Text="Sheen"/>
-                        <TextBlock Name="SheenValue" Classes="Value" Text="0" Grid.Column="1"/>
-                    </Grid>
-                </StackPanel>
+                <Border Classes="Section">
+                    <StackPanel>
+                        <TextBlock Classes="SectionTitle" Text="Additional Info"/>
+                        <Grid Classes="FieldRow">
+                            <TextBlock Classes="Label" Text="PC Markings"/>
+                            <TextBlock Name="MarkingsValue" Classes="Value" Text="SSCQW" Grid.Column="1"/>
+                        </Grid>
+                        <Grid Classes="FieldRow">
+                            <TextBlock Classes="Label" Text="Shiny Leaves Data"/>
+                            <TextBlock Name="ShinyLeavesValue" Classes="Value" Text="25" Grid.Column="1"/>
+                        </Grid>
+                        <Grid Classes="FieldRow">
+                            <TextBlock Classes="Label" Text="Gen3Misc Data"/>
+                            <TextBlock Name="Gen3MiscValue" Classes="Value" Text="2" Grid.Column="1"/>
+                        </Grid>
+                        <Grid Classes="FieldRow">
+                            <TextBlock Classes="Label" Text="Walking Mood"/>
+                            <TextBlock Name="WalkingMoodValue" Classes="Value" Text="100" Grid.Column="1"/>
+                        </Grid>
+                        <Grid Classes="FieldRow">
+                            <TextBlock Classes="Label" Text="Coolness"/>
+                            <TextBlock Name="CoolnessValue" Classes="Value" Text="0" Grid.Column="1"/>
+                        </Grid>
+                        <Grid Classes="FieldRow">
+                            <TextBlock Classes="Label" Text="Beauty"/>
+                            <TextBlock Name="BeautyValue" Classes="Value" Text="0" Grid.Column="1"/>
+                        </Grid>
+                        <Grid Classes="FieldRow">
+                            <TextBlock Classes="Label" Text="Cuteness"/>
+                            <TextBlock Name="CutenessValue" Classes="Value" Text="0" Grid.Column="1"/>
+                        </Grid>
+                        <Grid Classes="FieldRow">
+                            <TextBlock Classes="Label" Text="Smartness"/>
+                            <TextBlock Name="SmartinessValue" Classes="Value" Text="0" Grid.Column="1"/>
+                        </Grid>
+                        <Grid Classes="FieldRow">
+                            <TextBlock Classes="Label" Text="Toughness"/>
+                            <TextBlock Name="ToughnessValue" Classes="Value" Text="0" Grid.Column="1"/>
+                        </Grid>
+                        <Grid Classes="FieldRow">
+                            <TextBlock Classes="Label" Text="Sheen"/>
+                            <TextBlock Name="SheenValue" Classes="Value" Text="0" Grid.Column="1"/>
+                        </Grid>
+                    </StackPanel>
+                </Border>
             </StackPanel>
         </Border>
     </ScrollViewer>
