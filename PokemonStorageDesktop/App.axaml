@@ -17,7 +17,9 @@
         <SolidColorBrush x:Key="PrimaryLightTextColor">White</SolidColorBrush>
         <SolidColorBrush x:Key="SecondaryLightTextColor">LightGray</SolidColorBrush>
         <SolidColorBrush x:Key="DarkAccentColor">#6366F1</SolidColorBrush>
+        <SolidColorBrush x:Key="DarkAccentColorAlternate">#424192</SolidColorBrush>
         <SolidColorBrush x:Key="LightAccentColor">#6366F1</SolidColorBrush>
+        <SolidColorBrush x:Key="LightAccentColorAlternate">#424192</SolidColorBrush>
         <SolidColorBrush x:Key="PrimaryDarkBackgroundColor">DarkGray</SolidColorBrush>
         <SolidColorBrush x:Key="SecondaryDarkBackgroundColor">Black</SolidColorBrush>
         <SolidColorBrush x:Key="WhiteBackgroundColor">White</SolidColorBrush>
@@ -33,9 +35,10 @@
   
     <Application.Styles>
         <FluentTheme />
+
+        <!-- Panel Split Button -->
         <Style Selector="WrapPanel.BottomTransparentPanel">
             <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="HorizontalAlignment" Value="Stretch"/>
             <Setter Property="VerticalAlignment" Value="Bottom"/>
         </Style>
         <Style Selector="SplitButton.Accented">
@@ -46,6 +49,14 @@
         <Style Selector="SplitButton.Accented /template/ Button#PART_PrimaryButton /template/ ContentPresenter#PART_ContentPresenter">
             <Setter Property="Padding" Value="8"/>
         </Style>
+        <Style Selector="SplitButton.Accented /template/ Button#PART_PrimaryButton /template/ ContentPresenter:pointerover">
+            <Setter Property="Background" Value="{StaticResource LightAccentColorAlternate}"/>
+        </Style>
+        <Style Selector="SplitButton.Accented /template/ Button#PART_SecondaryButton /template/ ContentPresenter:pointerover">
+            <Setter Property="Background" Value="{StaticResource LightAccentColorAlternate}"/>
+        </Style>
+
+        <!-- Shadows -->
         <Style Selector="Border.VerticalShadow">
             <Setter Property="BoxShadow" Value="0 4 12 rgba(15, 15, 15, 0.75)"/>
         </Style>

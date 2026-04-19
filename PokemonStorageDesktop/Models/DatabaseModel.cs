@@ -5,20 +5,31 @@ using System.IO;
 using System.Linq;
 using PokemonStorageLibrary;
 using PokemonStorageLibrary.Models;
-using PokemonStorageLibrary.SaveContent;
 
 namespace PokemonStorageDesktop.Models;
 
-public class DatabaseModel
+public class DatabaseModel : StorageModel
 {
-    public string StorageConnectionString { get; private set; }
-    public List<PokemonModel> DatabasePokemon;
-
-    public DatabaseModel()
+    private string ConnectionString { get; set; }
+    public override string DisplayTitle { get { return Path.GetFileNameWithoutExtension(Utility.GetConnectionStringPath(ConnectionString)); } }
+    public DatabaseModel(string connectionString) : base()
     {
-        DatabasePokemon = [];
+        ConnectionString = connectionString;
         
-        List<Int64> primaryKeys = DbInterface.RetrieveTable("SELECT id FROM pokemon", Lookup.StorageConnectionString).AsEnumerable().Select(x => x.Field<Int64>("id")).ToList();
-        primaryKeys.ForEach(x => DatabasePokemon.Add(new PokemonModel(new PartyPokemon(x))));
+        List<Int64> primaryKeys = DbInterface.RetrieveTable("SELECT id FROM pokemon", connectionString).AsEnumerable().Select(x => x.Field<Int64>("id")).ToList();
+        List<PartyPokemon> databasePokemon = primaryKeys.Select(x => new PartyPokemon(x)).ToList();
+        PokemonLists.Add("Database", databasePokemon.Select(x => new PokemonModel(x)).ToList());
+    }
+
+    public override int ImportPokemon(List<PartyPokemon> partyPokemonList)
+    {
+        int i = 0;
+        foreach (PartyPokemon partyPokemon in partyPokemonList)
+        {
+            int pk = partyPokemon.InsertIntoDatabase(ConnectionString);
+            Console.WriteLine($"Inserted {partyPokemon.Nickname} as {pk}");
+            i++;
+        }
+        return i;
     }
 }

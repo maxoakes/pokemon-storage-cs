@@ -10,7 +10,7 @@ public class PokemonModel
 {
     public PartyPokemon Pokemon { get; }
     public SlotCard Card { get; }
-    private CheckBox TransferCheckbox { get; set; }
+    private CheckBox TransferCheckbox { get { return Card.TransferCheckbox; } }
     public bool IsChecked { get { return TransferCheckbox.IsChecked ?? false; }}
 
     public PokemonModel(PartyPokemon pokemon)

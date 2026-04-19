@@ -592,6 +592,15 @@ public class Lookup
         return 0;
     }
 
+    public static Int64 GetNationalDexNumber(int speciesId)
+    {
+        List<SqliteParameter> parameters = [
+            new SqliteParameter("Id", SqliteType.Integer) { Value = speciesId }
+        ];
+
+        return (long)DbInterface.RetrieveScalar("SELECT * FROM pokemon_dex_numbers WHERE pokedex_id=1 AND species_id=@Id", VeekunConnectionString, parameters);
+    }
+
     #endregion
 
     #region Index Mappings
@@ -715,7 +724,7 @@ public class Lookup
         }
         catch (NullReferenceException)
         {
-            return 0;
+            return (byte)itemId;
         }
     }
 

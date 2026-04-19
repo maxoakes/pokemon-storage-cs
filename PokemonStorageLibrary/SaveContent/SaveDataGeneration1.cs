@@ -253,6 +253,28 @@ public class SaveDataGeneration1 : SaveData
         return boxId;
     }
 
+    public override int AppendPokemonAndSave(List<PartyPokemon> partyPokemonList, string filepath, bool overwriteBackup=true)
+    {
+        int i = 0;
+        foreach (PartyPokemon partyPokemon in partyPokemonList)
+        {
+            AddPokemonToNextOpenBox(partyPokemon);
+            WriteToPokedex((int)Lookup.GetNationalDexNumber(partyPokemon.PokemonIdentity.SpeciesId));
+            WriteRecalculatedChecksums();
+            bool isValidWrite = AreAllChecksumsValid();
+            
+            if (!isValidWrite)
+            {
+                throw new InvalidDataException("Checksum after Pokemon write was not valid!");
+            }
+            i++;
+        }
+
+        File.Copy(filepath, filepath + ".original", overwriteBackup);
+        File.WriteAllBytes(filepath, ModifiedData);
+        return i;
+    }
+
     #endregion
 
     #region Helpers

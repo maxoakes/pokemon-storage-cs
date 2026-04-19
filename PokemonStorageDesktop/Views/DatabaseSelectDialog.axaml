@@ -4,13 +4,14 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d" d:DesignWidth="500" d:DesignHeight="200"
         SizeToContent="WidthAndHeight"
-        x:Class="PokemonStorageDesktop.Views.SaveFileSelectDialog"
-        Title="Open .sav File">
+        x:Class="PokemonStorageDesktop.Views.DatabaseSelectDialog"
+        Title="Open Database by Connection String">
     <Window.Styles>
         <Style Selector="Border#Container">
+            <Setter Property="Padding" Value="8"/>
             <Setter Property="Background" Value="{StaticResource WhiteBackgroundColor}"/>
         </Style>
-        <Style Selector="Grid > TextBlock">
+        <Style Selector="StackPanel > TextBlock">
             <Setter Property="Margin" Value="4"/>
             <Setter Property="Padding" Value="4"/>
             <Setter Property="VerticalAlignment" Value="Center"/>
@@ -26,15 +27,7 @@
         <Style Selector="TextBox.InteractControl">
             <Setter Property="Margin" Value="2"/>
             <Setter Property="Padding" Value="6"/>
-            <Setter Property="Width" Value="250"/>
             <Setter Property="Height" Value="{StaticResource InteractionControlHeight}"/>
-        </Style>
-        <Style Selector="ComboBox.InteractControl">
-            <Setter Property="Margin" Value="2"/>
-            <Setter Property="Padding" Value="4"/>
-            <Setter Property="Width" Value="175"/>
-            <Setter Property="Height" Value="{StaticResource InteractionControlHeight}"/>
-            <Setter Property="MaxDropDownHeight" Value="300"/>
         </Style>
         <Style Selector="Button.Button">
             <Setter Property="Margin" Value="2"/>
@@ -50,29 +43,13 @@
             <Setter Property="VerticalAlignment" Value="Stretch"/>
             <Setter Property="HorizontalAlignment" Value="Left"/>
         </Style>
-
     </Window.Styles>
 
     <Border Name="Container">
-        <Grid ColumnDefinitions="Auto,Auto,Auto" RowDefinitions="Auto,Auto,Auto,Auto,Auto">
-            <TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3"
-                x:Name="lblHeader" Name="Header" Text="Find the .sav file you would like to open." />
-            <TextBlock Grid.Row="1" Grid.Column="0" 
-                x:Name="lblSaveFilePath" Classes="Label" Text="Save File:" />
-            <TextBox Grid.Row="1" Grid.Column="1" 
-                x:Name="tbFilepath" Classes="InteractControl" Watermark="Path to .sav file"/>
-            <Button Grid.Row="1" Grid.Column="2"
-                x:Name="btnBrowse" Classes="Button" Content="Browse..." Click="BrowseSaveFile_Click" />
-            <TextBlock Grid.Row="2" Grid.Column="0"
-                x:Name="lblVersion" Classes="Label" Text="Version:" />
-            <ComboBox Grid.Row="2" Grid.Column="1"
-                x:Name="ddVersion" Classes="InteractControl" SelectedIndex="0"/>
-            <TextBlock Grid.Row="3" Grid.Column="0"
-                x:Name="lblLanguage" Classes="Label" Text="Language:" />
-            <ComboBox Grid.Row="3" Grid.Column="1"
-                x:Name="ddLanguage" Classes="InteractControl" SelectedIndex="0"/>
-            <Button Grid.Row="4" Grid.Column="1"
-                x:Name="btnOpenFile" Classes="Button" Content="Open" Click="OpenFile_Click" />
-        </Grid>
+    <StackPanel>
+        <TextBlock Name="Header" Text="Enter the connection string to an .sqlite database." />
+        <TextBox x:Name="tbConnectionString" Classes="InteractControl" Watermark="Data Source=/path/to/database.sqlite"/>
+        <Button Classes="Button" Content="Open" Click="Connect_Click" />
+    </StackPanel>
     </Border>
 </Window>

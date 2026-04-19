@@ -91,56 +91,56 @@ public partial class AboutPanel : UserControl
 
         // Overview Section
         tbPersonalityValue.Text = pokemon.PersonalityValue.ToString();
-        tbNatureValue.Text =  pokemon.Nature.Identifier;
-        tbAbilityValue.Text =  pokemon.AbilityIdentifier;
-        tbLevelValue.Text =  pokemon.Level.ToString();
-        tbExperienceValue.Text =  pokemon.ExperiencePoints.ToString();
-        tbFriendshipValue.Text =  pokemon.Friendship.ToString();
-        tbHeldItemValue.Text =  pokemon.HeldItemIdentifier ?? "None";
-        string pokerusString = 
+        tbNatureValue.Text = pokemon.Nature.Identifier;
+        tbAbilityValue.Text = pokemon.AbilityIdentifier;
+        tbLevelValue.Text = pokemon.Level.ToString();
+        tbExperienceValue.Text = pokemon.ExperiencePoints.ToString();
+        tbFriendshipValue.Text = pokemon.Friendship.ToString();
+        tbHeldItemValue.Text = pokemon.HeldItemIdentifier ?? "None";
+        string pokerusString =
             pokemon.PokerusStrain == 0 
             ? "No" 
             : $"Strain {pokemon.PokerusStrain} ({pokemon.PokerusDaysRemaining} days remain)";
-        tbPokerusValue.Text =  pokerusString;
+        tbPokerusValue.Text = pokerusString;
 
         // Origin Section
-        tbOriginGameValue.Text =  pokemon.Origin.Game.GameName;
-        tbOriginMetLevelValue.Text =  pokemon.Origin.MetLevel.ToString();
-        tbOriginMetDateValue.Text =  pokemon.Origin.MetDateTime?.ToString("yyyy-MM-dd") ?? "";
-        tbOriginMetLocationValue.Text =  pokemon.Origin.MetLocationIdentifier;
-        tbOriginPokeballValue.Text =  pokemon.Origin.PokeballIdentifier;
-        tbOriginEncounterTypeValue.Text =  pokemon.Origin.EncounterTypeIdentifier;
-        tbOriginEggReceiveValue.Text =  pokemon.Origin.EggReceiveDate?.ToString("yyyy-MM-dd") ?? "";
-        tbOriginEggHatchLocationValue.Text =  pokemon.Origin.EggHatchLocationIdentifier;
+        tbOriginGameValue.Text = pokemon.Origin.Game.GameName;
+        tbOriginMetLevelValue.Text = pokemon.Origin.MetLevel.ToString();
+        tbOriginMetDateValue.Text = pokemon.Origin.MetDateTime?.ToString("yyyy-MM-dd") ?? "";
+        tbOriginMetLocationValue.Text = pokemon.Origin.MetLocationIdentifier;
+        tbOriginPokeballValue.Text = pokemon.Origin.PokeballIdentifier;
+        tbOriginEncounterTypeValue.Text = pokemon.Origin.EncounterTypeIdentifier;
+        tbOriginEggReceiveValue.Text = pokemon.Origin.EggReceiveDate?.ToString("yyyy-MM-dd") ?? "";
+        tbOriginEggHatchLocationValue.Text = pokemon.Origin.EggHatchLocationIdentifier;
         
         // Stats Section - use Modern stats
         tbStatsSectionTitle.Text = $"Stats {(pokemon.Stats.IsModernSystemByDefault ? "Modern" : "Old")}";
         var statSet = pokemon.Stats.Modern;
         if (statSet != null)
         {
-            tbHPCalcValue.Text =  statSet.HP?.Value.ToString() ?? "";
-            tbHPIVValue.Text =  statSet.HP?.Iv.ToString() ?? "";
-            tbHPEVValue.Text =  statSet.HP?.Ev.ToString() ?? "";
+            tbHPCalcValue.Text = statSet.HP?.Value.ToString() ?? "";
+            tbHPIVValue.Text = statSet.HP?.Iv.ToString() ?? "";
+            tbHPEVValue.Text = statSet.HP?.Ev.ToString() ?? "";
 
-            tbAttackCalcValue.Text =  statSet.Attack?.Value.ToString() ?? "";
-            tbAttackIVValue.Text =  statSet.Attack?.Iv.ToString() ?? "";
-            tbAttackEVValue.Text =  statSet.Attack?.Ev.ToString() ?? "";
+            tbAttackCalcValue.Text = statSet.Attack?.Value.ToString() ?? "";
+            tbAttackIVValue.Text = statSet.Attack?.Iv.ToString() ?? "";
+            tbAttackEVValue.Text = statSet.Attack?.Ev.ToString() ?? "";
 
-            tbDefenseCalcValue.Text =  statSet.Defense?.Value.ToString() ?? "";
-            tbDefenseIVValue.Text =  statSet.Defense?.Iv.ToString() ?? "";
-            tbDefenseEVValue.Text =  statSet.Defense?.Ev.ToString() ?? "";
+            tbDefenseCalcValue.Text = statSet.Defense?.Value.ToString() ?? "";
+            tbDefenseIVValue.Text = statSet.Defense?.Iv.ToString() ?? "";
+            tbDefenseEVValue.Text = statSet.Defense?.Ev.ToString() ?? "";
 
-            tbSpAtkCalcValue.Text =  statSet.SpecialAttack?.Value.ToString() ?? "";
-            tbSpAtkIVValue.Text =  statSet.SpecialAttack?.Iv.ToString() ?? "";
-            tbSpAtkEVValue.Text =  statSet.SpecialAttack?.Ev.ToString() ?? "";
+            tbSpAtkCalcValue.Text = statSet.SpecialAttack?.Value.ToString() ?? "";
+            tbSpAtkIVValue.Text = statSet.SpecialAttack?.Iv.ToString() ?? "";
+            tbSpAtkEVValue.Text = statSet.SpecialAttack?.Ev.ToString() ?? "";
 
-            tbSpDefCalcValue.Text =  statSet.SpecialDefense?.Value.ToString() ?? "";
-            tbSpDefIVValue.Text =  statSet.SpecialDefense?.Iv.ToString() ?? "";
-            tbSpDefEVValue.Text =  statSet.SpecialDefense?.Ev.ToString() ?? "";
+            tbSpDefCalcValue.Text = statSet.SpecialDefense?.Value.ToString() ?? "";
+            tbSpDefIVValue.Text = statSet.SpecialDefense?.Iv.ToString() ?? "";
+            tbSpDefEVValue.Text = statSet.SpecialDefense?.Ev.ToString() ?? "";
 
-            tbSpeedCalcValue.Text =  statSet.Speed?.Value.ToString() ?? "";
-            tbSpeedIVValue.Text =  statSet.Speed?.Iv.ToString() ?? "";
-            tbSpeedEVValue.Text =  statSet.Speed?.Ev.ToString() ?? "";
+            tbSpeedCalcValue.Text = statSet.Speed?.Value.ToString() ?? "";
+            tbSpeedIVValue.Text = statSet.Speed?.Iv.ToString() ?? "";
+            tbSpeedEVValue.Text = statSet.Speed?.Ev.ToString() ?? "";
         }
 
         // Moves Section
@@ -191,16 +191,16 @@ public partial class AboutPanel : UserControl
         }
 
         // Additional Info Section
-        tbMarkingsValue.Text =  pokemon.Coolness.ToString();
-        tbShinyLeavesValue.Text =  pokemon.Coolness.ToString();
-        tbGen3MiscValue.Text =  pokemon.Coolness.ToString();
-        tbWalkingMoodValue.Text =  pokemon.Coolness.ToString();
-        tbCoolnessValue.Text =  pokemon.Coolness.ToString();
-        tbBeautyValue.Text =  pokemon.Beauty.ToString();
-        tbCutenessValue.Text =  pokemon.Cuteness.ToString();
-        tbSmartinessValue.Text =  pokemon.Smartness.ToString();
-        tbToughnessValue.Text =  pokemon.Toughness.ToString();
-        tbSheenValue.Text =  pokemon.Sheen.ToString();
+        tbMarkingsValue.Text = pokemon.Coolness.ToString();
+        tbShinyLeavesValue.Text = pokemon.Coolness.ToString();
+        tbGen3MiscValue.Text = pokemon.Coolness.ToString();
+        tbWalkingMoodValue.Text = pokemon.Coolness.ToString();
+        tbCoolnessValue.Text = pokemon.Coolness.ToString();
+        tbBeautyValue.Text = pokemon.Beauty.ToString();
+        tbCutenessValue.Text = pokemon.Cuteness.ToString();
+        tbSmartinessValue.Text = pokemon.Smartness.ToString();
+        tbToughnessValue.Text = pokemon.Toughness.ToString();
+        tbSheenValue.Text = pokemon.Sheen.ToString();
     }
 
     private Border NewBadge(string name, string content, string className)

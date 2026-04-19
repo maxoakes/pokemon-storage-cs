@@ -358,7 +358,7 @@
                         </Grid>
                         <Grid Classes="FieldRow">
                             <TextBlock Classes="Label" Text="Gen3Misc Data"/>
-                            <TextBlock  Name="Gen3MiscValue" x:Name="tbGen3MiscValue" Classes="Value" Text="2" Grid.Column="1"/>
+                            <TextBlock Name="Gen3MiscValue" x:Name="tbGen3MiscValue" Classes="Value" Text="2" Grid.Column="1"/>
                         </Grid>
                         <Grid Classes="FieldRow">
                             <TextBlock Classes="Label" Text="Walking Mood"/>

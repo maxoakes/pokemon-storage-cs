@@ -9,32 +9,14 @@ using PokemonStorageLibrary.SaveContent;
 
 namespace PokemonStorageDesktop.Models;
 
-public class MainModel
+public class SaveFileModel : StorageModel
 {
     public string SaveFilePath { get; private set; }
+    public override string DisplayTitle { get { return Path.GetFileNameWithoutExtension(SaveFilePath); } }
     public Game Game { get; private set; }
     public SaveData? GameState { get; private set; }
-    public string StorageConnectionString { get; private set; }
-    public List<PokemonModel> SaveFilePokemon;
-    public List<PokemonModel> DatabasePokemon;
 
-    public List<DatabaseModel> DatabaseModels;
-    public List<StorageModel> StorageModels;
-
-    public MainModel()
-    {
-        SaveFilePokemon = [];
-        DatabasePokemon = [];
-        LoadDatabase();
-    }
-
-    public void LoadDatabase()
-    {
-        List<Int64> primaryKeys = DbInterface.RetrieveTable("SELECT id FROM pokemon", Lookup.StorageConnectionString).AsEnumerable().Select(x => x.Field<Int64>("id")).ToList();
-        primaryKeys.ForEach(x => DatabasePokemon.Add(new PokemonModel(new PartyPokemon(x))));
-    }
-
-    public void LoadSaveFile(string filePath, string gameName, string language)
+    public SaveFileModel(string filePath, string gameName, string language) : base()
     {
         byte[] readData;
         SaveFilePath = filePath;
@@ -70,15 +52,35 @@ public class MainModel
         {
             foreach (PartyPokemon pokemon in GameState.Party.Values)
             {
-                SaveFilePokemon.Add(new PokemonModel(pokemon));
-            }
-            foreach (var box in GameState.BoxList.Values)
-            {
-                foreach (PartyPokemon pokemon in box.Values)
+                if (PokemonLists.ContainsKey("Party"))
                 {
-                    SaveFilePokemon.Add(new PokemonModel(pokemon));
+                    PokemonLists["Party"].Add(new PokemonModel(pokemon));
+                }
+                else
+                {
+                    PokemonLists.Add("Party", [new PokemonModel(pokemon)]);
                 }
             }
+            foreach (var box in GameState.BoxList)
+            {
+                foreach (var pokemon in box.Value.Values)
+                {
+                    if (PokemonLists.ContainsKey(box.Key))
+                    {
+                        PokemonLists[box.Key].Add(new PokemonModel(pokemon));
+                    }
+                    else
+                    {
+                        PokemonLists.Add(box.Key, [new PokemonModel(pokemon)]);
+                    }
+                }
+
+            }
         }
+    }
+
+    public override int ImportPokemon(List<PartyPokemon> partyPokemonList)
+    {
+        return GameState?.AppendPokemonAndSave(partyPokemonList, SaveFilePath) ?? 0;
     }
 }

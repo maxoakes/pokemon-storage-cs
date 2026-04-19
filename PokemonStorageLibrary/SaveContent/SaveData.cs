@@ -103,6 +103,13 @@ public abstract class SaveData
     /// <returns></returns>
     public abstract int AddPokemonToNextOpenBox(PartyPokemon pokemon);
     
+    /// <summary>
+    /// The complete process of writing Pokemon to a file, updating the Pokedex, and saving the file.
+    /// </summary>
+    /// <param name="partyPokemonList"></param>
+    /// <returns>Number of Pokemon appended to file</returns>
+    public abstract int AppendPokemonAndSave(List<PartyPokemon> partyPokemonList, string filepath, bool overwriteBackup=true);
+
     #endregion
 
     /// <summary>

@@ -33,7 +33,7 @@ public class Origin
     {
         FatefulEncounter = false;
         EncounterTypeId = 0;
-        PokeballId = 0;
+        PokeballId = 4; // 4=Pokeball
         Game = Lookup.GetGameByVersionId(versionId);
         EggReceiveDate = null;
         EggHatchLocationId = 0;

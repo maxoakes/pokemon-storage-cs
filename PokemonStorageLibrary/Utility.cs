@@ -250,4 +250,17 @@ public static class Utility
     }
 
     #endregion
+
+    #region Helpers
+
+    public static string GetConnectionStringPath(string connectionString)
+    {
+        var builder = new System.Data.Common.DbConnectionStringBuilder
+        {
+            ConnectionString = connectionString
+        };
+        return (string)builder["Data Source"];
+    }
+    
+    #endregion
 }

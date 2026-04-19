@@ -300,7 +300,7 @@ public partial class PartyPokemon
     
     #region Database
 
-    public int InsertIntoDatabase()
+    public int InsertIntoDatabase(string connectionString)
     {
         List<SqliteParameterPair> parameters = 
         [
@@ -337,7 +337,7 @@ public partial class PartyPokemon
             new SqliteParameterPair("fk_original_trainer", SqliteType.Integer, OriginalTrainer.GetDatabasePrimaryKeyAndInsertIfNotExist()),          
         ];
 
-        int primaryKey = DbInterface.InsertIntoDatabase("pokemon", parameters, Lookup.StorageConnectionString);
+        int primaryKey = DbInterface.InsertIntoDatabase("pokemon", parameters, connectionString);
         Moves.Values.ToList().ForEach(x => x.InsertIntoDatabase(primaryKey));
         return primaryKey;
     }

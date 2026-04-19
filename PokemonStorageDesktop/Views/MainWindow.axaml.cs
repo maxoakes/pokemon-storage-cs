@@ -1,68 +1,57 @@
 using System;
-using Avalonia;
-using System.IO;
 using System.Linq;
-using System.Net.Http;
-using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
-using Avalonia.Media;
-using Avalonia.Media.Imaging;
-using Avalonia.Platform;
-using Avalonia.Platform.Storage;
-using Avalonia.VisualTree;
 using PokemonStorageDesktop.Models;
 using PokemonStorageLibrary;
-using PokemonStorageLibrary.Models;
-using Newtonsoft.Json;
 using PokemonStorageDesktop.UserControls;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace PokemonStorageDesktop.Views;
 
-public enum TabType
-{
-    File,
-    Database
-}
-
 public partial class MainWindow : Window
 {
-    // public DatabaseModel MainModel { get; set; }
-    public List<DatabaseModel> DatabaseModels;
     public List<StorageModel> StorageModels;
+    public List<CardViewerContainer> CardViewerContainers;
 
     public MainWindow()
     {
         InitializeComponent();
+        StorageModels = [];
+        CardViewerContainers = [];
     }
 
-    public void AddFileTab(StorageModel storageModel)
+    public async Task AddTab(StorageModel storageModel)
     {
-        TabItem tabItem = new TabItem();
-        
-        // Create the header
-        StackPanel headerPanel = new StackPanel
+        if (StorageModels.Any(x => x.DisplayTitle == storageModel.DisplayTitle))
         {
-            Orientation = Avalonia.Layout.Orientation.Horizontal,
-            Spacing = 8
+            DialogBoxOk dialogBoxOk = new DialogBoxOk("A connection to this source already exists!")
+            {
+                WindowStartupLocation = WindowStartupLocation.CenterScreen
+            };
+            await dialogBoxOk.ShowDialog<bool>(this);
+            return;
         };
-        
+
+        CardViewerContainer cardViewerContainer = new CardViewerContainer(this, storageModel);
         TextBlock tabText = new TextBlock
         {
-            Text = storageModel.Game.GameName
+            Text = storageModel.DisplayTitle
+        };
+        StackPanel headerPanel = new StackPanel
+        {
+            Orientation = Avalonia.Layout.Orientation.Horizontal
         };
         headerPanel.Children.Add(tabText);
-        
-        tabItem.Header = headerPanel;
-        CardViewerContainer cardViewerContainer = new CardViewerContainer
+        TabItem tabItem = new TabItem
         {
-            TabTitle = storageModel.Game.GameName
-        };
-        cardViewerContainer.AddPokemonGroups(storageModel.BoxPokemon);
-        tabItem.Content = cardViewerContainer;
-        
-        foreach (var boxes in storageModel.BoxPokemon.Values)
+            Name = storageModel.DisplayTitle,
+            Header = headerPanel,
+            Content = cardViewerContainer
+        };      
+
+        foreach (var boxes in storageModel.PokemonLists.Values)
         {
             foreach (PokemonModel pokemonModel in boxes)
             {
@@ -70,45 +59,11 @@ public partial class MainWindow : Window
             }
         }
 
-        // Add to TabControl
         tabControl.Items.Add(tabItem);
-    }
-
-    public void AddDatabaseTab(DatabaseModel databaseModel, string tabTitle = "Database")
-    {
-        TabItem tabItem = new TabItem();
+        StorageModels.Add(storageModel);
+        CardViewerContainers.Add(cardViewerContainer);
         
-        // Create the header
-        StackPanel headerPanel = new StackPanel
-        {
-            Orientation = Avalonia.Layout.Orientation.Horizontal,
-            Spacing = 8
-        };
-        
-        TextBlock tabText = new TextBlock
-        {
-            Text = tabTitle
-        };
-        headerPanel.Children.Add(tabText);
-        
-        tabItem.Header = headerPanel;
-        CardViewerContainer cardViewerContainer = new CardViewerContainer
-        {
-            TabTitle = tabTitle
-        };
-        Dictionary<string, List<PokemonModel>> databasePokemon = [];
-        databasePokemon.Add(tabTitle, databaseModel.DatabasePokemon);
-
-        cardViewerContainer.AddPokemonGroups(databasePokemon);
-        tabItem.Content = cardViewerContainer;
-        
-        foreach (PokemonModel pokemonModel in databaseModel.DatabasePokemon)
-        {
-            pokemonModel.SetCardClickEvent((s, e) => AboutPanel.OnNewSelection(pokemonModel.Pokemon));
-        }
-
-        // Add to TabControl
-        tabControl.Items.Add(tabItem);
+        CardViewerContainers.ForEach(x => x.SetExportOptions(StorageModels));
     }
 
     protected override async void OnOpened(EventArgs e)
@@ -116,7 +71,7 @@ public partial class MainWindow : Window
         if (Design.IsDesignMode) return;
 
         // Automatically load database
-        AddDatabaseTab(new DatabaseModel());
+        await AddTab(new DatabaseModel(Lookup.StorageConnectionString));
     }
 
     private async void OpenSource_Click(object? sender, RoutedEventArgs e)
@@ -126,24 +81,33 @@ public partial class MainWindow : Window
         {
             case "OpenSaveFileDefault":
             case "OpenSaveFile":
-                
-                SaveFileSelectDialog saveFileSelectDialog = new SaveFileSelectDialog();
-                bool result = await saveFileSelectDialog.ShowDialog<bool>(this);
-                Console.WriteLine($"Open file {result}");
-
-                if (result)
+                SaveFileSelectDialog saveFileSelectDialog = new SaveFileSelectDialog
                 {
-                    AddFileTab(new StorageModel(
-                        saveFileSelectDialog.SelectedFilepath, 
-                        saveFileSelectDialog.SelectedVersionGroup, 
-                        saveFileSelectDialog.SelectedLanguage)
-                    );
+                    WindowStartupLocation = WindowStartupLocation.CenterScreen
+                };
+
+                if (await saveFileSelectDialog.ShowDialog<bool>(this))
+                {
+                    await AddTab(new SaveFileModel(
+                        saveFileSelectDialog.SelectedFilepath,
+                        saveFileSelectDialog.SelectedVersionGroup,
+                        saveFileSelectDialog.SelectedLanguage
+                    ));
                 }
                 break;
             case "OpenDatabase":
-                Console.WriteLine("Open database");
+                DatabaseSelectDialog databaseSelectDialog = new DatabaseSelectDialog
+                {
+                    WindowStartupLocation = WindowStartupLocation.CenterScreen
+                };
+
+                if (await databaseSelectDialog.ShowDialog<bool>(this))
+                {
+                    await AddTab(new DatabaseModel(databaseSelectDialog.ConnectionString));
+                }
                 break;
             case "DeleteSelectedSource":
+                StorageModels.RemoveAll(x => x.DisplayTitle == (tabControl.SelectedItem as TabItem)?.Name);
                 tabControl.Items.Remove(tabControl.SelectedItem);
                 break;
         }

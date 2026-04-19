@@ -6,30 +6,24 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="PokemonStorageDesktop.Views.CardViewerContainer">
     <UserControl.Styles>
-
+        <Style Selector="WrapPanel#TransferWrapPanel">
+            <Setter Property="HorizontalAlignment" Value="Right"/>
+        </Style>
     </UserControl.Styles>
     <Grid x:Name="gridContainer">
         <ScrollViewer>
             <StackPanel x:Name="parentPanel">
             </StackPanel>
         </ScrollViewer>
-        <WrapPanel Classes="BottomTransparentPanel">
+        <WrapPanel Name="TransferWrapPanel" Classes="BottomTransparentPanel">
             <SplitButton 
                 x:Name="btnTransferSelected"
+                Name="DEAFULT_Json"
                 Classes="Accented"
-                Content="Export to Database" 
+                Content="Export Selected to JSON" 
                 Click="ExportSelected_Click">
                 <SplitButton.Flyout>
-                    <MenuFlyout Placement="RightEdgeAlignedTop">
-                        <MenuItem 
-                            x:Name="itemExportToJsonButton"
-                            Header="Export to JSON"
-                            Click="ExportSelected_Click"/>
-                        <MenuItem 
-                            x:Name="itemExportToPokemonShowdownButton"
-                            Header="Export to PokemonShowdown"
-                            Click="ExportSelected_Click"/>
-                    </MenuFlyout>
+                    <MenuFlyout Placement="RightEdgeAlignedTop"/>
                 </SplitButton.Flyout>
             </SplitButton>
         </WrapPanel>

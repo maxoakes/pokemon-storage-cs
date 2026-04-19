@@ -255,7 +255,7 @@ public class Program
                 string input = Console.ReadLine() ?? "n";
                 if (input.ToLower() == "y")
                 {
-                    int pk = pokemon.InsertIntoDatabase();
+                    int pk = pokemon.InsertIntoDatabase(Lookup.StorageConnectionString);
                     Console.WriteLine($"Inserted {pokemon.Nickname} as {pk}");
                 }
             }
