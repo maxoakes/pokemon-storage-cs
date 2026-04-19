@@ -9,33 +9,17 @@ using PokemonStorageLibrary.SaveContent;
 
 namespace PokemonStorageDesktop.Models;
 
-public class MainModel
+public class StorageModel
 {
     public string SaveFilePath { get; private set; }
     public Game Game { get; private set; }
     public SaveData? GameState { get; private set; }
-    public string StorageConnectionString { get; private set; }
-    public List<PokemonModel> SaveFilePokemon;
-    public List<PokemonModel> DatabasePokemon;
+    public Dictionary<string, List<PokemonModel>> BoxPokemon;
 
-    public List<DatabaseModel> DatabaseModels;
-    public List<StorageModel> StorageModels;
-
-    public MainModel()
+    public StorageModel(string filePath, string gameName, string language)
     {
-        SaveFilePokemon = [];
-        DatabasePokemon = [];
-        LoadDatabase();
-    }
+        BoxPokemon = [];
 
-    public void LoadDatabase()
-    {
-        List<Int64> primaryKeys = DbInterface.RetrieveTable("SELECT id FROM pokemon", Lookup.StorageConnectionString).AsEnumerable().Select(x => x.Field<Int64>("id")).ToList();
-        primaryKeys.ForEach(x => DatabasePokemon.Add(new PokemonModel(new PartyPokemon(x))));
-    }
-
-    public void LoadSaveFile(string filePath, string gameName, string language)
-    {
         byte[] readData;
         SaveFilePath = filePath;
         try
@@ -70,14 +54,29 @@ public class MainModel
         {
             foreach (PartyPokemon pokemon in GameState.Party.Values)
             {
-                SaveFilePokemon.Add(new PokemonModel(pokemon));
-            }
-            foreach (var box in GameState.BoxList.Values)
-            {
-                foreach (PartyPokemon pokemon in box.Values)
+                if (BoxPokemon.ContainsKey("Party"))
                 {
-                    SaveFilePokemon.Add(new PokemonModel(pokemon));
+                    BoxPokemon["Party"].Add(new PokemonModel(pokemon));
                 }
+                else
+                {
+                    BoxPokemon.Add("Party", [new PokemonModel(pokemon)]);
+                }
+            }
+            foreach (var box in GameState.BoxList)
+            {
+                foreach (var pokemon in box.Value.Values)
+                {
+                    if (BoxPokemon.ContainsKey(box.Key))
+                    {
+                        BoxPokemon[box.Key].Add(new PokemonModel(pokemon));
+                    }
+                    else
+                    {
+                        BoxPokemon.Add(box.Key, [new PokemonModel(pokemon)]);
+                    }
+                }
+
             }
         }
     }

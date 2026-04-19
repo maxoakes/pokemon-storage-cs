@@ -24,6 +24,7 @@
         <SolidColorBrush x:Key="LightBackgroundColor">LightGray</SolidColorBrush>
         <x:String x:Key="AboutPanelBoxShadow">0 4 12 #200000</x:String>
         <SolidColorBrush x:Key="UNSET_COLOR">Magenta</SolidColorBrush>
+        <x:Double x:Key="InteractionControlHeight">30</x:Double>  
         <x:Double x:Key="HeaderTextSize">22</x:Double>
         <x:Double x:Key="SubheaderTextSize">18</x:Double>
         <x:Double x:Key="PrimaryTextSize">14</x:Double>
@@ -32,6 +33,19 @@
   
     <Application.Styles>
         <FluentTheme />
+        <Style Selector="WrapPanel.BottomTransparentPanel">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="HorizontalAlignment" Value="Stretch"/>
+            <Setter Property="VerticalAlignment" Value="Bottom"/>
+        </Style>
+        <Style Selector="SplitButton.Accented">
+            <Setter Property="Background" Value="{StaticResource LightAccentColor}"/>
+            <Setter Property="HorizontalAlignment" Value="Right"/>
+            <Setter Property="Margin" Value="8"/>
+        </Style>
+        <Style Selector="SplitButton.Accented /template/ Button#PART_PrimaryButton /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Padding" Value="8"/>
+        </Style>
         <Style Selector="Border.VerticalShadow">
             <Setter Property="BoxShadow" Value="0 4 12 rgba(15, 15, 15, 0.75)"/>
         </Style>

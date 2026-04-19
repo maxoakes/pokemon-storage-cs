@@ -85,78 +85,78 @@ public partial class AboutPanel : UserControl
         }
 
         // Header
-        SetTextBlockText("HeaderTitle", pokemon.PokemonIdentity.SpeciesName);
-        SetTextBlockText("HeaderSubtitle", pokemon.Nickname);
-        SetTextBlockText("OriginalTrainer", $"{pokemon.OriginalTrainer.Name} ({pokemon.OriginalTrainer.PublicId}-{pokemon.OriginalTrainer.PublicId})");
+        tbHeaderTitle.Text = pokemon.PokemonIdentity.SpeciesName;
+        tbHeaderSubtitle.Text = pokemon.Nickname;
+        tbOriginalTrainer.Text = $"{pokemon.OriginalTrainer.Name} ({pokemon.OriginalTrainer.PublicId}-{pokemon.OriginalTrainer.PublicId})";
 
         // Overview Section
-        SetTextBlockText("PersonalityValue", pokemon.PersonalityValue.ToString());
-        SetTextBlockText("NatureValue", pokemon.Nature.Identifier);
-        SetTextBlockText("AbilityValue", pokemon.AbilityIdentifier);
-        SetTextBlockText("LevelValue", pokemon.Level.ToString());
-        SetTextBlockText("ExperienceValue", pokemon.ExperiencePoints.ToString());
-        SetTextBlockText("FriendshipValue", pokemon.Friendship.ToString());
-        SetTextBlockText("HeldItemValue", pokemon.HeldItemIdentifier ?? "None");
+        tbPersonalityValue.Text = pokemon.PersonalityValue.ToString();
+        tbNatureValue.Text =  pokemon.Nature.Identifier;
+        tbAbilityValue.Text =  pokemon.AbilityIdentifier;
+        tbLevelValue.Text =  pokemon.Level.ToString();
+        tbExperienceValue.Text =  pokemon.ExperiencePoints.ToString();
+        tbFriendshipValue.Text =  pokemon.Friendship.ToString();
+        tbHeldItemValue.Text =  pokemon.HeldItemIdentifier ?? "None";
         string pokerusString = 
             pokemon.PokerusStrain == 0 
             ? "No" 
             : $"Strain {pokemon.PokerusStrain} ({pokemon.PokerusDaysRemaining} days remain)";
-        SetTextBlockText("PokerusValue", pokerusString);
+        tbPokerusValue.Text =  pokerusString;
 
         // Origin Section
-        SetTextBlockText("OriginGameValue", pokemon.Origin.Game.GameName);
-        SetTextBlockText("OriginMetLevelValue", pokemon.Origin.MetLevel.ToString());
-        SetTextBlockText("OriginMetDateValue", pokemon.Origin.MetDateTime?.ToString("yyyy-MM-dd") ?? "");
-        SetTextBlockText("OriginMetLocationValue", pokemon.Origin.MetLocationIdentifier);
-        SetTextBlockText("OriginPokeballValue", pokemon.Origin.PokeballIdentifier);
-        SetTextBlockText("OriginEncounterTypeValue", pokemon.Origin.EncounterTypeIdentifier);
-        SetTextBlockText("OriginEggReceiveValue", pokemon.Origin.EggReceiveDate?.ToString("yyyy-MM-dd") ?? "");
-        SetTextBlockText("OriginEggHatchLocationValue", pokemon.Origin.EggHatchLocationIdentifier);
+        tbOriginGameValue.Text =  pokemon.Origin.Game.GameName;
+        tbOriginMetLevelValue.Text =  pokemon.Origin.MetLevel.ToString();
+        tbOriginMetDateValue.Text =  pokemon.Origin.MetDateTime?.ToString("yyyy-MM-dd") ?? "";
+        tbOriginMetLocationValue.Text =  pokemon.Origin.MetLocationIdentifier;
+        tbOriginPokeballValue.Text =  pokemon.Origin.PokeballIdentifier;
+        tbOriginEncounterTypeValue.Text =  pokemon.Origin.EncounterTypeIdentifier;
+        tbOriginEggReceiveValue.Text =  pokemon.Origin.EggReceiveDate?.ToString("yyyy-MM-dd") ?? "";
+        tbOriginEggHatchLocationValue.Text =  pokemon.Origin.EggHatchLocationIdentifier;
         
         // Stats Section - use Modern stats
-        SetTextBlockText("StatsSectionTitle", $"Stats {(pokemon.Stats.IsModernSystemByDefault ? "Modern" : "Old")}");
+        tbStatsSectionTitle.Text = $"Stats {(pokemon.Stats.IsModernSystemByDefault ? "Modern" : "Old")}";
         var statSet = pokemon.Stats.Modern;
         if (statSet != null)
         {
-            SetTextBlockText("HPCalcValue", statSet.HP?.Value.ToString() ?? "");
-            SetTextBlockText("HPIVValue", statSet.HP?.Iv.ToString() ?? "");
-            SetTextBlockText("HPEVValue", statSet.HP?.Ev.ToString() ?? "");
+            tbHPCalcValue.Text =  statSet.HP?.Value.ToString() ?? "";
+            tbHPIVValue.Text =  statSet.HP?.Iv.ToString() ?? "";
+            tbHPEVValue.Text =  statSet.HP?.Ev.ToString() ?? "";
 
-            SetTextBlockText("AttackCalcValue", statSet.Attack?.Value.ToString() ?? "");
-            SetTextBlockText("AttackIVValue", statSet.Attack?.Iv.ToString() ?? "");
-            SetTextBlockText("AttackEVValue", statSet.Attack?.Ev.ToString() ?? "");
+            tbAttackCalcValue.Text =  statSet.Attack?.Value.ToString() ?? "";
+            tbAttackIVValue.Text =  statSet.Attack?.Iv.ToString() ?? "";
+            tbAttackEVValue.Text =  statSet.Attack?.Ev.ToString() ?? "";
 
-            SetTextBlockText("DefenseCalcValue", statSet.Defense?.Value.ToString() ?? "");
-            SetTextBlockText("DefenseIVValue", statSet.Defense?.Iv.ToString() ?? "");
-            SetTextBlockText("DefenseEVValue", statSet.Defense?.Ev.ToString() ?? "");
+            tbDefenseCalcValue.Text =  statSet.Defense?.Value.ToString() ?? "";
+            tbDefenseIVValue.Text =  statSet.Defense?.Iv.ToString() ?? "";
+            tbDefenseEVValue.Text =  statSet.Defense?.Ev.ToString() ?? "";
 
-            SetTextBlockText("SpAtkCalcValue", statSet.SpecialAttack?.Value.ToString() ?? "");
-            SetTextBlockText("SpAtkIVValue", statSet.SpecialAttack?.Iv.ToString() ?? "");
-            SetTextBlockText("SpAtkEVValue", statSet.SpecialAttack?.Ev.ToString() ?? "");
+            tbSpAtkCalcValue.Text =  statSet.SpecialAttack?.Value.ToString() ?? "";
+            tbSpAtkIVValue.Text =  statSet.SpecialAttack?.Iv.ToString() ?? "";
+            tbSpAtkEVValue.Text =  statSet.SpecialAttack?.Ev.ToString() ?? "";
 
-            SetTextBlockText("SpDefCalcValue", statSet.SpecialDefense?.Value.ToString() ?? "");
-            SetTextBlockText("SpDefIVValue", statSet.SpecialDefense?.Iv.ToString() ?? "");
-            SetTextBlockText("SpDefEVValue", statSet.SpecialDefense?.Ev.ToString() ?? "");
+            tbSpDefCalcValue.Text =  statSet.SpecialDefense?.Value.ToString() ?? "";
+            tbSpDefIVValue.Text =  statSet.SpecialDefense?.Iv.ToString() ?? "";
+            tbSpDefEVValue.Text =  statSet.SpecialDefense?.Ev.ToString() ?? "";
 
-            SetTextBlockText("SpeedCalcValue", statSet.Speed?.Value.ToString() ?? "");
-            SetTextBlockText("SpeedIVValue", statSet.Speed?.Iv.ToString() ?? "");
-            SetTextBlockText("SpeedEVValue", statSet.Speed?.Ev.ToString() ?? "");
+            tbSpeedCalcValue.Text =  statSet.Speed?.Value.ToString() ?? "";
+            tbSpeedIVValue.Text =  statSet.Speed?.Iv.ToString() ?? "";
+            tbSpeedEVValue.Text =  statSet.Speed?.Ev.ToString() ?? "";
         }
 
         // Moves Section
         // Clear all move slots first
-        SetTextBlockText("Move1Name", "");
-        SetTextBlockText("Move1PP", "");
-        SetTextBlockText("Move1PowerUps", "");
-        SetTextBlockText("Move2Name", "");
-        SetTextBlockText("Move2PP", "");
-        SetTextBlockText("Move2PowerUps", "");
-        SetTextBlockText("Move3Name", "");
-        SetTextBlockText("Move3PP", "");
-        SetTextBlockText("Move3PowerUps", "");
-        SetTextBlockText("Move4Name", "");
-        SetTextBlockText("Move4PP", "");
-        SetTextBlockText("Move4PowerUps", "");
+        tbMove1Name.Text = "";
+        tbMove1PP.Text = "";
+        tbMove1PowerUps.Text = "";
+        tbMove2Name.Text = "";
+        tbMove2PP.Text = "";
+        tbMove2PowerUps.Text = "";
+        tbMove3Name.Text = "";
+        tbMove3PP.Text = "";
+        tbMove3PowerUps.Text = "";
+        tbMove4Name.Text = "";
+        tbMove4PP.Text = "";
+        tbMove4PowerUps.Text = "";
 
         // Populate moves
         int moveIndex = 1;
@@ -167,45 +167,40 @@ public partial class AboutPanel : UserControl
             switch (moveIndex)
             {
                 case 1:
-                    SetTextBlockText("Move1Name", move.Identifier);
-                    SetTextBlockText("Move1PP", move.Pp.ToString());
-                    SetTextBlockText("Move1PowerUps", move.TimesIncreased.ToString());
+                    tbMove1Name.Text = move.Identifier;
+                    tbMove1PP.Text = move.Pp.ToString();
+                    tbMove1PowerUps.Text = move.TimesIncreased.ToString();
                     break;
                 case 2:
-                    SetTextBlockText("Move2Name", move.Identifier);
-                    SetTextBlockText("Move2PP", move.Pp.ToString());
-                    SetTextBlockText("Move2PowerUps", move.TimesIncreased.ToString());
+                    tbMove2Name.Text = move.Identifier;
+                    tbMove2PP.Text = move.Pp.ToString();
+                    tbMove2PowerUps.Text = move.TimesIncreased.ToString();
                     break;
                 case 3:
-                    SetTextBlockText("Move3Name", move.Identifier);
-                    SetTextBlockText("Move3PP", move.Pp.ToString());
-                    SetTextBlockText("Move3PowerUps", move.TimesIncreased.ToString());
+                    tbMove3Name.Text = move.Identifier;
+                    tbMove3PP.Text = move.Pp.ToString();
+                    tbMove3PowerUps.Text = move.TimesIncreased.ToString();
                     break;
                 case 4:
-                    SetTextBlockText("Move4Name", move.Identifier);
-                    SetTextBlockText("Move4PP", move.Pp.ToString());
-                    SetTextBlockText("Move4PowerUps", move.TimesIncreased.ToString());
+                    tbMove4Name.Text = move.Identifier;
+                    tbMove4PP.Text = move.Pp.ToString();
+                    tbMove4PowerUps.Text = move.TimesIncreased.ToString();
                     break;
             }
             moveIndex++;
         }
 
         // Additional Info Section
-        SetTextBlockText("MarkingsValue", pokemon.Coolness.ToString());
-        SetTextBlockText("ShinyLeavesValue", pokemon.Coolness.ToString());
-        SetTextBlockText("Gen3MiscValue", pokemon.Coolness.ToString());
-        SetTextBlockText("WalkingMoodValue", pokemon.Coolness.ToString());
-        SetTextBlockText("CoolnessValue", pokemon.Coolness.ToString());
-        SetTextBlockText("BeautyValue", pokemon.Beauty.ToString());
-        SetTextBlockText("CutenessValue", pokemon.Cuteness.ToString());
-        SetTextBlockText("SmartinessValue", pokemon.Smartness.ToString());
-        SetTextBlockText("ToughnessValue", pokemon.Toughness.ToString());
-        SetTextBlockText("SheenValue", pokemon.Sheen.ToString());
-    }
-
-    private void SetTextBlockText(string componentName, string content)
-    {
-        this.FindControl<TextBlock>(componentName)?.Text = content;
+        tbMarkingsValue.Text =  pokemon.Coolness.ToString();
+        tbShinyLeavesValue.Text =  pokemon.Coolness.ToString();
+        tbGen3MiscValue.Text =  pokemon.Coolness.ToString();
+        tbWalkingMoodValue.Text =  pokemon.Coolness.ToString();
+        tbCoolnessValue.Text =  pokemon.Coolness.ToString();
+        tbBeautyValue.Text =  pokemon.Beauty.ToString();
+        tbCutenessValue.Text =  pokemon.Cuteness.ToString();
+        tbSmartinessValue.Text =  pokemon.Smartness.ToString();
+        tbToughnessValue.Text =  pokemon.Toughness.ToString();
+        tbSheenValue.Text =  pokemon.Sheen.ToString();
     }
 
     private Border NewBadge(string name, string content, string className)

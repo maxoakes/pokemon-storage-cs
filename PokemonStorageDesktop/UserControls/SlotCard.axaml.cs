@@ -16,9 +16,7 @@ namespace PokemonStorageDesktop.UserControls;
 public partial class SlotCard : UserControl
 {
     public PartyPokemon Pokemon { get; private set; }
-    public CheckBox? TransferCheckBox => this.FindControl<CheckBox>("TransferCheckbox");
-    public Image? SpriteImage => this.FindControl<Image>("PokemonSprite");
-    public bool IsChecked => TransferCheckBox?.IsChecked ?? false;
+    public bool IsChecked => cbTransfer?.IsChecked ?? false;
 
     public SlotCard()
     {
@@ -28,23 +26,18 @@ public partial class SlotCard : UserControl
     public void UpdateCard(PartyPokemon pokemon)
     {
         Pokemon = pokemon;
-        SetTextBlockText("NicknameValue", Pokemon.Nickname);
-        SetTextBlockText("OriginalTrainerValue", $"O/T: {Pokemon.OriginalTrainer.Name}");
-        SetTextBlockText("LevelGenderValue", $"Lv. {Pokemon.Level} ({Pokemon.Gender})");
-        SetTextBlockText("NatureValue", Pokemon.Nature.Identifier);
-    }
-
-    private void SetTextBlockText(string componentName, string content)
-    {
-        this.FindControl<TextBlock>(componentName)?.Text = content;
+        tbNickname.Text = Pokemon.Nickname;
+        tbOriginalTrainer.Text = $"O/T: {Pokemon.OriginalTrainer.Name}";
+        tbInformation1.Text = $"Lv. {Pokemon.Level} ({Pokemon.Gender})";
+        tbInformation2.Text = Pokemon.Nature.Identifier;
     }
 
     protected override async void OnLoaded(RoutedEventArgs e)
     {
         if (Design.IsDesignMode) return;
 
-        RenderOptions.SetBitmapInterpolationMode(SpriteImage, BitmapInterpolationMode.None);
-        SpriteImage.Source = await GetImageFromUrl(BuildSpriteUrl());
+        RenderOptions.SetBitmapInterpolationMode(imageSprite, BitmapInterpolationMode.None);
+        imageSprite.Source = await GetImageFromUrl(BuildSpriteUrl());
     }
 
     public string BuildSpriteUrl()

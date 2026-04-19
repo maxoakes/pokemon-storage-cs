@@ -5,36 +5,21 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         x:Class="PokemonStorageDesktop.Views.MainWindow"
-        x:DataType="vm:MainWindowViewModel"
         Icon="/Assets/avalonia-logo.ico"
         Title="PokemonStorageDesktop"
-        Width="1600" 
-        Height="900">
+        Width="800" 
+        Height="600">
     <Window.Styles>
-        <!-- Export Panel and Button -->
-        <Style Selector="WrapPanel.ExportPanel">
-            <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="HorizontalAlignment" Value="Stretch"/>
-            <Setter Property="VerticalAlignment" Value="Bottom"/>
-        </Style>
-        <Style Selector="SplitButton.ExportButton">
-            <Setter Property="Background" Value="{StaticResource LightAccentColor}"/>
-            <Setter Property="HorizontalAlignment" Value="Right"/>
-            <Setter Property="Margin" Value="8"/>
-        </Style>
-        <Style Selector="SplitButton.ExportButton /template/ Button#PART_PrimaryButton /template/ ContentPresenter#PART_ContentPresenter">
-            <Setter Property="Padding" Value="8"/>
-        </Style>
         <!-- Tabs -->
         <Style Selector="TabControl.PrimaryTabControl > TabItem">
             <Setter Property="Padding" Value="8"/>
+            <Setter Property="Width" Value="200"/>
         </Style>
         <Style Selector="TabControl.PrimaryTabControl > TabItem TextBlock">
             <Setter Property="Foreground" Value="{StaticResource PrimaryDarkTextColor}"/>
             <Setter Property="VerticalAlignment" Value="Center"/>
             <Setter Property="FontSize" Value="16"/>
         </Style>
-
         <Style Selector="TabControl.PrimaryTabControl > TabItem:selected">
             <Setter Property="Background" Value="{StaticResource PrimaryDarkBackgroundColor}"/>
         </Style>
@@ -48,6 +33,7 @@
             <Setter Property="Width" Value="32"/>
             <Setter Property="Height" Value="32"/>
         </Style>
+
         <!-- Tab Content -->
         <Style Selector="TabControl.PrimaryTabControl">
             <Setter Property="Background" Value="{StaticResource WhiteBackgroundColor}"/>
@@ -58,79 +44,41 @@
             <Setter Property="Padding" Value="0"/>
         </Style>
     </Window.Styles>
-    <Design.DataContext>
-        <vm:MainWindowViewModel/>
-    </Design.DataContext>
-    <DockPanel LastChildFill="True">
-        <Border DockPanel.Dock="Right">
-            <local:AboutPanel Name="AboutPanel" />
-        </Border>
-        <TabControl Classes="PrimaryTabControl" TabStripPlacement="Left">
-            <TabItem>
-                <TabItem.Header>
-                    <StackPanel Orientation="Horizontal" Spacing="8">
-                        <Image Classes="Tab" Source="/Assets/file-solid.png" RenderOptions.BitmapInterpolationMode="MediumQuality"/>
-                        <TextBlock Text="New File"/>
-                    </StackPanel>
-                </TabItem.Header>
-                <Grid>
-                    <ScrollViewer Name="FileGridParent" />
-                    <WrapPanel Classes="ExportPanel">
-                        <SplitButton 
-                            Classes="ExportButton"
-                            Content="Export to Database" 
-                            Name="ExportToDatabaseButton"
-                            Click="ExportSelected_Click">
-                            <SplitButton.Flyout>
-                                <MenuFlyout Placement="RightEdgeAlignedTop">
-                                    <MenuItem 
-                                        Name="ExportToJsonButton"
-                                        Header="Export to JSON"
-                                        Click="ExportSelected_Click"/>
-                                    <MenuItem 
-                                        Name="ExportToPokemonShowdownButton"
-                                        Header="Export to PokemonShowdown"
-                                        Click="ExportSelected_Click"/>
-                                </MenuFlyout>
-                            </SplitButton.Flyout>
-                        </SplitButton>
-                    </WrapPanel>
-                </Grid>
-            </TabItem>
-            <TabItem>
-                <TabItem.Header>
-                    <StackPanel Orientation="Horizontal" Spacing="8">
-                        <Image Classes="Tab" Source="/Assets/database-solid.png" RenderOptions.BitmapInterpolationMode="MediumQuality"/>
-                        <TextBlock Text="Database"/>
-                    </StackPanel>
-                </TabItem.Header>
-                <Grid>
-                    <ScrollViewer Classes="MainBackground" Name="DatabaseGridParent">
-                        <WrapPanel Name="Database">
-                        </WrapPanel>
-                    </ScrollViewer>
-                    <WrapPanel Classes="ExportPanel">
-                        <SplitButton 
-                            Classes="ExportButton"
-                            Content="Import from Database to Save File" 
-                            Name="ImportFromDatabaseButton"
-                            Click="ImportSelected_Click">
-                            <SplitButton.Flyout>
-                                <MenuFlyout Placement="RightEdgeAlignedTop">
-                                    <MenuItem 
-                                        Name="DatabaseExportToJsonButton"
-                                        Header="Export to JSON"
-                                        Click="ImportSelected_Click"/>
-                                    <MenuItem 
-                                        Name="DatabaseExportToPokemonShowdownButton"
-                                        Header="Export to PokemonShowdown"
-                                        Click="ImportSelected_Click"/>
-                                </MenuFlyout>
-                            </SplitButton.Flyout>
-                        </SplitButton>
-                    </WrapPanel>
-                </Grid>
-            </TabItem>
-        </TabControl>
-    </DockPanel>
+    <Grid>
+        <DockPanel LastChildFill="True">
+            <Border DockPanel.Dock="Right">
+                <local:AboutPanel x:Name="AboutPanel" Name="AboutPanel" />
+            </Border>
+            <TabControl x:Name="tabControl" Classes="PrimaryTabControl" TabStripPlacement="Left">
+            </TabControl>
+        </DockPanel>
+        <WrapPanel Classes="BottomTransparentPanel">
+            <SplitButton 
+                x:Name="btnOpen"
+                Classes="Accented"
+                Name="OpenSaveFileDefault"
+                Content="Open Save File" 
+                Click="OpenSource_Click">
+                <SplitButton.Flyout>
+                    <MenuFlyout Placement="RightEdgeAlignedTop">
+                        <MenuItem 
+                            x:Name="itemOpenSaveFile"
+                            Name="OpenSaveFile"
+                            Header="Open Save File"
+                            Click="OpenSource_Click"/>
+                        <MenuItem 
+                            x:Name="itemOpenDatabase"
+                            Name="OpenDatabase"
+                            Header="Open Database"
+                            Click="OpenSource_Click"/>
+                        <MenuItem 
+                            x:Name="itemDeleteSelectedSource"
+                            Name="DeleteSelectedSource"
+                            Header="Remove Selected Tab"
+                            Click="OpenSource_Click"/>
+                    </MenuFlyout>
+                </SplitButton.Flyout>
+            </SplitButton>
+        </WrapPanel>
+    </Grid>
 </Window>

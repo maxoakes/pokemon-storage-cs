@@ -71,22 +71,22 @@
         <Border Classes="CardBorder PanelShadow" Name="CardBorder">
             <DockPanel>
                 <Border Classes="Footer" DockPanel.Dock="Bottom">
-                    <CheckBox Name="TransferCheckbox" Classes="Transfer"/>
+                    <CheckBox x:Name="cbTransfer" Name="TransferCheckbox" Classes="Transfer"/>
                 </Border>
 
                 <StackPanel DockPanel.Dock="Top">
                     <Border Classes="SpriteFrame">
-                        <Image Name="PokemonSprite" Classes="Sprite"/>
+                        <Image x:Name="imageSprite" Name="PokemonSprite" Classes="Sprite"/>
                     </Border>
                     <Border Classes="HeaderTitle">
-                        <TextBlock Name="NicknameValue" Classes="Nickname" Text="Nickname"/>
+                        <TextBlock x:Name="tbNickname" Name="NicknameValue" Classes="Nickname" Text="Nickname"/>
                     </Border>
                 </StackPanel>
 
                 <StackPanel Classes="InfoPanel">
-                    <TextBlock Name="OriginalTrainerValue" Classes="Info" Text="O/T: Ash"/>
-                    <TextBlock Name="LevelGenderValue" Classes="Info" Text="Lv. 56 (M)"/>
-                    <TextBlock Name="NatureValue" Classes="Info" Text="Impish"/>
+                    <TextBlock x:Name="tbOriginalTrainer" Name="OriginalTrainerValue" Classes="Info" Text="O/T: Ash"/>
+                    <TextBlock x:Name="tbInformation1" Name="LevelGenderValue" Classes="Info" Text="Lv. 56 (M)"/>
+                    <TextBlock x:Name="tbInformation2" Name="NatureValue" Classes="Info" Text="Impish"/>
                 </StackPanel>
             </DockPanel>
         </Border>

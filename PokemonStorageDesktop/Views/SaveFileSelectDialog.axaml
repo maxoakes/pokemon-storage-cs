@@ -1,0 +1,76 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="500" d:DesignHeight="200"
+        SizeToContent="WidthAndHeight"
+        x:Class="PokemonStorageDesktop.Views.SaveFileSelectDialog"
+        Title="SaveFileSelectDialog">
+    <Window.Styles>
+        <Style Selector="Grid#GridStructure">
+            <Setter Property="Background" Value="{StaticResource PrimaryLightTextColor}"/>
+        </Style>
+        <Style Selector="Grid > TextBlock">
+            <Setter Property="Margin" Value="4"/>
+            <Setter Property="Padding" Value="4"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Foreground" Value="{StaticResource PrimaryDarkTextColor}"/>
+        </Style>
+        <Style Selector="TextBlock.Header">
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="FontSize" Value="14"/>
+        </Style>
+        <Style Selector="TextBox.Label">
+            <Setter Property="Width" Value="250"/>
+        </Style>
+        <Style Selector="TextBox.InteractControl">
+            <Setter Property="Margin" Value="2"/>
+            <Setter Property="Padding" Value="6"/>
+            <Setter Property="Width" Value="250"/>
+            <Setter Property="Height" Value="{StaticResource InteractionControlHeight}"/>
+        </Style>
+        <Style Selector="ComboBox.InteractControl">
+            <Setter Property="Margin" Value="2"/>
+            <Setter Property="Padding" Value="4"/>
+            <Setter Property="Width" Value="175"/>
+            <Setter Property="Height" Value="{StaticResource InteractionControlHeight}"/>
+            <Setter Property="MaxDropDownHeight" Value="300"/>
+        </Style>
+        <Style Selector="Button.Button">
+            <Setter Property="Margin" Value="2"/>
+            <Setter Property="Padding" Value="2"/>
+            <Setter Property="Width" Value="120"/>
+            <Setter Property="Background" Value="{StaticResource LightAccentColor}"/>
+            <Setter Property="HorizontalAlignment" Value="Left"/>
+            <Setter Property="VerticalAlignment" Value="Stretch"/>
+        </Style>
+        <Style Selector="Button.Button > ContentPresenter">
+            <Setter Property="Margin" Value="0,1"/>
+            <Setter Property="Padding" Value="16,6"/>
+            <Setter Property="VerticalAlignment" Value="Stretch"/>
+            <Setter Property="HorizontalAlignment" Value="Left"/>
+        </Style>
+
+    </Window.Styles>
+
+    <Grid x:Name="gridStructure" Name="GridStructure" ColumnDefinitions="Auto,Auto,Auto" RowDefinitions="Auto,Auto,Auto,Auto,Auto">
+        <TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3"
+            x:Name="lblHeader" Name="Header" Text="Find the .sav file you would like to open." />
+        <TextBlock Grid.Row="1" Grid.Column="0" 
+            x:Name="lblSaveFilePath" Classes="Label" Text="Save File:" />
+        <TextBox Grid.Row="1" Grid.Column="1" 
+            x:Name="tbFilepath" Classes="InteractControl" Watermark="Path to .sav file"/>
+        <Button Grid.Row="1" Grid.Column="2"
+            x:Name="btnBrowse" Classes="Button" Content="Browse..." Click="BrowseSaveFile_Click" />
+        <TextBlock Grid.Row="2" Grid.Column="0"
+            x:Name="lblVersion" Classes="Label" Text="Version:" />
+        <ComboBox Grid.Row="2" Grid.Column="1"
+            x:Name="ddVersion" Classes="InteractControl" SelectedIndex="0"/>
+        <TextBlock Grid.Row="3" Grid.Column="0"
+            x:Name="lblLanguage" Classes="Label" Text="Language:" />
+        <ComboBox Grid.Row="3" Grid.Column="1"
+            x:Name="ddLanguage" Classes="InteractControl" SelectedIndex="0"/>
+        <Button Grid.Row="4" Grid.Column="1"
+            x:Name="btnOpenFile" Classes="Button" Content="Open" Click="OpenFile_Click" />
+    </Grid>
+</Window>

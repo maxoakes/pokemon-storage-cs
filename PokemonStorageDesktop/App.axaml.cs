@@ -1,12 +1,10 @@
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
-using Avalonia.Data.Core;
 using Avalonia.Data.Core.Plugins;
 using System.Linq;
 using Avalonia.Markup.Xaml;
 using PokemonStorageDesktop.Views;
 using PokemonStorageDesktop.ViewModels;
-using Avalonia.Controls;
 
 namespace PokemonStorageDesktop;
 
