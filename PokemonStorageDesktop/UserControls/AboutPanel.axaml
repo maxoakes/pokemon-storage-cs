@@ -51,7 +51,7 @@
             <Setter Property="Background" Value="{StaticResource LightBackgroundColor}"/>
             <Setter Property="Margin" Value="8, 4"/>
             <Setter Property="Padding" Value="8"/>
-            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="CornerRadius" Value="{StaticResource StandardCornerRadius}"/>
         </Style>
 
         <Style Selector="TextBlock.SectionTitle">
@@ -100,7 +100,7 @@
         <Style Selector="Border.Badge">
             <Setter Property="Margin" Value="2"/>
             <Setter Property="Padding" Value="8,4"/>
-            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="CornerRadius" Value="{StaticResource TinyCornerRadius}"/>
             <Setter Property="Background" Value="{StaticResource UNSET_COLOR}"/>
         </Style>
         <Style Selector="Border.Badge > TextBlock">

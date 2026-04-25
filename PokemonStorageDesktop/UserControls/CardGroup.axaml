@@ -11,19 +11,20 @@
             <Setter Property="Width" Value="145"/>
             <Setter Property="Height" Value="215"/>
             <Setter Property="Background" Value="{StaticResource LightBackgroundColor}"/>
-            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="CornerRadius" Value="{StaticResource StandardCornerRadius}"/>
             <Setter Property="Cursor" Value="Hand"/>
       </Style>
       <Style Selector="Border.Banner">
-            <Setter Property="Margin" Value="4"/>
-            <Setter Property="Padding" Value="8"/>
-            <Setter Property="Height" Value="30"/>
-            <Setter Property="Background" Value="{StaticResource LightBackgroundColor}"/>
-            <Setter Property="CornerRadius" Value="1"/>
+            <Setter Property="Margin" Value="8"/>
+            <Setter Property="Padding" Value="16,0"/>
+            <Setter Property="Height" Value="40"/>
+            <Setter Property="Background" Value="{StaticResource MediumBackgroundColor}"/>
+            <Setter Property="CornerRadius" Value="{StaticResource StandardCornerRadius}"/>
       </Style>
       <Style Selector="TextBlock.BannerTitle">
             <Setter Property="Foreground" Value="{StaticResource PrimaryDarkTextColor}"/>
             <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="FontSize" Value="{StaticResource PrimaryTextSize}"/>
       </Style>
   </UserControl.Styles>
   <StackPanel>

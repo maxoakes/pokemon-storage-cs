@@ -7,24 +7,26 @@
         x:Class="PokemonStorageDesktop.Views.MainWindow"
         Icon="/Assets/avalonia-logo.ico"
         Title="Pokemon Storage"
-        Width="800" 
+        Width="600" 
         Height="600">
     <Window.Styles>
         <!-- Tabs -->
-        <Style Selector="TabControl.PrimaryTabControl > TabItem">
+        <Style Selector="TabControl.PrimaryTabControl > TabItem > Border">
+            <Setter Property="Margin" Value="8"/>
             <Setter Property="Padding" Value="8"/>
-            <Setter Property="Width" Value="200"/>
+            <Setter Property="Width" Value="220"/>
+            <Setter Property="Height" Value="40"/>
+            <Setter Property="CornerRadius" Value="{StaticResource StandardCornerRadius}"/>
+            <Setter Property="Background" Value="{StaticResource MediumBackgroundColor}"/>
+        </Style>
+        <Style Selector="TabControl.PrimaryTabControl > TabItem > Border > Panel">
+            <Setter Property="Margin" Value="10,4"/>
+            <Setter Property="Height" Value="20"/>
         </Style>
         <Style Selector="TabControl.PrimaryTabControl > TabItem TextBlock">
             <Setter Property="Foreground" Value="{StaticResource PrimaryDarkTextColor}"/>
             <Setter Property="VerticalAlignment" Value="Center"/>
             <Setter Property="FontSize" Value="{StaticResource PrimaryTextSize}"/>
-        </Style>
-        <Style Selector="TabControl.PrimaryTabControl > TabItem > StackPanel">
-            <Setter Property="Spacing" Value="8"/>
-        </Style>
-        <Style Selector="TabControl.PrimaryTabControl > TabItem:selected">
-            <Setter Property="Background" Value="{StaticResource PrimaryDarkBackgroundColor}"/>
         </Style>
         <Style Selector="TabControl.PrimaryTabControl > TabItem:pointerover /template/ Border#PART_LayoutRoot">
             <Setter Property="Background" Value="{StaticResource LightAccentColor}"/>
@@ -36,10 +38,10 @@
             <Setter Property="Width" Value="32"/>
             <Setter Property="Height" Value="32"/>
         </Style>
-
+        
         <!-- Tab Content -->
         <Style Selector="TabControl.PrimaryTabControl">
-            <Setter Property="Background" Value="{StaticResource WhiteBackgroundColor}"/>
+            <Setter Property="Background" Value="{StaticResource LightBackgroundColor}"/>
         </Style>
         <Style Selector="TabControl.PrimaryTabControl /template/ ContentPresenter#PART_SelectedContentHost">
             <Setter Property="Background" Value="{StaticResource LightBackgroundColor}"/>

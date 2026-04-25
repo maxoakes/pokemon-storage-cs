@@ -276,6 +276,16 @@ public partial class PartyPokemon
 
     #region Print
 
+    public string GetGenderCharacter()
+    {
+        return Gender switch
+        {
+            Gender.MALE => "♂",
+            Gender.FEMALE => "♀",
+            _ => "",
+        };
+    }
+
     public string GetSummaryString()
     {
         return $"{PokemonIdentity.SpeciesName}: Lv.{Level} ({Gender}) ({Nickname}) Nature: {Nature.Identifier}, Item: {HeldItemIdentifier}";

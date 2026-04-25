@@ -28,7 +28,7 @@ public partial class SlotCard : UserControl
         Pokemon = pokemon;
         tbNickname.Text = Pokemon.Nickname;
         tbOriginalTrainer.Text = $"O/T: {Pokemon.OriginalTrainer.Name}";
-        tbInformation1.Text = $"Lv. {Pokemon.Level} ({Pokemon.Gender})";
+        tbInformation1.Text = $"Lv. {Pokemon.Level} {Pokemon.GetGenderCharacter()}";
         tbInformation2.Text = Pokemon.Nature.Identifier;
     }
 
