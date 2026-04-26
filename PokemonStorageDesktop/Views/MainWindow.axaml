@@ -43,10 +43,21 @@
         <Style Selector="TabControl.PrimaryTabControl">
             <Setter Property="Background" Value="{StaticResource LightBackgroundColor}"/>
         </Style>
+        <Style Selector="ScrollViewer /template/ ScrollContentPresenter#PART_ContentPresenter">
+            <Setter Property="BoxShadow" Value="inset 0 0 16 4 rgba(15, 15, 15, .5)"/>
+        </Style>
         <Style Selector="TabControl.PrimaryTabControl /template/ ContentPresenter#PART_SelectedContentHost">
-            <Setter Property="Background" Value="{StaticResource LightBackgroundColor}"/>
+            <Setter Property="Background">
+                <ImageBrush 
+                    Source="/Assets/forest-tile.png" 
+                    TileMode="Tile" 
+                    Stretch="None" 
+                    DestinationRect="0 0 128 128"/>
+            </Setter>
             <Setter Property="Margin" Value="0"/>
             <Setter Property="Padding" Value="0"/>
+            <Setter Property="BorderThickness" Value="2 0 2 0"/>
+            <Setter Property="BorderBrush" Value="{StaticResource LightAccentColorAlternate}"/>
         </Style>
 
         <!-- Bottom Panel -->

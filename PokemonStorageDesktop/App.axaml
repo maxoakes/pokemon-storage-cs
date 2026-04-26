@@ -2,7 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="PokemonStorageDesktop.App"
              xmlns:local="using:PokemonStorageDesktop"
-             RequestedThemeVariant="Dark">
+             RequestedThemeVariant="Light">
              <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
 
     <Application.DataTemplates>
@@ -16,22 +16,18 @@
         <SolidColorBrush x:Key="SecondaryDarkTextColor">#222</SolidColorBrush>
         <SolidColorBrush x:Key="PrimaryLightTextColor">White</SolidColorBrush>
         <SolidColorBrush x:Key="SecondaryLightTextColor">LightGray</SolidColorBrush>
-        <SolidColorBrush x:Key="DarkAccentColor">#6366F1</SolidColorBrush>
-        <SolidColorBrush x:Key="DarkAccentColorAlternate">#424192</SolidColorBrush>
-        <SolidColorBrush x:Key="LightAccentColor">#6366F1</SolidColorBrush>
-        <SolidColorBrush x:Key="LightAccentColorAlternate">#424192</SolidColorBrush>
-        <SolidColorBrush x:Key="PrimaryDarkBackgroundColor">DarkGray</SolidColorBrush>
-        <SolidColorBrush x:Key="SecondaryDarkBackgroundColor">Black</SolidColorBrush>
-        <SolidColorBrush x:Key="WhiteBackgroundColor">White</SolidColorBrush>
-        <SolidColorBrush x:Key="LightBackgroundColor">#D8DDE9</SolidColorBrush>
-        <SolidColorBrush x:Key="MediumBackgroundColor">#9FA5B3</SolidColorBrush>
+        <SolidColorBrush x:Key="LightAccentColor">#87986a</SolidColorBrush>
+        <SolidColorBrush x:Key="LightAccentColorAlternate">#718355</SolidColorBrush>
+        <SolidColorBrush x:Key="WhiteBackgroundColor">#e9f5db</SolidColorBrush>
+        <SolidColorBrush x:Key="LightBackgroundColor">#cfe1b9</SolidColorBrush>
+        <SolidColorBrush x:Key="MediumBackgroundColor">#97a97c</SolidColorBrush>
         <x:String x:Key="AboutPanelBoxShadow">0 4 12 #200000</x:String>
         <SolidColorBrush x:Key="UNSET_COLOR">Magenta</SolidColorBrush>
         <x:Double x:Key="InteractionControlHeight">30</x:Double>
-        <CornerRadius x:Key="StandardCornerRadius">16</CornerRadius>
-        <CornerRadius x:Key="SmallCornerRadius">8</CornerRadius>
-        <CornerRadius x:Key="TinyCornerRadius">4</CornerRadius>
-        <CornerRadius x:Key="CardImageCornerRadius">16 16 0 0</CornerRadius>
+        <CornerRadius x:Key="StandardCornerRadius">8</CornerRadius>
+        <CornerRadius x:Key="SmallCornerRadius">4</CornerRadius>
+        <CornerRadius x:Key="TinyCornerRadius">2</CornerRadius>
+        <CornerRadius x:Key="CardImageCornerRadius">8 8 0 0</CornerRadius>
         <x:Double x:Key="HeaderTextSize">22</x:Double>
         <x:Double x:Key="SubheaderTextSize">18</x:Double>
         <x:Double x:Key="PrimaryTextSize">14</x:Double>
@@ -46,10 +42,15 @@
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="VerticalAlignment" Value="Bottom"/>
         </Style>
-        <Style Selector="SplitButton.Accented">
+        <Style Selector="SplitButton.Accented, Button.Accented">
             <Setter Property="Background" Value="{StaticResource LightAccentColor}"/>
+        </Style>
+        <Style Selector="SplitButton.Accented">
             <Setter Property="HorizontalAlignment" Value="Right"/>
             <Setter Property="Margin" Value="8"/>
+        </Style>
+        <Style Selector="SplitButton.Accented:pointerover, SplitButton.Accented:pressed, Button.Accented:pointerover, Button.Accented:pressed">
+            <Setter Property="Background" Value="{StaticResource LightAccentColorAlternate}"/>
         </Style>
         <Style Selector="SplitButton.Accented /template/ Button#PART_PrimaryButton /template/ ContentPresenter#PART_ContentPresenter">
             <Setter Property="Padding" Value="8"/>

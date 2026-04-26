@@ -28,8 +28,7 @@ public partial class SlotCard : UserControl
         Pokemon = pokemon;
         tbNickname.Text = Pokemon.Nickname;
         tbOriginalTrainer.Text = $"O/T: {Pokemon.OriginalTrainer.Name}";
-        tbInformation1.Text = $"Lv. {Pokemon.Level} {Pokemon.GetGenderCharacter()}";
-        tbInformation2.Text = Pokemon.Nature.Identifier;
+        tbInformation1.Text = $"Lv. {Pokemon.Level} {Pokemon.GetGenderCharacter()}\n{Pokemon.Nature.Identifier}";
     }
 
     protected override async void OnLoaded(RoutedEventArgs e)

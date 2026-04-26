@@ -9,6 +9,9 @@
         <Style Selector="WrapPanel#TransferWrapPanel">
             <Setter Property="HorizontalAlignment" Value="Right"/>
         </Style>
+        <Style Selector="ScrollViewer">
+            <Setter Property="Padding" Value="8"/>
+        </Style>
     </UserControl.Styles>
     <Grid x:Name="gridContainer">
         <ScrollViewer>

@@ -90,7 +90,6 @@
                 <StackPanel Classes="InfoPanel">
                     <TextBlock x:Name="tbOriginalTrainer" Name="OriginalTrainerValue" Classes="Info" Text="O/T: Ash"/>
                     <TextBlock x:Name="tbInformation1" Name="LevelGenderValue" Classes="Info" Text="Lv. 56 (M)"/>
-                    <TextBlock x:Name="tbInformation2" Name="NatureValue" Classes="Info" Text="Impish"/>
                 </StackPanel>
             </DockPanel>
         </Border>

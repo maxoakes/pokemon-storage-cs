@@ -11,7 +11,7 @@
             <Setter Property="Padding" Value="2"/>
         </Style>
         <Style Selector="Border.AboutCard">
-            <Setter Property="Background" Value="{StaticResource WhiteBackgroundColor}"/>
+            <Setter Property="Background" Value="{StaticResource LightBackgroundColor}"/>
             <Setter Property="Width" Value="300"/>
             <Setter Property="HorizontalAlignment" Value="Center"/>
         </Style>
@@ -48,7 +48,7 @@
 
         <!-- Sections -->
         <Style Selector="Border.Section">
-            <Setter Property="Background" Value="{StaticResource LightBackgroundColor}"/>
+            <Setter Property="Background" Value="{StaticResource MediumBackgroundColor}"/>
             <Setter Property="Margin" Value="8, 4"/>
             <Setter Property="Padding" Value="8"/>
             <Setter Property="CornerRadius" Value="{StaticResource StandardCornerRadius}"/>
