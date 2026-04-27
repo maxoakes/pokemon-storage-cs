@@ -1,5 +1,6 @@
 ﻿using System.Data;
 using Microsoft.Data.Sqlite;
+using System.Linq;
 
 namespace PokemonStorageLibrary;
 
@@ -144,6 +145,12 @@ public static class DbInterface
         }
         
         return dataTable;
+    }
+
+    public static DataRow RetrieveSingleRow(string query, string connectionString, List<SqliteParameter>? parameters = null, bool isStoredProcedure = false)
+    {
+        DataTable dataTable = RetrieveTable(query, connectionString, parameters, isStoredProcedure);
+        return dataTable.AsEnumerable().First();
     }
 
     /// <summary>

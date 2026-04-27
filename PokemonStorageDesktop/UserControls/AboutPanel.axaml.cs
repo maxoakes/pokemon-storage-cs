@@ -91,12 +91,12 @@ public partial class AboutPanel : UserControl
 
         // Overview Section
         tbPersonalityValue.Text = pokemon.PersonalityValue.ToString();
-        tbNatureValue.Text = pokemon.Nature.Identifier;
-        tbAbilityValue.Text = pokemon.AbilityIdentifier;
+        tbNatureValue.Text = Lookup.GetDatabaseIdentityById(pokemon.Nature.Id, DatabaseObject.Natures).Name;
+        tbAbilityValue.Text = pokemon.AbilityIdentity.Name;
         tbLevelValue.Text = pokemon.Level.ToString();
         tbExperienceValue.Text = pokemon.ExperiencePoints.ToString();
         tbFriendshipValue.Text = pokemon.Friendship.ToString();
-        tbHeldItemValue.Text = pokemon.HeldItemIdentifier ?? "None";
+        tbHeldItemValue.Text = pokemon.HeldItemIdentity.Name ?? "None";
         string pokerusString =
             pokemon.PokerusStrain == 0 
             ? "No" 
@@ -107,11 +107,11 @@ public partial class AboutPanel : UserControl
         tbOriginGameValue.Text = pokemon.Origin.Game.GameName;
         tbOriginMetLevelValue.Text = pokemon.Origin.MetLevel.ToString();
         tbOriginMetDateValue.Text = pokemon.Origin.MetDateTime?.ToString("yyyy-MM-dd") ?? "";
-        tbOriginMetLocationValue.Text = pokemon.Origin.MetLocationIdentifier;
-        tbOriginPokeballValue.Text = pokemon.Origin.PokeballIdentifier;
-        tbOriginEncounterTypeValue.Text = pokemon.Origin.EncounterTypeIdentifier;
+        tbOriginMetLocationValue.Text = pokemon.Origin.MetLocationIdentity.Name;
+        tbOriginPokeballValue.Text = pokemon.Origin.CatchBallIdentity.Name;
+        tbOriginEncounterTypeValue.Text = pokemon.Origin.EncounterMethodIdentity.Name;
         tbOriginEggReceiveValue.Text = pokemon.Origin.EggReceiveDate?.ToString("yyyy-MM-dd") ?? "";
-        tbOriginEggHatchLocationValue.Text = pokemon.Origin.EggHatchLocationIdentifier;
+        tbOriginEggHatchLocationValue.Text = pokemon.Origin.EggHatchLocationIdentity.Name;
         
         // Stats Section - use Modern stats
         tbStatsSectionTitle.Text = $"Stats {(pokemon.Stats.IsModernSystemByDefault ? "Modern" : "Old")}";
@@ -167,22 +167,22 @@ public partial class AboutPanel : UserControl
             switch (moveIndex)
             {
                 case 1:
-                    tbMove1Name.Text = move.Identifier;
+                    tbMove1Name.Text = move.Identity.Name;
                     tbMove1PP.Text = move.Pp.ToString();
                     tbMove1PowerUps.Text = move.TimesIncreased.ToString();
                     break;
                 case 2:
-                    tbMove2Name.Text = move.Identifier;
+                    tbMove2Name.Text = move.Identity.Name;
                     tbMove2PP.Text = move.Pp.ToString();
                     tbMove2PowerUps.Text = move.TimesIncreased.ToString();
                     break;
                 case 3:
-                    tbMove3Name.Text = move.Identifier;
+                    tbMove3Name.Text = move.Identity.Name;
                     tbMove3PP.Text = move.Pp.ToString();
                     tbMove3PowerUps.Text = move.TimesIncreased.ToString();
                     break;
                 case 4:
-                    tbMove4Name.Text = move.Identifier;
+                    tbMove4Name.Text = move.Identity.Name;
                     tbMove4PP.Text = move.Pp.ToString();
                     tbMove4PowerUps.Text = move.TimesIncreased.ToString();
                     break;
@@ -203,7 +203,7 @@ public partial class AboutPanel : UserControl
         tbSheenValue.Text = pokemon.Sheen.ToString();
     }
 
-    private Border NewBadge(string name, string content, string className)
+    private static Border NewBadge(string name, string content, string className)
     {
         Border border = new Border
         {

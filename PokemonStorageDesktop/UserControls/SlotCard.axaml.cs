@@ -3,10 +3,8 @@ using System.IO;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Avalonia.Controls;
-using Avalonia.Input;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
-using Avalonia.Layout;
 using PokemonStorageLibrary;
 using PokemonStorageLibrary.Models;
 using Avalonia.Interactivity;
@@ -28,7 +26,7 @@ public partial class SlotCard : UserControl
         Pokemon = pokemon;
         tbNickname.Text = Pokemon.Nickname;
         tbOriginalTrainer.Text = $"O/T: {Pokemon.OriginalTrainer.Name}";
-        tbInformation1.Text = $"Lv. {Pokemon.Level} {Pokemon.GetGenderCharacter()}\n{Pokemon.Nature.Identifier}";
+        tbInformation1.Text = $"Lv. {Pokemon.Level} {Pokemon.GetGenderCharacter()}\n{Lookup.GetDatabaseIdentityById(Pokemon.Nature.Id, DatabaseObject.Natures).Name}";
     }
 
     protected override async void OnLoaded(RoutedEventArgs e)
@@ -45,7 +43,7 @@ public partial class SlotCard : UserControl
         string baseUrl = "https://img.pokemondb.net/sprites";
         string versionRoot = GetVersionRootName();
         string shiny = Pokemon.IsShinyPersonalityValue ? "shiny" : "normal";
-        string female = Lookup.DoesSpeciesHaveGenderDifference(Pokemon.PokemonIdentity.SpeciesId) && Pokemon.Origin.Game.VersionId > 6 ? "-f" : "";
+        string female = Pokemon.DoesSpeciesHaveGenderDifference() && Pokemon.Origin.Game.VersionId > 6 ? "-f" : "";
 
         return $"{baseUrl}/{versionRoot}/{shiny}/{Pokemon.PokemonIdentity.SpeciesIdentifier}{female}.png";
     }

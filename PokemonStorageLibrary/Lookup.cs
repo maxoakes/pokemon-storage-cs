@@ -1,28 +1,88 @@
 using System.Data;
 using Microsoft.Data.Sqlite;
+using PokemonStorageLibrary.Models;
 
 namespace PokemonStorageLibrary;
 
 #region Structs and Enums
 
-public struct BasicDatabaseEntry
+public enum LanguageType
 {
-    public int Id;
-    public string Identifier;
-    public string Name;
+    Id,
+    Iso639,
+    Iso3166,
+    Identifier
 }
 
-public struct Game
+public enum DatabaseObject
 {
-    public byte VersionId;
-    public byte GenerationId;
-    public byte VersionGroupId;
-    public string GameName;
+    Abilities,
+    EncounterMethods,
+    Generations,
+    Items,
+    Languages,
+    Locations,
+    Moves,
+    Natures,
+    Types,
+    Versions,
+    VersionGroups
+}
+
+public enum SupplementObject
+{
+    Balls,
+    EncounterMethods,
+    GameOrigins,
+    Items,
+    Languages,
+    Locations,
+    Pokemon
+}
+
+public struct DatabaseIdentity(Int64 id, string identifier, string name)
+{
+    public ushort Id = (ushort)id;
+    public string Identifier = identifier;
+    public string Name = name;
+}
+
+public enum Gender
+{
+    MALE = 0,
+    FEMALE = 1,
+    GENDERLESS = 2
+}
+
+public struct Game(long versionId, long generationId, long groupId, string game)
+{
+    public byte VersionId = (byte)versionId;
+    public byte GenerationId = (byte)generationId;
+    public byte VersionGroupId = (byte)groupId;
+    public string GameName = game;
 
     public override string ToString()
     {
         return $"{VersionId}: {GameName} (Gen {GenerationId}) (Group {VersionGroupId})";
     }
+}
+
+public struct Language(long id, string iso639, string iso3166, string identifier)
+{
+    public byte Id = (byte)id;
+    public string Iso639 = iso639;
+    public string Iso3166 = iso3166;
+    public string Identifier = identifier;
+}
+
+public struct PokemonIdentity(long pokemonId, long speciesId, long formId, string formIdentifier, string speciesIdentifier, string speciesName)
+{
+    public ushort PokemonId = (ushort)pokemonId;
+    public ushort SpeciesId = (ushort)speciesId;
+    public ushort FormId = (ushort)formId;
+    public string FormIdentifier = formIdentifier;
+    public string SpeciesIdentifier = speciesIdentifier;
+    public string SpeciesName = speciesName;
 }
 
 public struct AbilityMapping
@@ -51,50 +111,26 @@ public struct AbilityMapping
 
 public struct Types
 {
-    public byte Slot1 = 255;
-    public byte Slot2 = 255;
+    public byte Slot1;
+    public byte Slot2;
 
     public Types()
     {
+        Slot1 = 255;
+        Slot2 = 255;
     }
 }
 
-public struct Nature
-{
-    public byte Id;
-    public string Identifier;
-    public byte DecreaseId;
-    public byte IncreaseId;
-    public byte GameIndex;
-}
-
-public struct PokemonIdentity
-{
-    public ushort PokemonId;
-    public ushort SpeciesId;
-    public ushort FormId;
-    public string FormIdentifier;
-    public string SpeciesIdentifier;
-    public string SpeciesName;
-}
-
-public enum Gender
-{
-    MALE = 0,
-    FEMALE = 1,
-    GENDERLESS = 2
-}
-
 #endregion
-
-#region Static Lookup
 
 public class Lookup
 {
     public static string VeekunConnectionString { get; set; }
     public static string SupplementConnectionString { get; set; }
-    public static string StorageConnectionString { get; set; }
+    public static string DefaultStorageConnectionString { get; set; }
     
+    #region Game Char Lookup
+
     public static string GetDecodedCharacterByGameIndex(int gameIndex, int generation, string language="en", bool standardCharacter=true)
     {
         List<SqliteParameter> parameters = [
@@ -135,24 +171,100 @@ public class Lookup
         return (ushort)i;
     }
 
-    public static string GetIdentifierById(string tableName, int id, string connectionString)
+    #endregion
+
+    #region Get by ID
+
+    public static DatabaseIdentity GetDatabaseIdentityById(int id, DatabaseObject databaseObject, int languageId=9)
     {
         List<SqliteParameter> parameters = [
-            new SqliteParameter("Id", SqliteType.Integer) { Value = id }
+            new SqliteParameter("Id", SqliteType.Integer) { Value = id },
+            new SqliteParameter("LanguageId", SqliteType.Integer) { Value = languageId },
         ];
+        string query = databaseObject switch
+        {
+            DatabaseObject.Abilities => 
+                "SELECT i.id, i.identifier, n.name FROM abilities i LEFT JOIN ability_names n ON i.id = n.ability_id WHERE n.local_language_id = @LanguageId AND i.id = @Id",
+            DatabaseObject.EncounterMethods =>
+                "SELECT i.id, i.identifier, n.name FROM encounter_methods i LEFT JOIN encounter_method_prose n ON i.id = n.encounter_method_id WHERE n.local_language_id = @LanguageId AND i.id = @Id",
+            DatabaseObject.Generations =>
+                "SELECT i.id, i.identifier, n.name FROM generations i LEFT JOIN generation_names n ON i.id = n.generation_id WHERE n.local_language_id = @LanguageId AND i.id = @Id",
+            DatabaseObject.Items =>
+                "SELECT i.id, i.identifier, n.name FROM items i LEFT JOIN item_names n ON i.id = n.item_id WHERE n.local_language_id = @LanguageId AND i.id = @Id",
+            DatabaseObject.Languages =>
+                "SELECT i.id, i.identifier, n.name FROM languages i LEFT JOIN item_names n WHERE n.local_language_id = @LanguageId AND i.id = @Id",
+            DatabaseObject.Locations =>
+                "SELECT i.id, i.identifier, n.name FROM locations i LEFT JOIN location_names n ON i.id = n.location_id WHERE n.local_language_id = @LanguageId AND i.id = @Id",
+            DatabaseObject.Moves =>
+                "SELECT i.id, i.identifier, n.name FROM moves i LEFT JOIN move_names n ON i.id = n.move_id WHERE n.local_language_id = @LanguageId AND i.id = @Id",
+            DatabaseObject.Natures =>
+                "SELECT i.id, i.identifier, n.name FROM natures i LEFT JOIN nature_names n ON i.id = n.nature_id WHERE n.local_language_id = @LanguageId AND i.id = @Id",
+            DatabaseObject.Types =>
+                "SELECT i.id, i.identifier, n.name FROM types i LEFT JOIN type_names n ON i.id = n.type_id WHERE n.local_language_id = @LanguageId AND i.id = @Id",
+            DatabaseObject.Versions =>
+                "SELECT i.id, i.identifier, n.name FROM versions i LEFT JOIN version_names n ON i.id = n.version_id WHERE n.local_language_id = @LanguageId AND i.id = @Id",
+            DatabaseObject.VersionGroups =>
+                "SELECT i.id, i.identifier, n.name FROM version_groups i LEFT JOIN version_group_names n ON i.id = n.version_group_id WHERE n.local_language_id = @LanguageId AND i.id = @Id",
+            _ => 
+                "",
+        };
+        DataRow row = DbInterface.RetrieveSingleRow(query, VeekunConnectionString, parameters);
 
-        return (string)(DbInterface.RetrieveScalar($"SELECT identifier FROM {tableName} WHERE id=@Id", connectionString, parameters) ?? "");
+        return new DatabaseIdentity(
+            row.Field<Int64>("id"),
+            row.Field<string>("identifier") ?? "",
+            row.Field<string>("name") ?? ""
+        );
     }
 
-    public static byte GetLanguageIdByIdentifier(string identifier)
+    #endregion
+
+    #region Get by Identifier
+
+    public static DatabaseIdentity GetIdByIdentifier(string identifier, DatabaseObject databaseObject)
     {
         List<SqliteParameter> parameters = [
-            new SqliteParameter("Identifier", SqliteType.Text) { Value = identifier }
+            new SqliteParameter("Identifier", SqliteType.Text) { Value = identifier },
         ];
+        string query = databaseObject switch
+        {
+            DatabaseObject.Abilities => 
+                "SELECT id FROM abilities WHERE identifier = @Identifier",
+            DatabaseObject.EncounterMethods =>
+                "SELECT id FROM encounter_methods WHERE identifier = @Identifier",
+            DatabaseObject.Generations =>
+                "SELECT id FROM generations WHERE identifier = @Identifier",
+            DatabaseObject.Items =>
+                "SELECT id FROM items WHERE identifier = @Identifier",
+            DatabaseObject.Languages =>
+                "SELECT id FROM languages WHERE identifier = @Identifier",
+            DatabaseObject.Locations =>
+                "SELECT id FROM locations WHERE identifier = @Identifier",
+            DatabaseObject.Moves =>
+                "SELECT id FROM moves WHERE identifier = @Identifier",
+            DatabaseObject.Natures =>
+                "SELECT id FROM natures WHERE identifier = @Identifier",
+            DatabaseObject.Types =>
+                "SELECT id FROM types WHERE identifier = @Identifier",
+            DatabaseObject.Versions =>
+                "SELECT id FROM versions WHERE identifier = @Identifier",
+            DatabaseObject.VersionGroups =>
+                "SELECT id FROM version_groups WHERE identifier = @Identifier",
+            _ => 
+                "",
+        };
+        DataRow row = DbInterface.RetrieveSingleRow(query, VeekunConnectionString, parameters);
 
-        Int64 value = (Int64)DbInterface.RetrieveScalar("SELECT id FROM languages WHERE identifier=@Identifier", VeekunConnectionString, parameters);
-        return (byte)value;
+        return new DatabaseIdentity(
+            row.Field<Int64>("id"),
+            row.Field<string>("identifier") ?? "",
+            row.Field<string>("name") ?? ""
+        );
     }
+
+    #endregion
+
+    #region Specific Structs
 
     public static Game GetGameByName(string inputName)
     {
@@ -160,8 +272,7 @@ public class Lookup
             new SqliteParameter("Name", SqliteType.Text) { Value = inputName }
         ];
 
-        // Get basic game ids and names
-        DataTable gameDataTable = DbInterface.RetrieveTable("""
+        DataRow row = DbInterface.RetrieveSingleRow("""
             SELECT 
                 v.id,
                 v.version_group_id,
@@ -175,25 +286,21 @@ public class Lookup
                 vn.name LIKE @Name
         """, VeekunConnectionString, parameters);
 
-        Game game = new();
-        foreach (DataRow row in gameDataTable.Rows)
-        {
-            game.VersionId = (byte)row.Field<Int64>("id");
-            game.VersionGroupId = (byte)row.Field<Int64>("version_group_id");
-            game.GenerationId = (byte)row.Field<Int64>("generation_id");
-            game.GameName = row.Field<string>("name") ?? "";
-        }
-        return game;
+        return new Game(
+            (byte)row.Field<Int64>("id"),
+            (byte)row.Field<Int64>("version_group_id"),
+            (byte)row.Field<Int64>("generation_id"),
+            row.Field<string>("name") ?? ""
+        );
     }
 
-    public static Game GetGameByVersionId(int versionId, int languageId=9)
+    public static Game GetGameByVersionId(int versionId)
     {
         List<SqliteParameter> parameters = [
             new SqliteParameter("Id", SqliteType.Integer) { Value = versionId }
         ];
 
-        // Get basic game ids and names
-        DataTable gameDataTable = DbInterface.RetrieveTable("""
+        DataRow row = DbInterface.RetrieveSingleRow("""
             SELECT 
                 v.id,
                 v.version_group_id,
@@ -207,42 +314,58 @@ public class Lookup
                 v.id LIKE @Id
         """, VeekunConnectionString, parameters);
 
-        Game game = new();
-        foreach (DataRow row in gameDataTable.Rows)
-        {
-            game.VersionId = (byte)row.Field<Int64>("id");
-            game.VersionGroupId = (byte)row.Field<Int64>("version_group_id");
-            game.GenerationId = (byte)row.Field<Int64>("generation_id");
-            game.GameName = row.Field<string>("name") ?? "";
-        }
-        return game;
+        return new Game(
+            row.Field<Int64>("id"),
+            row.Field<Int64>("version_group_id"),
+            row.Field<Int64>("generation_id"),
+            row.Field<string>("name") ?? ""
+        );
     }
 
-    public static Types GetTypesByPokemonId(int pokemonId)
-    {
-        List<SqliteParameter> parameters = [
-            new SqliteParameter("Id", SqliteType.Integer) { Value = pokemonId }
-        ];
-
-        DataTable gameDataTable = DbInterface.RetrieveTable("SELECT * FROM pokemon_types WHERE pokemon_id=@Id", VeekunConnectionString, parameters);
-
-        Types types = new();
-        foreach (DataRow row in gameDataTable.Rows)
-        {
-            if (row.Field<Int64>("slot") == 1) types.Slot1 = (byte)row.Field<Int64>("type_id");
-            if (row.Field<Int64>("slot") == 2) types.Slot2 = (byte)row.Field<Int64>("type_id");
-        }
-        return types;
-    }
-
-    public static string GetVersionGroupIdentifierByVersionGroupId(int id)
+    public static Language GetLanguageById(int id)
     {
         List<SqliteParameter> parameters = [
             new SqliteParameter("Id", SqliteType.Integer) { Value = id }
         ];
 
-        return (string)(DbInterface.RetrieveScalar("SELECT identifier FROM version_groups WHERE id=@Id", VeekunConnectionString, parameters) ?? "");
+        DataRow row = DbInterface.RetrieveSingleRow("SELECT * FROM languages WHERE id=@Id", VeekunConnectionString, parameters);
+
+        return new Language(
+            row.Field<Int64>("id"),
+            row.Field<string>("iso639") ?? "",
+            row.Field<string>("iso3166") ?? "",
+            row.Field<string>("identifier") ?? ""
+        );
     }
+
+    public static Language GetLanguageByIdentifier(string identifier, LanguageType languageType)
+    {
+        List<SqliteParameter> parameters = [
+            new SqliteParameter("Id", SqliteType.Text) { Value = identifier }
+        ];
+
+        string columnName = languageType switch
+        {
+            LanguageType.Id => "id",
+            LanguageType.Iso639 => "iso639",
+            LanguageType.Iso3166 => "iso3166",
+            LanguageType.Identifier => "identifier",
+            _ => identifier
+        };
+
+        DataRow row = DbInterface.RetrieveSingleRow($"SELECT * FROM languages WHERE {columnName}=@Id", VeekunConnectionString, parameters);
+
+        return new Language(
+            row.Field<Int64>("id"),
+            row.Field<string>("iso639") ?? "",
+            row.Field<string>("iso3166") ?? "",
+            row.Field<string>("identifier") ?? ""
+        );
+    }
+
+    #endregion
+
+    #region Get List
 
     public static List<string> GetVersionNames(int languageId=9)
     {
@@ -250,7 +373,6 @@ public class Lookup
             new SqliteParameter("LanguageId", SqliteType.Integer) { Value = languageId }
         ];
 
-        // Get basic game ids and names
         DataTable dataTable = DbInterface.RetrieveTable("""
             SELECT 
                 v.id,
@@ -264,13 +386,7 @@ public class Lookup
             WHERE vn.local_language_id = @LanguageId AND v.version_group_id < 11
         """, VeekunConnectionString, parameters);
 
-        List<string> versions = [];
-        foreach (DataRow row in dataTable.Rows)
-        {
-            string v = row.Field<string>("name") ?? "";
-            if (!string.IsNullOrWhiteSpace(v)) versions.Add(v);
-        }
-        return versions;
+        return dataTable.AsEnumerable().Select(x => x.Field<string>("name") ?? "").ToList();
     }
 
     public static List<string> GetLanguageNames(string columnName = "name", int languageId=9)
@@ -279,94 +395,103 @@ public class Lookup
             new SqliteParameter("LanguageId", SqliteType.Integer) { Value = languageId }
         ];
 
-        // Get basic game ids and names
         DataTable dataTable = DbInterface.RetrieveTable($"""
             SELECT 
                 {columnName}
             FROM
                 languages l 
-                LEFT JOIN language_names t  ON l.id = t.language_id 
-            WHERE t.local_language_id = 9
+                LEFT JOIN language_names t ON l.id = t.language_id 
+            WHERE t.local_language_id = @LanguageId
         """, VeekunConnectionString, parameters);
 
-        List<string> languages = [];
-        foreach (DataRow row in dataTable.Rows)
-        {
-            string l = row.Field<string>(columnName) ?? "";
-            if (!string.IsNullOrWhiteSpace(l)) languages.Add(l);
-        }
-        return languages;
+        return dataTable.AsEnumerable().Select(x => x.Field<string>(columnName) ?? "").ToList();
     }
 
-    public static byte GetCatchRateBySpeciesId(int speciesId)
-    {
-        List<SqliteParameter> parameters = [
-            new SqliteParameter("Id", SqliteType.Integer) { Value = speciesId }
-        ];
+    #endregion
 
-        return (byte)(Int64)DbInterface.RetrieveScalar("SELECT capture_rate FROM pokemon_species WHERE id=@Id", VeekunConnectionString, parameters);
-    }
+    #region Get Game Index
 
-    public static byte GetPpAmount(int moveId, byte increasedAmount)
-    {
-        List<SqliteParameter> parameters = [
-            new SqliteParameter("Id", SqliteType.Integer) { Value = moveId }
-        ];
-        int baseline = (int)(Int64)DbInterface.RetrieveScalar("SELECT PP FROM moves WHERE id=@Id", VeekunConnectionString, parameters);
-        return (byte)(baseline * (1 + (increasedAmount * 0.2f)));
-    }
-
-    public static bool DoesSpeciesHaveGenderDifference(ushort id)
-    {
-        List<SqliteParameter> parameters = [
-            new SqliteParameter("Id", SqliteType.Integer) { Value = id }
-        ];
-
-        return (Int64)DbInterface.RetrieveScalar("SELECT has_gender_differences FROM pokemon_species WHERE id=@Id", VeekunConnectionString, parameters) == 1;
-    }
-
-    public static byte GetLanguageGameIndexById(int id)
-    {
-        List<SqliteParameter> parameters = [
-            new SqliteParameter("Id", SqliteType.Integer) { Value = id }
-        ];
-
-        return (byte)(Int64)DbInterface.RetrieveScalar("SELECT game_index FROM language_game_index WHERE language_index=@Id", SupplementConnectionString, parameters);
-    }
-
-    public static string GetNameById(string tableName, string primaryColumnName, int id, int languageId, string connectionString)
+    public static ushort GetGameIndexById(int id, SupplementObject supplementObject, int generation = 0)
     {
         List<SqliteParameter> parameters = [
             new SqliteParameter("Id", SqliteType.Integer) { Value = id },
-            new SqliteParameter("Language", SqliteType.Integer) { Value = languageId }
+            new SqliteParameter("Generation", SqliteType.Integer) { Value = generation },
         ];
 
-        return (string)(DbInterface.RetrieveScalar($"SELECT name FROM {tableName} WHERE {primaryColumnName}=@Id AND local_language_id=@Language", connectionString, parameters) ?? "");
+        string query = supplementObject switch
+        {
+            SupplementObject.Balls => 
+                "SELECT game_index FROM catch_ball_game_index WHERE item_index = @Id",
+            SupplementObject.EncounterMethods =>
+                "SELECT game_index FROM encounter_types_game_index WHERE encounter_method_index = @Id",
+            SupplementObject.GameOrigins =>
+                "SELECT game_index FROM game_origin_game_index WHERE version_id = @Id",
+            SupplementObject.Items =>
+                "SELECT game_index FROM item_game_index WHERE item_id = @Id AND generation = @Generation",
+            SupplementObject.Languages =>
+                "SELECT game_index FROM language_game_index WHERE language_index = @Id",
+            SupplementObject.Locations =>
+                "SELECT game_index FROM location_game_index WHERE location_id = @Id AND generation = @Generation",
+            SupplementObject.Pokemon =>
+                "SELECT game_index FROM pokemon_game_index WHERE form_id = @Id AND generation = @Generation",
+            _ => 
+                "",
+        };
+        return (ushort)DbInterface.RetrieveScalar(query, VeekunConnectionString, parameters);
     }
-    
-    #region Pokemon
 
-    public static PokemonIdentity GetPokemonBySpeciesId(int speciesId, int languageId)
+    #endregion
+
+    #region Get By Game Index
+
+    public static ushort GetIdByGameIndex(int id, SupplementObject supplementObject, int generation = 0)
     {
         List<SqliteParameter> parameters = [
-            new SqliteParameter("Id", SqliteType.Integer) { Value = speciesId },
-            new SqliteParameter("Lang", SqliteType.Integer) { Value = languageId }
+            new SqliteParameter("GameIndex", SqliteType.Integer) { Value = id },
+            new SqliteParameter("Generation", SqliteType.Integer) { Value = generation },
         ];
 
-        Int64 formId = (Int64)DbInterface.RetrieveScalar(""" 
-            SELECT 
-                pf.id
-            FROM 
-                pokemon p  
-                LEFT JOIN pokemon_forms pf ON p.id=pf.pokemon_id 
-                LEFT JOIN pokemon_species ps ON p.species_id=ps.id
-            WHERE ps.id = @Id
-            ORDER BY ps."order", pf."order" 
-        """, VeekunConnectionString, parameters);
-
-        PokemonIdentity pokemon = GetPokemonByFormId((ushort)formId, languageId);
-        return pokemon;
+        string query = supplementObject switch
+        {
+            SupplementObject.Balls => 
+                "SELECT item_index FROM catch_ball_game_index WHERE game_index=@GameIndex",
+            SupplementObject.EncounterMethods =>
+                "",
+            SupplementObject.GameOrigins =>
+                "SELECT version_id FROM game_origin_game_index WHERE game_index=@GameIndex",
+            SupplementObject.Items =>
+                "SELECT item_id FROM item_game_index WHERE game_index=@GameIndex AND generation=@Generation",
+            SupplementObject.Languages =>
+                "SELECT language_index FROM language_game_index WHERE game_index=@GameIndex",
+            SupplementObject.Locations =>
+                "SELECT location_id FROM location_game_index WHERE game_index=@GameIndex AND generation=@Generation",
+            SupplementObject.Pokemon =>
+                "SELECT form_id FROM pokemon_game_index WHERE game_index=@GameIndex AND generation=@Generation",
+            _ => 
+                "",
+        };
+        return (ushort)DbInterface.RetrieveScalar(query, VeekunConnectionString, parameters);
     }
+
+    public static Nature GetNatureByGameIndex(int index)
+    {
+        List<SqliteParameter> parameters = [
+            new SqliteParameter("Id", SqliteType.Integer) { Value = index },
+        ];
+
+        DataRow row = DbInterface.RetrieveSingleRow("SELECT * FROM natures WHERE game_index=@Id", VeekunConnectionString, parameters);
+        
+        return new Nature(
+            (int)row.Field<Int64>("id"),
+            (int)row.Field<Int64>("decreased_stat_id"),
+            (int)row.Field<Int64>("increased_stat_id"),
+            (int)row.Field<Int64>("game_index")
+        );
+    }
+
+    #endregion
+    
+    #region PokemonIdentity
 
     public static PokemonIdentity GetPokemonByFormId(ushort formId, int languageId)
     {
@@ -375,7 +500,7 @@ public class Lookup
             new SqliteParameter("Lang", SqliteType.Integer) { Value = languageId }
         ];
 
-        DataTable table = DbInterface.RetrieveTable(""" 
+        DataRow row = DbInterface.RetrieveSingleRow(""" 
             SELECT 
                 p.id AS PokemonId,
                 p.identifier AS PokemonIdenfier,
@@ -398,416 +523,36 @@ public class Lookup
             ORDER BY p."order", pf."order" 
         """, VeekunConnectionString, parameters);
 
-        PokemonIdentity pokemon = new();
-        foreach (DataRow row in table.Rows)
-        {
-            pokemon.FormId = (ushort)row.Field<Int64>("FormId");
-            pokemon.PokemonId = (ushort)row.Field<Int64>("PokemonId");
-            pokemon.SpeciesId = (ushort)row.Field<Int64>("SpeciesId");
-            pokemon.SpeciesIdentifier = row.Field<string>("SpeciesIdentifier") ?? "???";
-            pokemon.FormIdentifier = row.Field<string>("FormIdentifier") ?? "";
-            pokemon.SpeciesName = row.Field<string>("SpeciesName") ?? "???";
-        }
-        return pokemon;
+        return new PokemonIdentity(
+            row.Field<Int64>("PokemonId"),
+            row.Field<Int64>("SpeciesId"),
+            row.Field<Int64>("FormId"),
+            row.Field<string>("FormIdentifier") ?? "",
+            row.Field<string>("SpeciesIdentifier") ?? "",
+            row.Field<string>("SpeciesName") ?? "??"
+        );
     }
 
-    public static int GetGenderThreshold(int speciesId)
-    {
-        var threshold = new Dictionary<int, int>
-        {
-            [0] = 0,
-            [1] = 31,
-            [2] = 63,
-            [4] = 127,
-            [6] = 191,
-            [7] = 225,
-            [8] = 254,
-            [-1] = 255
-        };
-
-        // key/8 chance of being female
-        var genderRate = GetGenderRateBySpeciesId(speciesId);
-        return threshold.GetValueOrDefault(genderRate, 255);
-    }
-
-    public static int GetGenderRateBySpeciesId(int speciesId)
+    public static PokemonIdentity GetPokemonBySpeciesId(int speciesId, int languageId)
     {
         List<SqliteParameter> parameters = [
             new SqliteParameter("Id", SqliteType.Integer) { Value = speciesId },
+            new SqliteParameter("Lang", SqliteType.Integer) { Value = languageId }
         ];
 
-        Int64 value = (Int64)DbInterface.RetrieveScalar("SELECT gender_rate FROM pokemon_species WHERE id=@Id", VeekunConnectionString, parameters);
-        return (int)value;
-    }
-            
-    public static byte GetBaseHappinessBySpeciesId(uint speciesId)
-    {
-        List<SqliteParameter> parameters = [
-            new SqliteParameter("Id", SqliteType.Integer) { Value = speciesId },
-        ];
-
-        Int64 value = (Int64)DbInterface.RetrieveScalar("SELECT base_happiness FROM pokemon_species WHERE id=@Id", VeekunConnectionString, parameters);
-        return (byte)value;
-    }
-        
-    public static AbilityMapping GetAbilitiesByPokemonId(int pokemonId)
-    {
-        List<SqliteParameter> parameters = [
-            new SqliteParameter("Id", SqliteType.Integer) { Value = pokemonId },
-        ];
-
-        DataTable abilityMappingDataTable = DbInterface.RetrieveTable("""
+        Int64 formId = (Int64)DbInterface.RetrieveScalar(""" 
             SELECT 
-                ps.id AS species_id, 
-                pa.ability_id, 
-                pa.slot, 
-                pa.is_hidden 
+                pf.id
             FROM 
-                pokemon p 
-                LEFT JOIN pokemon_species ps ON p.species_id = ps.id 
-                LEFT JOIN pokemon_abilities pa ON p.id=pa.pokemon_id 
-            WHERE p.id=@Id
+                pokemon p  
+                LEFT JOIN pokemon_forms pf ON p.id=pf.pokemon_id 
+                LEFT JOIN pokemon_species ps ON p.species_id=ps.id
+            WHERE ps.id = @Id
+            ORDER BY ps."order", pf."order" 
         """, VeekunConnectionString, parameters);
 
-        AbilityMapping abilityMapping = new();
-        foreach (DataRow row in abilityMappingDataTable.Rows)
-        {
-            Int64 abilityId = row.Field<Int64>("ability_id");
-            Int64 slot = row.Field<Int64>("slot");
-            bool isHidden = Convert.ToBoolean(row.Field<Int64>("is_hidden"));
-
-            abilityMapping.Assign((ushort)abilityId, (ushort)slot, isHidden);
-        }
-
-        return abilityMapping;
-    }
-
-    public static Nature GetNatureByGameIndex(int index)
-    {
-        List<SqliteParameter> parameters = [
-            new SqliteParameter("Id", SqliteType.Integer) { Value = index },
-        ];
-
-        DataTable table = DbInterface.RetrieveTable("SELECT * FROM natures WHERE game_index=@Id", VeekunConnectionString, parameters);
-
-        Nature nature = new();
-        foreach (DataRow row in table.Rows)
-        {
-            nature.Id = (byte)row.Field<Int64>("id");
-            nature.Identifier = row.Field<string>("identifier") ?? "???";
-            nature.GameIndex = (byte)row.Field<Int64>("game_index");
-            nature.DecreaseId = (byte)row.Field<Int64>("decreased_stat_id");
-            nature.IncreaseId = (byte)row.Field<Int64>("increased_stat_id");
-        }
-        return nature;
-    }
-
-    public static ushort GetAbilityIdByAbilityNumber(ushort pokemonId, byte slotId)
-    {
-        List<SqliteParameter> parameters = [
-            new SqliteParameter("PokemonId", SqliteType.Integer) { Value = pokemonId },
-            new SqliteParameter("SlotId", SqliteType.Integer) { Value = slotId + 1 },
-        ];
-
-        try
-        {
-            Int64 index = (Int64)DbInterface.RetrieveScalar("SELECT ability_id FROM pokemon_abilities WHERE pokemon_id=@PokemonId AND slot=@SlotId", VeekunConnectionString, parameters);
-            return (ushort)index;
-        }
-        catch (NullReferenceException)
-        {
-            return 0;
-        }
-    }
-
-    public static StatHextuple GetBaseStats(int speciesId)
-    {
-        List<SqliteParameter> parameters = [
-            new SqliteParameter("Id", SqliteType.Integer) { Value = speciesId }
-        ];
-
-        DataTable statDataTable = DbInterface.RetrieveTable("""
-                SELECT 
-                    ps.id,
-                    SUM(CASE WHEN ps2.stat_id=1 THEN ps2.base_stat ELSE 0 END) AS hp,
-                    SUM(CASE WHEN ps2.stat_id=2 THEN ps2.base_stat ELSE 0 END) AS attack,
-                    SUM(CASE WHEN ps2.stat_id=3 THEN ps2.base_stat ELSE 0 END) AS defense,
-                    SUM(CASE WHEN ps2.stat_id=4 THEN ps2.base_stat ELSE 0 END) AS special_attack,
-                    SUM(CASE WHEN ps2.stat_id=5 THEN ps2.base_stat ELSE 0 END) AS special_defense,
-                    SUM(CASE WHEN ps2.stat_id=6 THEN ps2.base_stat ELSE 0 END) AS speed
-                FROM 
-                    pokemon p 
-                    LEFT JOIN pokemon_species ps ON ps.id=p.species_id 
-                    LEFT JOIN pokemon_stats ps2 ON ps2.pokemon_id=p.id
-                WHERE p.id < 10000 AND ps.id = @Id
-                GROUP BY ps.id
-            """, VeekunConnectionString, parameters);
-
-        foreach (DataRow row in statDataTable.Rows)
-        {
-            return new StatHextuple(
-                (ushort)row.Field<Int64>("hp"),
-                (ushort)row.Field<Int64>("attack"),
-                (ushort)row.Field<Int64>("defense"),
-                (ushort)row.Field<Int64>("special_attack"),
-                (ushort)row.Field<Int64>("special_defense"),
-                (ushort)row.Field<Int64>("speed")
-            );
-        }
-        return new StatHextuple();
-    }
-
-    public static byte GetLevelFromExperience(uint speciesId, uint experience)
-    {
-        List<SqliteParameter> parameters = [
-            new SqliteParameter("Id", SqliteType.Integer) { Value = speciesId },
-            new SqliteParameter("Experience", SqliteType.Integer) { Value = experience }
-        ];
-
-        DataTable statDataTable = DbInterface.RetrieveTable("""
-                SELECT 
-                    e.level,
-                    e.experience,
-                    ps.id,
-                    ps.identifier 
-                FROM 
-                    experience e 
-                    LEFT JOIN pokemon_species ps ON ps.growth_rate_id=e.growth_rate_id
-                WHERE 
-                    ps.id = @Id AND
-                    e.experience > @Experience
-                ORDER BY ps.id, `level` 
-        """, VeekunConnectionString, parameters);
-
-        foreach (DataRow row in statDataTable.Rows)
-        {
-            // Edge case, level 0 and 0 experience
-            if (experience == 0) return 1;
-
-            // Edge case, level 100
-            if (row.Field<Int64>("level") == 100 && row.Field<Int64>("experience") == experience) return 100;
-
-            return (byte)Math.Max(row.Field<Int64>("level")-1, 0);
-        }
-        return 0;
-    }
-
-    public static Int64 GetNationalDexNumber(int speciesId)
-    {
-        List<SqliteParameter> parameters = [
-            new SqliteParameter("Id", SqliteType.Integer) { Value = speciesId }
-        ];
-
-        return (long)DbInterface.RetrieveScalar("SELECT * FROM pokemon_dex_numbers WHERE pokedex_id=1 AND species_id=@Id", VeekunConnectionString, parameters);
-    }
-
-    #endregion
-
-    #region Index Mappings
-
-    public static ushort GetPokemonFormIdByGameIndex(int generation, int gameIndex)
-    {
-        List<SqliteParameter> parameters = [
-            new SqliteParameter("GameIndex", SqliteType.Integer) { Value = gameIndex },
-            new SqliteParameter("Generation", SqliteType.Integer) { Value = generation },
-        ];
-
-        try
-        {
-            Int64 index = (Int64)DbInterface.RetrieveScalar("SELECT form_id FROM pokemon_game_index WHERE game_index=@GameIndex AND generation=@Generation", SupplementConnectionString, parameters);
-            return (ushort)index;
-        }
-        catch (NullReferenceException)
-        {
-            return 0;
-        }
-    }
-
-    public static ushort GetPokemonGameIndexByFormId(int generation, int formId)
-    {
-        List<SqliteParameter> parameters = [
-            new SqliteParameter("FormId", SqliteType.Integer) { Value = formId },
-            new SqliteParameter("Generation", SqliteType.Integer) { Value = generation },
-        ];
-
-        try
-        {
-            Int64 index = (Int64)DbInterface.RetrieveScalar("SELECT game_index FROM pokemon_game_index WHERE form_id=@FormId AND generation=@Generation", SupplementConnectionString, parameters);
-            return (ushort)index;
-        }
-        catch (NullReferenceException)
-        {
-            return 0;
-        }
-    }
-
-    public static ushort GetItemGameIndexById(int generation, int itemId)
-    {
-        List<SqliteParameter> parameters = [
-            new SqliteParameter("ItemId", SqliteType.Integer) { Value = itemId },
-            new SqliteParameter("Generation", SqliteType.Integer) { Value = generation },
-        ];
-
-        try
-        {
-            Int64 index = (Int64)DbInterface.RetrieveScalar("SELECT game_index FROM item_game_index WHERE item_id=@ItemId AND generation=@Generation", SupplementConnectionString, parameters);
-            return (ushort)index;
-        }
-        catch (NullReferenceException)
-        {
-            return 0;
-        }
-    }
-
-    public static byte GetGameGameIndexById(int gameId)
-    {
-        List<SqliteParameter> parameters = [
-            new SqliteParameter("GameId", SqliteType.Integer) { Value = gameId },
-        ];
-
-        try
-        {
-            Int64 index = (Int64)DbInterface.RetrieveScalar("SELECT game_index FROM game_origin_game_index WHERE version_id=@GameId", SupplementConnectionString, parameters);
-            return (byte)index;
-        }
-        catch (NullReferenceException)
-        {
-            return 0;
-        }
-    }
-
-    public static ushort GetLocationGameIndexById(int generation, int locationId)
-    {
-        List<SqliteParameter> parameters = [
-            new SqliteParameter("LocationId", SqliteType.Integer) { Value = locationId },
-            new SqliteParameter("Generation", SqliteType.Integer) { Value = generation },
-        ];
-
-        try
-        {
-            Int64 index = (Int64)DbInterface.RetrieveScalar("SELECT game_index FROM location_game_index WHERE location_id=@LocationId AND generation=@Generation", SupplementConnectionString, parameters);
-            return (ushort)index;
-        }
-        catch (NullReferenceException)
-        {
-            return 0;
-        }
-    }
-
-    public static byte GetCatchBallByGameIndex(int gameIndex)
-    {
-        List<SqliteParameter> parameters = [
-            new SqliteParameter("Id", SqliteType.Integer) { Value = gameIndex }
-        ];
-
-        try
-        {
-            Int64 index = (Int64)DbInterface.RetrieveScalar("SELECT item_index FROM catch_ball_game_index WHERE game_index=@Id", SupplementConnectionString, parameters);
-            return (byte)index;
-        }
-        catch (NullReferenceException)
-        {
-            return 0;
-        }
-    }
-
-    public static byte GetBallGameIndexByItemId(int itemId)
-    {
-        List<SqliteParameter> parameters = [
-            new SqliteParameter("ItemId", SqliteType.Integer) { Value = itemId },
-        ];
-
-        try
-        {
-            Int64 index = (Int64)DbInterface.RetrieveScalar("SELECT game_index FROM catch_ball_game_index WHERE item_index=@ItemId", SupplementConnectionString, parameters);
-            return (byte)index;
-        }
-        catch (NullReferenceException)
-        {
-            return (byte)itemId;
-        }
-    }
-
-    public static string GetEncounterTypeGameIndex(int gameIndex)
-    {
-        List<SqliteParameter> parameters = [
-            new SqliteParameter("Id", SqliteType.Integer) { Value = gameIndex }
-        ];
-
-        string value = (string)(DbInterface.RetrieveScalar("SELECT identifier FROM encounter_types_game_index WHERE game_index=@Id", SupplementConnectionString, parameters) ?? "");
-        return value;
-    }
-
-    public static byte GetVersionIdByGameIndex(int gameIndex)
-    {
-        List<SqliteParameter> parameters = [
-            new SqliteParameter("Id", SqliteType.Integer) { Value = gameIndex }
-        ];
-
-        try
-        {
-            Int64 index = (Int64)DbInterface.RetrieveScalar("SELECT version_id FROM game_origin_game_index WHERE game_index=@Id", SupplementConnectionString, parameters);
-            return (byte)index;
-        }
-        catch (NullReferenceException)
-        {
-            return 0;
-        }
-    }
-
-    public static ushort GetItemIdByGameIndex(int generation, int gameIndex)
-    {
-        List<SqliteParameter> parameters = [
-            new SqliteParameter("GameIndex", SqliteType.Integer) { Value = gameIndex },
-            new SqliteParameter("Generation", SqliteType.Integer) { Value = generation },
-        ];
-
-        try
-        {
-            Int64 index = (Int64)DbInterface.RetrieveScalar("SELECT item_id FROM item_game_index WHERE game_index=@GameIndex AND generation=@Generation", SupplementConnectionString, parameters);
-            return (ushort)index;
-        }
-        catch (NullReferenceException)
-        {
-            return 0;
-        }
-    }
-
-    public static byte GetLanguageIdByGameIndex(int gameIndex)
-    {
-        List<SqliteParameter> parameters = [
-            new SqliteParameter("Id", SqliteType.Integer) { Value = gameIndex }
-        ];
-
-        try
-        {
-            Int64 value = (Int64)DbInterface.RetrieveScalar("SELECT language_index FROM language_game_index WHERE game_index=@Id", SupplementConnectionString, parameters);
-            return (byte)value;
-        }
-        catch (NullReferenceException)
-        {
-            return 0;
-        }
-    }
-
-    public static ushort GetLocationIdByGameIndex(int generation, int gameIndex)
-    {
-        List<SqliteParameter> parameters = [
-            new SqliteParameter("GameIndex", SqliteType.Integer) { Value = gameIndex },
-            new SqliteParameter("Generation", SqliteType.Integer) { Value = generation },
-        ];
-
-        try
-        {
-            Int64 index = (Int64)DbInterface.RetrieveScalar("SELECT location_id FROM location_game_index WHERE game_index=@GameIndex AND generation=@Generation", SupplementConnectionString, parameters);
-            return (ushort)index;
-        }
-        catch (NullReferenceException)
-        {
-            return 0;
-        }
+        return GetPokemonByFormId((ushort)formId, languageId);
     }
 
     #endregion
 }
-#endregion

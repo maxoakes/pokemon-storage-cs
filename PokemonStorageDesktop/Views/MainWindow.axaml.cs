@@ -71,7 +71,7 @@ public partial class MainWindow : Window
         if (Design.IsDesignMode) return;
 
         // Automatically load database
-        await AddTab(new DatabaseModel(Lookup.StorageConnectionString));
+        await AddTab(new DatabaseModel(Lookup.DefaultStorageConnectionString));
     }
 
     private async void OpenSource_Click(object? sender, RoutedEventArgs e)

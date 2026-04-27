@@ -5,23 +5,24 @@ namespace PokemonStorageLibrary.Models;
 
 public class StatStructure
 {
+    public PartyPokemon PartyPokemon { get; }
     public bool IsModernSystemByDefault { get; private set; }
     private StatHextuple BaseStats { get; set; }
     public StatSet Modern { get; private set; }
     public StatSet Old { get; private set; }
 
-    public StatStructure(bool isModern, StatHextuple iv, StatHextuple ev, int speciesId, int level, Nature? nature = null)
+    public StatStructure(PartyPokemon pokemon, bool isModern, StatHextuple iv, StatHextuple ev)
     {
-        BuildStats(isModern, iv, ev, speciesId, level, nature);
+        BuildStats(isModern, iv, ev);
     }
 
-    public StatStructure(Int64 statsPrimaryKey, int speciesId, int level, Nature? nature = null)
+    public StatStructure(PartyPokemon pokemon, Int64 statsPrimaryKey)
     {
         List<SqliteParameter> parameters = [
             new SqliteParameter("Id", SqliteType.Integer) { Value = statsPrimaryKey }
         ];
 
-        DataTable dataTable = DbInterface.RetrieveTable($"SELECT * FROM stats WHERE id = @Id", Lookup.StorageConnectionString, parameters);
+        DataTable dataTable = DbInterface.RetrieveTable($"SELECT * FROM stats WHERE id = @Id", Lookup.DefaultStorageConnectionString, parameters);
         if (dataTable.Rows.Count == 0)
         {
             throw new Exception($"No stats found with primary key {statsPrimaryKey}");
@@ -47,13 +48,13 @@ public class StatStructure
             ev.SpecialDefense = (ushort)row.Field<Int64>("spd_ev");
         }
         
-        BuildStats(isModern, iv, ev, speciesId, level, nature);
+        BuildStats(isModern, iv, ev);
     }
 
-    private void BuildStats(bool isModern, StatHextuple iv, StatHextuple ev, int speciesId, int level, Nature? nature = null)
+    private void BuildStats(bool isModern, StatHextuple iv, StatHextuple ev)
     {
         IsModernSystemByDefault = isModern;
-        BaseStats = Lookup.GetBaseStats(speciesId);
+        BaseStats = PartyPokemon.GetBaseStats();
 
         if (IsModernSystemByDefault) 
         {
@@ -122,25 +123,25 @@ public class StatStructure
         }
 
         // Set the calculated final stat values for each system
-        SetFinalOldSystemValues(level);
-        SetFinalModernSystemValues(level, nature);
+        SetFinalOldSystemValues();
+        SetFinalModernSystemValues();
     }
 
-    public void SetFinalOldSystemValues(int level)
+    public void SetFinalOldSystemValues()
     {
         Old.SetFinalValues(
             new(
-                (ushort)(Math.Floor(((BaseStats.HP + Old.HP.Iv) * 2 + Math.Floor(Math.Ceiling(Math.Sqrt(Old.HP.Ev)) / 4)) * level / 100) + level + 10),
-                (ushort)(Math.Floor(((BaseStats.Attack + Old.Attack.Iv) * 2 + Math.Floor(Math.Ceiling(Math.Sqrt(Old.Attack.Ev)) / 4)) * level / 100) + 5),
-                (ushort)(Math.Floor(((BaseStats.Defense + Old.Defense.Iv) * 2 + Math.Floor(Math.Ceiling(Math.Sqrt(Old.Defense.Ev)) / 4)) * level / 100) + 5),
-                (ushort)(Math.Floor(((BaseStats.SpecialAttack + Old.SpecialAttack.Iv) * 2 + Math.Floor(Math.Ceiling(Math.Sqrt(Old.SpecialAttack.Ev)) / 4)) * level / 100) + 5),
-                (ushort)(Math.Floor(((BaseStats.SpecialDefense + Old.SpecialDefense.Iv) * 2 + Math.Floor(Math.Ceiling(Math.Sqrt(Old.SpecialDefense.Ev)) / 4)) * level / 100) + 5),
-                (ushort)(Math.Floor(((BaseStats.Speed + Old.Speed.Iv) * 2 + Math.Floor(Math.Ceiling(Math.Sqrt(Old.Speed.Ev)) / 4)) * level / 100) + 5)
+                (ushort)(Math.Floor(((BaseStats.HP + Old.HP.Iv) * 2 + Math.Floor(Math.Ceiling(Math.Sqrt(Old.HP.Ev)) / 4)) * PartyPokemon.Level / 100) + PartyPokemon.Level + 10),
+                (ushort)(Math.Floor(((BaseStats.Attack + Old.Attack.Iv) * 2 + Math.Floor(Math.Ceiling(Math.Sqrt(Old.Attack.Ev)) / 4)) * PartyPokemon.Level / 100) + 5),
+                (ushort)(Math.Floor(((BaseStats.Defense + Old.Defense.Iv) * 2 + Math.Floor(Math.Ceiling(Math.Sqrt(Old.Defense.Ev)) / 4)) * PartyPokemon.Level / 100) + 5),
+                (ushort)(Math.Floor(((BaseStats.SpecialAttack + Old.SpecialAttack.Iv) * 2 + Math.Floor(Math.Ceiling(Math.Sqrt(Old.SpecialAttack.Ev)) / 4)) * PartyPokemon.Level / 100) + 5),
+                (ushort)(Math.Floor(((BaseStats.SpecialDefense + Old.SpecialDefense.Iv) * 2 + Math.Floor(Math.Ceiling(Math.Sqrt(Old.SpecialDefense.Ev)) / 4)) * PartyPokemon.Level / 100) + 5),
+                (ushort)(Math.Floor(((BaseStats.Speed + Old.Speed.Iv) * 2 + Math.Floor(Math.Ceiling(Math.Sqrt(Old.Speed.Ev)) / 4)) * PartyPokemon.Level / 100) + 5)
             )
         );
     }
 
-    public void SetFinalModernSystemValues(int level, Nature? nature = null)
+    public void SetFinalModernSystemValues()
     {
         double modifiedAttack = 1;
         double modifiedDefense = 1;
@@ -148,9 +149,9 @@ public class StatStructure
         double modifiedSpecialDefense = 1;
         double modifiedSpeed = 1;
 
-        if (nature.HasValue)
+        if (PartyPokemon.Nature != null)
         {
-            switch (nature.Value.IncreaseId)
+            switch (PartyPokemon.Nature.IncreaseId)
             {
                 case 2:
                     modifiedAttack = 1.1;
@@ -171,7 +172,7 @@ public class StatStructure
                     break;
             }
 
-            switch (nature.Value.DecreaseId)
+            switch (PartyPokemon.Nature.DecreaseId)
             {
                 case 2:
                     modifiedAttack = 0.9;
@@ -195,12 +196,12 @@ public class StatStructure
 
         Modern.SetFinalValues(
             new(
-                (ushort)(Math.Floor((2 * BaseStats.HP + Modern.HP.Iv + Math.Floor(Modern.HP.Ev / 4.0)) * level / 100.0) + level + 10),
-                (ushort)Math.Floor((Math.Floor((2 * BaseStats.Attack + Modern.Attack.Iv + Math.Floor(Modern.Attack.Ev / 4.0)) * level / 100.0) + 5) * modifiedAttack),
-                (ushort)Math.Floor((Math.Floor((2 * BaseStats.Defense + Modern.Defense.Iv + Math.Floor(Modern.Defense.Ev / 4.0)) * level / 100.0) + 5) * modifiedDefense),
-                (ushort)Math.Floor((Math.Floor((2 * BaseStats.SpecialAttack + Modern.SpecialAttack.Iv + Math.Floor(Modern.SpecialAttack.Ev / 4.0)) * level / 100.0) + 5) * modifiedSpecialAttack),
-                (ushort)Math.Floor((Math.Floor((2 * BaseStats.SpecialDefense + Modern.SpecialDefense.Iv + Math.Floor(Modern.SpecialDefense.Ev / 4.0)) * level / 100.0) + 5) * modifiedSpecialDefense),
-                (ushort)Math.Floor((Math.Floor((2 * BaseStats.Speed + Modern.Speed.Iv + Math.Floor(Modern.Speed.Ev / 4.0)) * level / 100.0) + 5) * modifiedSpeed)
+                (ushort)(Math.Floor((2 * BaseStats.HP + Modern.HP.Iv + Math.Floor(Modern.HP.Ev / 4.0)) * PartyPokemon.Level / 100.0) + PartyPokemon.Level + 10),
+                (ushort)Math.Floor((Math.Floor((2 * BaseStats.Attack + Modern.Attack.Iv + Math.Floor(Modern.Attack.Ev / 4.0)) * PartyPokemon.Level / 100.0) + 5) * modifiedAttack),
+                (ushort)Math.Floor((Math.Floor((2 * BaseStats.Defense + Modern.Defense.Iv + Math.Floor(Modern.Defense.Ev / 4.0)) * PartyPokemon.Level / 100.0) + 5) * modifiedDefense),
+                (ushort)Math.Floor((Math.Floor((2 * BaseStats.SpecialAttack + Modern.SpecialAttack.Iv + Math.Floor(Modern.SpecialAttack.Ev / 4.0)) * PartyPokemon.Level / 100.0) + 5) * modifiedSpecialAttack),
+                (ushort)Math.Floor((Math.Floor((2 * BaseStats.SpecialDefense + Modern.SpecialDefense.Iv + Math.Floor(Modern.SpecialDefense.Ev / 4.0)) * PartyPokemon.Level / 100.0) + 5) * modifiedSpecialDefense),
+                (ushort)Math.Floor((Math.Floor((2 * BaseStats.Speed + Modern.Speed.Iv + Math.Floor(Modern.Speed.Ev / 4.0)) * PartyPokemon.Level / 100.0) + 5) * modifiedSpeed)
             )
         );
     }
@@ -225,6 +226,6 @@ public class StatStructure
             new SqliteParameterPair("spd_ev", SqliteType.Integer, defaultSet.SpecialDefense.Ev)
         ];
 
-        return DbInterface.InsertIntoDatabase("stats", parameterPairs, Lookup.StorageConnectionString);
+        return DbInterface.InsertIntoDatabase("stats", parameterPairs, Lookup.DefaultStorageConnectionString);
     }
 }

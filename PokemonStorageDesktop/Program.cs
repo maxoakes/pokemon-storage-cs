@@ -71,7 +71,7 @@ sealed class Program
         // Access configuration values
         Lookup.VeekunConnectionString = config.GetConnectionString("veekun") ?? "";
         Lookup.SupplementConnectionString = config.GetConnectionString("supplement") ?? "";
-        Lookup.StorageConnectionString = config.GetConnectionString("storage") ?? "";
+        Lookup.DefaultStorageConnectionString = config.GetConnectionString("storage") ?? "";
         Settings = new Settings(config);
 
         if (!Settings.AreSettingsValid())

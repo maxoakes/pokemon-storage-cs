@@ -102,7 +102,7 @@ public class SaveDataGeneration4 : SaveData
         int trainerGenderOffset = Game.VersionGroupId == 9 ? 0x80 : 0x7C;
 
         Trainer = new(
-            Utility.GetDecodedString(Utility.GetBytes(GeneralBlocks[GeneralBlockIndex].Data, trainerNameOffset, 16), Game, Language),
+            Utility.GetDecodedString(Utility.GetBytes(GeneralBlocks[GeneralBlockIndex].Data, trainerNameOffset, 16), Game, Language.Iso639),
             Utility.GetUnsignedNumber<byte>(GeneralBlocks[GeneralBlockIndex].Data, trainerPublicIdOffset, 1),
             Utility.GetUnsignedNumber<ushort>(GeneralBlocks[GeneralBlockIndex].Data, trainerSecretIdOffset, 2),
             Utility.GetUnsignedNumber<ushort>(GeneralBlocks[GeneralBlockIndex].Data, trainerGenderOffset, 2)
@@ -139,7 +139,7 @@ public class SaveDataGeneration4 : SaveData
             int boxNameOffset = (Game.VersionGroupId == 10) ? 0x12008 : 0x11EE4;
             
             byte[] boxNameBytes = Utility.GetBytes(StorageBlocks[StorageBlockIndex].Data, boxNameOffset + (i * 40), 40);
-            string boxName = Utility.GetDecodedString(boxNameBytes, Game, Language);
+            string boxName = Utility.GetDecodedString(boxNameBytes, Game, Language.Iso639);
             if (!BoxList.ContainsKey(boxName)) BoxList.Add(boxName, []);
             byte[] thisBoxBytes = Utility.GetBytes(StorageBlocks[StorageBlockIndex].Data, pokemonOffset + (boxSize * i), 136 * 30);
 
@@ -217,15 +217,15 @@ public class SaveDataGeneration4 : SaveData
             switch (c)
             {
                 case 'A':
-                    p.PokemonIdentity = Lookup.GetPokemonByFormId(Lookup.GetPokemonFormIdByGameIndex(4, Utility.GetUnsignedNumber<ushort>(blockBytes, 0x00, 2)), Lookup.GetLanguageIdByIdentifier(Language)); 
-                    p.HeldItemId = Lookup.GetItemIdByGameIndex(4, Utility.GetUnsignedNumber<ushort>(blockBytes, 0x02, 2));
+                    p.PokemonIdentity = Lookup.GetPokemonByFormId(Lookup.GetIdByGameIndex(Utility.GetUnsignedNumber<ushort>(blockBytes, 0x00, 2), SupplementObject.Pokemon, 4), Language.Id); 
+                    p.HeldItemId = Lookup.GetIdByGameIndex(Utility.GetUnsignedNumber<ushort>(blockBytes, 0x02, 2), SupplementObject.Items, 4);
                     p.OriginalTrainer.PublicId = Utility.GetUnsignedNumber<ushort>(blockBytes, 0x04, 2);
                     p.OriginalTrainer.SecretId = Utility.GetUnsignedNumber<ushort>(blockBytes, 0x06, 2);
                     p.ExperiencePoints = Utility.GetUnsignedNumber<uint>(blockBytes, 0x08, 4);
                     p.Friendship = Utility.GetUnsignedNumber<byte>(blockBytes, 0x0C, 1);
                     p.AbilityId = Utility.GetUnsignedNumber<byte>(blockBytes, 0x0D, 1);
                     p.Markings = new(4, Utility.GetUnsignedNumber<byte>(blockBytes, 0x0E, 1));
-                    p.LanguageId = Lookup.GetLanguageIdByGameIndex(Utility.GetUnsignedNumber<byte>(blockBytes, 0x0F, 1));
+                    p.LanguageId = (byte)Lookup.GetIdByGameIndex(Utility.GetUnsignedNumber<byte>(blockBytes, 0x0F, 1), SupplementObject.Languages, 4);
                     ev.HP = Utility.GetUnsignedNumber<byte>(blockBytes, 0x10, 1);
                     ev.Attack = Utility.GetUnsignedNumber<byte>(blockBytes, 0x11, 1);
                     ev.Defense = Utility.GetUnsignedNumber<byte>(blockBytes, 0x12, 1);
@@ -289,20 +289,20 @@ public class SaveDataGeneration4 : SaveData
                     p.AlternateFormId = (ushort)Convert.ToInt16(Utility.ReverseString(flagsBinary.Substring(3, 5)), 2);
                     p.ShinyLeaves = Utility.GetUnsignedNumber<byte>(blockBytes, 0x19, 1);
 
-                    p.Origin.EggHatchLocationPlatinumId = Lookup.GetLocationIdByGameIndex(4, Utility.GetUnsignedNumber<ushort>(blockBytes, 0x1C, 2));
-                    p.Origin.MetLocationPlatinumId = Lookup.GetLocationIdByGameIndex(4, Utility.GetUnsignedNumber<ushort>(blockBytes, 0x1E, 2));
+                    p.Origin.EggHatchLocationPlatinumId = Lookup.GetIdByGameIndex(Utility.GetUnsignedNumber<ushort>(blockBytes, 0x1C, 2), SupplementObject.Locations, 4);
+                    p.Origin.MetLocationPlatinumId = Lookup.GetIdByGameIndex(Utility.GetUnsignedNumber<ushort>(blockBytes, 0x1E, 2), SupplementObject.Locations, 4);
                     break;
 
                 case 'C':
                     byte[] nicknameBytes = Utility.GetBytes(blockBytes, 0x0, 20);
-                    p.Nickname = Utility.GetDecodedString(nicknameBytes, Game, Language);
-                    p.Origin.Game = Lookup.GetGameByVersionId(Lookup.GetVersionIdByGameIndex(Utility.GetUnsignedNumber<byte>(blockBytes, 0x17, 1)));
+                    p.Nickname = Utility.GetDecodedString(nicknameBytes, Game, Language.Iso639);
+                    p.Origin.Game = Lookup.GetGameByVersionId(Lookup.GetIdByGameIndex(Utility.GetUnsignedNumber<byte>(blockBytes, 0x17, 1), SupplementObject.GameOrigins, 4));
                     p.Ribbons.SinnohSet2 = Utility.GetUnsignedNumber<uint>(blockBytes, 0x18, 4);
                     break;
 
                 case 'D':
                     byte[] otNameBytes = Utility.GetBytes(blockBytes, 0x0, 16);
-                    p.OriginalTrainer.Name = Utility.GetDecodedString(otNameBytes, Game, Language);
+                    p.OriginalTrainer.Name = Utility.GetDecodedString(otNameBytes, Game, Language.Iso639);
                     
                     byte eggYear = Utility.GetUnsignedNumber<byte>(blockBytes, 0x10, 1);
                     byte eggMonth = Utility.GetUnsignedNumber<byte>(blockBytes, 0x11, 1);
@@ -320,27 +320,27 @@ public class SaveDataGeneration4 : SaveData
                         p.Origin.MetDateTime = new DateTime(metYear + 2000, metMonth, metDay);
                     }
                     
-                    p.Origin.EggHatchLocationId = Lookup.GetLocationIdByGameIndex(4, Utility.GetUnsignedNumber<ushort>(blockBytes, 0x16, 2));
-                    p.Origin.MetLocationId = Lookup.GetLocationIdByGameIndex(4, Utility.GetUnsignedNumber<ushort>(blockBytes, 0x18, 2));
+                    p.Origin.EggHatchLocationId = Lookup.GetIdByGameIndex(Utility.GetUnsignedNumber<ushort>(blockBytes, 0x16, 2), SupplementObject.Locations, 4);
+                    p.Origin.MetLocationId = Lookup.GetIdByGameIndex(Utility.GetUnsignedNumber<ushort>(blockBytes, 0x18, 2), SupplementObject.Locations, 4);
 
                     byte pokerusData = Utility.GetUnsignedNumber<byte>(blockBytes, 0x1A, 1);
                     string pokerusBinary = Convert.ToString(pokerusData, 2).PadLeft(8, '0');
                     p.PokerusStrain = Convert.ToByte(pokerusBinary.Substring(0, 4), 2);
                     p.PokerusDaysRemaining = Convert.ToByte(pokerusBinary.Substring(4, 4), 2);
 
-                    p.Origin.PokeballId = Utility.GetUnsignedNumber<byte>(blockBytes, 0x1B, 1);
+                    p.Origin.CatchBallId = Utility.GetUnsignedNumber<byte>(blockBytes, 0x1B, 1);
 
                     int originData = Utility.GetUnsignedNumber<byte>(blockBytes, 0x1C, 1);
                     string originBinary = Utility.ReverseString(Convert.ToString(originData, 2).PadLeft(8, '0'));
                     p.Origin.MetLevel = Convert.ToByte(Utility.ReverseString(originBinary.Substring(0, 6)), 2);
                     p.OriginalTrainer.Gender = originBinary[7] == '1' ? Gender.FEMALE : Gender.MALE;
-                    p.Origin.EncounterTypeId = Utility.GetUnsignedNumber<byte>(blockBytes, 0x1D, 1);
+                    p.Origin.EncounterMethodId = Utility.GetUnsignedNumber<byte>(blockBytes, 0x1D, 1);
 
                     if (Game.VersionGroupId == 10)
                     {
-                        if (p.Origin.PokeballId == 0)
+                        if (p.Origin.CatchBallId == 0)
                         {
-                            p.Origin.PokeballId = Utility.GetUnsignedNumber<byte>(blockBytes, 0x1E, 1);
+                            p.Origin.CatchBallId = Utility.GetUnsignedNumber<byte>(blockBytes, 0x1E, 1);
                         }
                         p.WalkingMood = Utility.GetUnsignedNumber<byte>(blockBytes, 0x1F, 1);
                     }
@@ -352,7 +352,7 @@ public class SaveDataGeneration4 : SaveData
 
         // Calculations        
         // Console.WriteLine($"Done reading: {PokemonIdentity.SpeciesIdentifier}");
-        p.Stats = new(true, iv, ev, p.PokemonIdentity.SpeciesId, p.Level, p.Nature);
+        p.Stats = new(p, true, iv, ev);
         return p;
     }
 
@@ -378,7 +378,7 @@ public class SaveDataGeneration4 : SaveData
         byte[] maleBytes = Utility.GetBytes(GeneralBlocks[GeneralBlockIndex].Data, capturedOffset+0xC0, 0x3F);
         for (int i = 0; i < 493; i++)
         {
-            PokemonIdentity pokemon = Lookup.GetPokemonBySpeciesId(i+1, Lookup.GetLanguageIdByIdentifier(Language));
+            PokemonIdentity pokemon = Lookup.GetPokemonBySpeciesId(i+1, Language.Id);
             int ownedBit = ownedBytes[i >> 3] >> (i & 7) & 1;
             int seenBit = seenBytes[i >> 3] >> (i & 7) & 1;
             int femaleBit = femaleBytes[i >> 3] >> (i & 7) & 1;
@@ -439,10 +439,10 @@ public class SaveDataGeneration4 : SaveData
         // A block
         byte[] a = new byte[0x20];
 
-        byte[] speciesData = BitConverter.GetBytes(Lookup.GetPokemonGameIndexByFormId(4, p.PokemonIdentity.FormId));
+        byte[] speciesData = BitConverter.GetBytes(Lookup.GetGameIndexById(p.PokemonIdentity.FormId, SupplementObject.Pokemon, 4));
         Buffer.BlockCopy(speciesData, 0, a, 0x00, 2);
  
-        byte[] itemData = BitConverter.GetBytes(Lookup.GetItemGameIndexById(4, p.HeldItemId));
+        byte[] itemData = BitConverter.GetBytes(Lookup.GetGameIndexById(p.HeldItemId, SupplementObject.Items, 4));
         Buffer.BlockCopy(itemData, 0, a, 0x02, 2);
 
         byte[] otIdPublicData = [.. BitConverter.GetBytes(p.OriginalTrainer.PublicId)];
@@ -457,7 +457,7 @@ public class SaveDataGeneration4 : SaveData
         a[0x0C] = p.Friendship;
         a[0x0D] = (byte)p.AbilityId;
         a[0x0E] = p.Markings.AsGen4Byte();
-        a[0x0F] = Lookup.GetLanguageGameIndexById(p.LanguageId);
+        a[0x0F] = (byte)Lookup.GetGameIndexById(p.LanguageId, SupplementObject.Languages, 4);
         a[0x10] = (byte)p.Stats.Modern.HP.Ev;
         a[0x11] = (byte)p.Stats.Modern.Attack.Ev;
         a[0x12] = (byte)p.Stats.Modern.Defense.Ev;
@@ -522,19 +522,19 @@ public class SaveDataGeneration4 : SaveData
         
         b[0x19] = p.ShinyLeaves;
         
-        byte[] platEggLocationData = BitConverter.GetBytes(Lookup.GetLocationGameIndexById(4, p.Origin.EggHatchLocationPlatinumId));
+        byte[] platEggLocationData = BitConverter.GetBytes(Lookup.GetGameIndexById(p.Origin.EggHatchLocationPlatinumId, SupplementObject.Locations, 4));
         Buffer.BlockCopy(platEggLocationData, 0, b, 0x1C, 2);
 
-        byte[] platLocation = BitConverter.GetBytes(Lookup.GetLocationGameIndexById(4, p.Origin.MetLocationPlatinumId));
+        byte[] platLocation = BitConverter.GetBytes(Lookup.GetGameIndexById(p.Origin.MetLocationPlatinumId, SupplementObject.Locations, 4));
         Buffer.BlockCopy(platLocation, 0, b, 0x1E, 2);
 
         // C block
         byte[] c = new byte[0x20];
 
-        byte[] nicknameData = Utility.GetEncodedString(p.Nickname, 10, Game, Language);
+        byte[] nicknameData = Utility.GetEncodedString(p.Nickname, 10, Game, Language.Iso639);
         Buffer.BlockCopy(nicknameData, 0, c, 0x00, 20);
 
-        c[0x15] = Lookup.GetGameGameIndexById(p.Origin.Game.VersionId);
+        c[0x15] = (byte)Lookup.GetGameIndexById(p.Origin.Game.VersionId, SupplementObject.GameOrigins, 4);
 
         byte[] sinnohRibbon2Data = BitConverter.GetBytes(p.Ribbons.SinnohSet2);
         Buffer.BlockCopy(sinnohRibbon2Data, 0, c, 0x18, 4);
@@ -542,7 +542,7 @@ public class SaveDataGeneration4 : SaveData
         // D block
         byte[] d = new byte[0x20];
 
-        byte[] otNameData = Utility.GetEncodedString(p.OriginalTrainer.Name, 8, Game, Language);
+        byte[] otNameData = Utility.GetEncodedString(p.OriginalTrainer.Name, 8, Game, Language.Iso639);
         Buffer.BlockCopy(otNameData, 0, d, 0x00, 16);
 
         d[0x10] = (byte)(p.Origin.EggReceiveDate.HasValue ? p.Origin.EggReceiveDate.Value.Year - 2000 : 0);
@@ -553,17 +553,17 @@ public class SaveDataGeneration4 : SaveData
         d[0x14] = (byte)(p.Origin.MetDateTime.HasValue ? p.Origin.MetDateTime.Value.Month : 0);
         d[0x15] = (byte)(p.Origin.MetDateTime.HasValue ? p.Origin.MetDateTime.Value.Day : 0);
 
-        byte[] dpEggLocationData = [.. BitConverter.GetBytes(Lookup.GetLocationGameIndexById(4, p.Origin.EggHatchLocationId))];
+        byte[] dpEggLocationData = [.. BitConverter.GetBytes(Lookup.GetGameIndexById(p.Origin.EggHatchLocationId, SupplementObject.Locations, 4))];
         Buffer.BlockCopy(dpEggLocationData, 0, d, 0x16, 2);
 
-        byte[] dpMetLocationData = [.. BitConverter.GetBytes(Lookup.GetLocationGameIndexById(4, p.Origin.MetLocationId))];
+        byte[] dpMetLocationData = [.. BitConverter.GetBytes(Lookup.GetGameIndexById(p.Origin.MetLocationId, SupplementObject.Locations, 4))];
         Buffer.BlockCopy(dpMetLocationData, 0, d, 0x18, 2);
 
         d[0x1A] = (byte)(p.PokerusDaysRemaining + (p.PokerusStrain << 4));
-        d[0x1B] = Lookup.GetBallGameIndexByItemId(p.Origin.PokeballId);
+        d[0x1B] = (byte)Lookup.GetGameIndexById(p.Origin.CatchBallId, SupplementObject.Balls, 4);
         d[0x1C] = (byte)(p.Origin.MetLevel + (p.OriginalTrainer.Gender == Gender.FEMALE ? 0x80 : 0));
-        d[0x1D] = p.Origin.EncounterTypeId;
-        d[0x1E] = Lookup.GetBallGameIndexByItemId(p.Origin.PokeballId);
+        d[0x1D] = p.Origin.EncounterMethodId;
+        d[0x1E] = (byte)Lookup.GetGameIndexById(p.Origin.CatchBallId, SupplementObject.Balls, 4);
         d[0x1F] = p.WalkingMood;
 
         // Arrange substructure
@@ -730,7 +730,7 @@ public class SaveDataGeneration4 : SaveData
         foreach (PartyPokemon partyPokemon in partyPokemonList)
         {
             AddPokemonToNextOpenBox(partyPokemon);
-            WriteToPokedex((int)Lookup.GetNationalDexNumber(partyPokemon.PokemonIdentity.SpeciesId));
+            WriteToPokedex((int)partyPokemon.GetNationalDexNumber());
             SaveStructureToModifiedBytes();
             bool isValidWrite = AreAllChecksumsValid();
 

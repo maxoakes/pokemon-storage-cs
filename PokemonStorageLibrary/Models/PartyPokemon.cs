@@ -1,7 +1,5 @@
 using System.Data;
-using System.Text;
 using Microsoft.Data.Sqlite;
-using Microsoft.Extensions.Logging;
 
 namespace PokemonStorageLibrary.Models;
 
@@ -20,8 +18,8 @@ public partial class PartyPokemon
     public Trainer OriginalTrainer { get; set; }
     public byte AbilityNumber { get; set; }
     public ushort AbilityId { get; set; }
-    public string AbilityIdentifier { get { return Lookup.GetIdentifierById("abilities", AbilityId, Lookup.VeekunConnectionString); } }
-    public Nature Nature { get { return GetNatureFromPersonalityValue(); } }
+    public DatabaseIdentity AbilityIdentity { get { return Lookup.GetDatabaseIdentityById(AbilityId, DatabaseObject.Abilities); } }
+    public Nature? Nature { get { return GetNatureFromPersonalityValue(); } }
     
 
     // Nickname
@@ -29,10 +27,10 @@ public partial class PartyPokemon
     public string Nickname { get; set; }
 
     // Status
-    public byte Level { get { return Lookup.GetLevelFromExperience(PokemonIdentity.SpeciesId, ExperiencePoints); } }
+    public byte Level { get { return GetLevelFromExperience(); } }
     public uint ExperiencePoints { get; set; }
     public ushort HeldItemId { get; set; }
-    public string HeldItemIdentifier { get { return Lookup.GetIdentifierById("items", HeldItemId, Lookup.VeekunConnectionString); } }
+    public DatabaseIdentity HeldItemIdentity { get { return Lookup.GetDatabaseIdentityById(HeldItemId, DatabaseObject.Items); } }
     public byte Friendship { get; set; }
     public byte WalkingMood { get; set; }
     public bool IsShinyPersonalityValue { get {return GetShinyFromPersonalityValue(); } }
@@ -41,6 +39,7 @@ public partial class PartyPokemon
     // Stats
     public StatStructure Stats { get; set; }
 
+    // Moves
     public Dictionary<int, Move> Moves { get; set; }
     public uint PokerusDaysRemaining { get; set; }
     public uint PokerusStrain { get; set; }
@@ -66,7 +65,7 @@ public partial class PartyPokemon
     {
         // Overview
         Origin = new Origin(game.GenerationId);
-        LanguageId = Lookup.GetLanguageIdByIdentifier("en");
+        LanguageId = (byte)Lookup.GetIdByIdentifier("en", DatabaseObject.Languages).Id;
         OriginalTrainer = new Trainer("???", 0, 0, 0);
         PokemonIdentity = new PokemonIdentity();
         AlternateFormId = 0;
@@ -84,7 +83,7 @@ public partial class PartyPokemon
         WalkingMood = 0;
 
         // Stats
-        Stats = new(true, new StatHextuple(), new StatHextuple(), PokemonIdentity.SpeciesId, Level);
+        Stats = new(this, true, new StatHextuple(), new StatHextuple());
         
         Moves = [];
         for (int i = 0; i < 4; i++)
@@ -111,17 +110,17 @@ public partial class PartyPokemon
         Gen3Misc = 0;
     }
 
-    public PartyPokemon(Int64 primaryKey)
+    public PartyPokemon(Int64 primaryKey, string connectionString)
     {
         List<SqliteParameter> parameters = 
         [
-            new SqliteParameter("PrimaryKey", SqliteType.Integer) { Value = primaryKey }
+            new SqliteParameter("PokemonId", SqliteType.Integer) { Value = primaryKey }
         ];
 
-        DataTable pokemonDataTable = DbInterface.RetrieveTable($"SELECT * FROM pokemon WHERE id = @PrimaryKey", Lookup.StorageConnectionString, parameters);
+        DataTable pokemonDataTable = DbInterface.RetrieveTable("SELECT * FROM pokemon WHERE id = @PokemonId", connectionString, parameters);
         if (pokemonDataTable.Rows.Count == 0)
         {
-            throw new Exception($"No Pokemon found with primary key {primaryKey}");
+            throw new KeyNotFoundException($"No Pokemon found with primary key {primaryKey}");
         }
 
         foreach (DataRow row in pokemonDataTable.Rows)
@@ -160,15 +159,10 @@ public partial class PartyPokemon
             };
             Origin = new(row.Field<Int64>("fk_origin"));
             OriginalTrainer = new((Int64)row.Field<Int64>("fk_original_trainer"));
-            Stats = new(row.Field<Int64>("fk_stats"), PokemonIdentity.SpeciesId, Level, Nature);
+            Stats = new(this, row.Field<Int64>("fk_stats"));
         };
 
-        List<SqliteParameterPair> moveParameters = 
-        [
-            new SqliteParameterPair("PrimaryKey", SqliteType.Integer, primaryKey)
-        ];
-
-        DataTable movesDataTable = DbInterface.RetrieveTable($"SELECT * FROM move_set WHERE pokemon_id = @PrimaryKey", Lookup.StorageConnectionString, parameters);
+        DataTable movesDataTable = DbInterface.RetrieveTable($"SELECT * FROM move_set WHERE pokemon_id = @PokemonId", connectionString, parameters);
         Moves = [];
         foreach (DataRow row in movesDataTable.Rows)
         {
@@ -202,21 +196,23 @@ public partial class PartyPokemon
         return shinyValue < 8;
     }
 
-    public Nature GetNatureFromPersonalityValue()
+    public Nature? GetNatureFromPersonalityValue()
     {
+        if (PersonalityValue == 0) return null;
+
         int pNature = (int)(PersonalityValue % 25);
         return Lookup.GetNatureByGameIndex(pNature);
     }
 
     public ushort GetAbilityIdFromAbilityNumber()
     {
-        var speciesAbilities = Lookup.GetAbilitiesByPokemonId(PokemonIdentity.PokemonId);
+        var speciesAbilities = GetPossibleAbilities();
         return AbilityNumber == 0 ? speciesAbilities.First : speciesAbilities.Second;
     }
 
     public ushort GetAbilityNumberFromAbilityId()
     {
-        return Lookup.GetAbilityIdByAbilityNumber(PokemonIdentity.PokemonId, AbilityNumber);
+        return GetAbilityIdByAbilityNumber(AbilityNumber);
     }
 
     private string GetPersonalityString()
@@ -228,7 +224,7 @@ public partial class PartyPokemon
 
     public void AssignGenderByAttackIv()
     {
-        int ratio = Lookup.GetGenderRateBySpeciesId(PokemonIdentity.SpeciesId);
+        int ratio = GetGenderRate();
         Gender = ratio switch
         {
             0 => Gender.MALE,
@@ -241,7 +237,7 @@ public partial class PartyPokemon
     public Gender GetGenderByPersonalityValue()
     {
         int pGender = (int)(PersonalityValue % 256);
-        int threshold = Lookup.GetGenderThreshold(PokemonIdentity.SpeciesId);
+        int threshold = GetGenderThreshold();
         if (threshold == 0)
             return Gender.MALE;
         else if (threshold == 254)
@@ -255,6 +251,212 @@ public partial class PartyPokemon
             else
                 return Gender.FEMALE;
         }
+    }
+
+    public int GetGenderThreshold()
+    {
+        var threshold = new Dictionary<int, int>
+        {
+            [0] = 0,
+            [1] = 31,
+            [2] = 63,
+            [4] = 127,
+            [6] = 191,
+            [7] = 225,
+            [8] = 254,
+            [-1] = 255
+        };
+
+        // key/8 chance of being female
+        var genderRate = GetGenderRate();
+        return threshold.GetValueOrDefault(genderRate, 255);
+    }
+
+
+    public int GetGenderRate()
+    {
+        List<SqliteParameter> parameters = [
+            new SqliteParameter("Id", SqliteType.Integer) { Value = PokemonIdentity.SpeciesId },
+        ];
+
+        Int64 value = (Int64)DbInterface.RetrieveScalar("SELECT gender_rate FROM pokemon_species WHERE id=@Id", Lookup.VeekunConnectionString, parameters);
+        return (int)value;
+    }
+            
+    public byte GetBaseHappiness()
+    {
+        List<SqliteParameter> parameters = [
+            new SqliteParameter("Id", SqliteType.Integer) { Value = PokemonIdentity.SpeciesId },
+        ];
+
+        Int64 value = (Int64)DbInterface.RetrieveScalar("SELECT base_happiness FROM pokemon_species WHERE id=@Id", Lookup.VeekunConnectionString, parameters);
+        return (byte)value;
+    }
+        
+    public AbilityMapping GetPossibleAbilities()
+    {
+        List<SqliteParameter> parameters = [
+            new SqliteParameter("Id", SqliteType.Integer) { Value = PokemonIdentity.PokemonId },
+        ];
+
+        DataTable abilityMappingDataTable = DbInterface.RetrieveTable("""
+            SELECT 
+                ps.id AS species_id, 
+                pa.ability_id, 
+                pa.slot, 
+                pa.is_hidden 
+            FROM 
+                pokemon p 
+                LEFT JOIN pokemon_species ps ON p.species_id = ps.id 
+                LEFT JOIN pokemon_abilities pa ON p.id=pa.pokemon_id 
+            WHERE p.id=@Id
+        """, Lookup.VeekunConnectionString, parameters);
+
+        AbilityMapping abilityMapping = new();
+        foreach (DataRow row in abilityMappingDataTable.Rows)
+        {
+            Int64 abilityId = row.Field<Int64>("ability_id");
+            Int64 slot = row.Field<Int64>("slot");
+            bool isHidden = Convert.ToBoolean(row.Field<Int64>("is_hidden"));
+
+            abilityMapping.Assign((ushort)abilityId, (ushort)slot, isHidden);
+        }
+
+        return abilityMapping;
+    }
+
+    public ushort GetAbilityIdByAbilityNumber(byte slotId)
+    {
+        List<SqliteParameter> parameters = [
+            new SqliteParameter("PokemonId", SqliteType.Integer) { Value = PokemonIdentity.PokemonId },
+            new SqliteParameter("SlotId", SqliteType.Integer) { Value = slotId + 1 },
+        ];
+
+        try
+        {
+            Int64 index = (Int64)DbInterface.RetrieveScalar("SELECT ability_id FROM pokemon_abilities WHERE pokemon_id=@PokemonId AND slot=@SlotId", Lookup.VeekunConnectionString, parameters);
+            return (ushort)index;
+        }
+        catch (NullReferenceException)
+        {
+            return 0;
+        }
+    }
+
+    public StatHextuple GetBaseStats()
+    {
+        List<SqliteParameter> parameters = [
+            new SqliteParameter("Id", SqliteType.Integer) { Value = PokemonIdentity.SpeciesId }
+        ];
+
+        DataTable statDataTable = DbInterface.RetrieveTable("""
+                SELECT 
+                    ps.id,
+                    SUM(CASE WHEN ps2.stat_id=1 THEN ps2.base_stat ELSE 0 END) AS hp,
+                    SUM(CASE WHEN ps2.stat_id=2 THEN ps2.base_stat ELSE 0 END) AS attack,
+                    SUM(CASE WHEN ps2.stat_id=3 THEN ps2.base_stat ELSE 0 END) AS defense,
+                    SUM(CASE WHEN ps2.stat_id=4 THEN ps2.base_stat ELSE 0 END) AS special_attack,
+                    SUM(CASE WHEN ps2.stat_id=5 THEN ps2.base_stat ELSE 0 END) AS special_defense,
+                    SUM(CASE WHEN ps2.stat_id=6 THEN ps2.base_stat ELSE 0 END) AS speed
+                FROM 
+                    pokemon p 
+                    LEFT JOIN pokemon_species ps ON ps.id=p.species_id 
+                    LEFT JOIN pokemon_stats ps2 ON ps2.pokemon_id=p.id
+                WHERE p.id < 10000 AND ps.id = @Id
+                GROUP BY ps.id
+            """, Lookup.VeekunConnectionString, parameters);
+
+        foreach (DataRow row in statDataTable.Rows)
+        {
+            return new StatHextuple(
+                (ushort)row.Field<Int64>("hp"),
+                (ushort)row.Field<Int64>("attack"),
+                (ushort)row.Field<Int64>("defense"),
+                (ushort)row.Field<Int64>("special_attack"),
+                (ushort)row.Field<Int64>("special_defense"),
+                (ushort)row.Field<Int64>("speed")
+            );
+        }
+        return new StatHextuple();
+    }
+
+    public byte GetLevelFromExperience()
+    {
+        List<SqliteParameter> parameters = [
+            new SqliteParameter("Id", SqliteType.Integer) { Value = PokemonIdentity.SpeciesId },
+            new SqliteParameter("Experience", SqliteType.Integer) { Value = ExperiencePoints }
+        ];
+
+        DataTable statDataTable = DbInterface.RetrieveTable("""
+                SELECT 
+                    e.level,
+                    e.experience,
+                    ps.id,
+                    ps.identifier 
+                FROM 
+                    experience e 
+                    LEFT JOIN pokemon_species ps ON ps.growth_rate_id=e.growth_rate_id
+                WHERE 
+                    ps.id = @Id AND
+                    e.experience > @Experience
+                ORDER BY ps.id, `level` 
+        """, Lookup.VeekunConnectionString, parameters);
+
+        foreach (DataRow row in statDataTable.Rows)
+        {
+            // Edge case, level 0 and 0 experience
+            if (ExperiencePoints == 0) return 1;
+
+            // Edge case, level 100
+            if (row.Field<Int64>("level") == 100 && row.Field<Int64>("experience") == ExperiencePoints) return 100;
+
+            return (byte)Math.Max(row.Field<Int64>("level")-1, 0);
+        }
+        return 0;
+    }
+
+    public Int64 GetNationalDexNumber()
+    {
+        List<SqliteParameter> parameters = [
+            new SqliteParameter("Id", SqliteType.Integer) { Value = PokemonIdentity.SpeciesId }
+        ];
+
+        return (long)DbInterface.RetrieveScalar("SELECT * FROM pokemon_dex_numbers WHERE pokedex_id=1 AND species_id=@Id", Lookup.VeekunConnectionString, parameters);
+    }
+
+    public Types GetTypes()
+    {
+        List<SqliteParameter> parameters = [
+            new SqliteParameter("Id", SqliteType.Integer) { Value = PokemonIdentity.PokemonId }
+        ];
+
+        DataTable gameDataTable = DbInterface.RetrieveTable("SELECT * FROM pokemon_types WHERE pokemon_id=@Id", Lookup.VeekunConnectionString, parameters);
+
+        Types types = new();
+        foreach (DataRow row in gameDataTable.Rows)
+        {
+            if (row.Field<Int64>("slot") == 1) types.Slot1 = (byte)row.Field<Int64>("type_id");
+            if (row.Field<Int64>("slot") == 2) types.Slot2 = (byte)row.Field<Int64>("type_id");
+        }
+        return types;
+    }
+
+    public byte GetCatchRate()
+    {
+        List<SqliteParameter> parameters = [
+            new SqliteParameter("Id", SqliteType.Integer) { Value = PokemonIdentity.SpeciesId }
+        ];
+
+        return (byte)(Int64)DbInterface.RetrieveScalar("SELECT capture_rate FROM pokemon_species WHERE id=@Id", Lookup.VeekunConnectionString, parameters);
+    }
+
+    public bool DoesSpeciesHaveGenderDifference()
+    {
+        List<SqliteParameter> parameters = [
+            new SqliteParameter("Id", SqliteType.Integer) { Value = PokemonIdentity.SpeciesId }
+        ];
+
+        return (Int64)DbInterface.RetrieveScalar("SELECT has_gender_differences FROM pokemon_species WHERE id=@Id", Lookup.VeekunConnectionString, parameters) == 1;
     }
 
     public bool DoesNicknameExist()
@@ -286,23 +488,18 @@ public partial class PartyPokemon
         };
     }
 
-    public string GetSummaryString()
-    {
-        return $"{PokemonIdentity.SpeciesName}: Lv.{Level} ({Gender}) ({Nickname}) Nature: {Nature.Identifier}, Item: {HeldItemIdentifier}";
-    }
-
     public string GetPokemonShowdownString()
     {
         string genderString = Gender == Gender.GENDERLESS ? "" : $" ({Gender.ToString().Substring(0,1).ToUpper()})";
-        string itemString = HeldItemId > 0 ? $" @ {Lookup.GetNameById("item_names", "item_id", HeldItemId, 9, Lookup.VeekunConnectionString)}" : "";
+        string itemString = HeldItemId > 0 ? $" @ {HeldItemIdentity.Name}" : "";
         string basicLine = $"{PokemonIdentity.SpeciesName}{genderString}{itemString}";
-        string abilityLine = $"Ability: {Lookup.GetNameById("ability_names", "ability_id", AbilityId, 9, Lookup.VeekunConnectionString)}";
+        string abilityLine = $"Ability: {AbilityIdentity.Name}";
         string levelLine = $"Level: {Level}";
         string shinyLine = $"Shiny: {(IsShinyPersonalityValue ? "Yes": "No")}";
         string evLine = $"EVs: {Stats.Modern.HP.Ev} HP / {Stats.Modern.Attack.Ev} Atk / {Stats.Modern.Defense.Ev} Def / {Stats.Modern.SpecialAttack.Ev} SpA / {Stats.Modern.SpecialDefense.Ev} SpD / {Stats.Modern.Speed.Ev} Spe";
         string ivLine = $"IVs: {Stats.Modern.HP.Iv} HP / {Stats.Modern.Attack.Iv} Atk / {Stats.Modern.Defense.Iv} Def / {Stats.Modern.SpecialAttack.Iv} SpA / {Stats.Modern.SpecialDefense.Iv} SpD / {Stats.Modern.Speed.Iv} Spe";
-        string natureLine = $"{Lookup.GetNameById("nature_names", "nature_id", Nature.Id, 9, Lookup.VeekunConnectionString)} Nature";
-        List<string>moves = Moves.Values.Select(x => $"- {Lookup.GetNameById("move_names", "move_id", x.Id, 9, Lookup.VeekunConnectionString)}").ToList();
+        string natureLine = Nature != null ? $"{Lookup.GetDatabaseIdentityById(Nature.Id, DatabaseObject.Natures)} Nature" : "Serious";
+        List<string>moves = Moves.Values.Select(x => $"- {x.Identity.Name}").ToList();
         return $"{basicLine}\n{abilityLine}\n{levelLine}\n{shinyLine}\n{evLine}\n{ivLine}\n{natureLine}\n{string.Join("\n", moves)}";
     }
 

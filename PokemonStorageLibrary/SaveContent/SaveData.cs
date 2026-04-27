@@ -29,8 +29,8 @@ public abstract class SaveData
 {
     public byte[] OriginalData { get; set; }
     public byte[] ModifiedData { get; set; }
-    public Game Game { get; set; }
-    public string Language { get; set; }
+    public Game Game { get; }
+    public Language Language { get; }
     public Trainer Trainer { get; set; }
     public Dictionary<int, PartyPokemon> Party { get; set; } = [];
     public Dictionary<string, Dictionary<int, PartyPokemon>> BoxList { get; set; } = [];
@@ -42,7 +42,7 @@ public abstract class SaveData
         Array.Copy(content, OriginalData, content.Length);
         Array.Copy(content, ModifiedData, content.Length);
         Game = game;
-        Language = language;
+        Language = Lookup.GetLanguageByIdentifier(language, LanguageType.Iso3166);
     }
 
     #region Abstract Declarations

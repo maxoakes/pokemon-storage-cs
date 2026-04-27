@@ -24,7 +24,7 @@ public class Trainer
             new SqliteParameter("Id", SqliteType.Integer) { Value = trainerPrimaryKey }
         ];
 
-        DataTable dataTable = DbInterface.RetrieveTable($"SELECT * FROM original_trainer WHERE id = @Id", Lookup.StorageConnectionString, parameters);
+        DataTable dataTable = DbInterface.RetrieveTable($"SELECT * FROM original_trainer WHERE id = @Id", Lookup.DefaultStorageConnectionString, parameters);
         if (dataTable.Rows.Count == 0)
         {
             throw new Exception($"No Original Trainer found with primary key {trainerPrimaryKey}");
@@ -49,7 +49,7 @@ public class Trainer
             new SqliteParameterPair("secret_id", SqliteType.Integer, SecretId)
         ];
 
-        return DbInterface.InsertIntoDatabase("original_trainer", parameterPairs, Lookup.StorageConnectionString);
+        return DbInterface.InsertIntoDatabase("original_trainer", parameterPairs, Lookup.DefaultStorageConnectionString);
     }
 
     public int GetDatabasePrimaryKeyIfExists()
@@ -62,7 +62,7 @@ public class Trainer
             new SqliteParameterPair("secret_id", SqliteType.Integer, SecretId)
         ];
 
-        object primaryKey = DbInterface.RetrieveScalar("SELECT id FROM original_trainer WHERE public_id = @public_id AND secret_id = @secret_id", Lookup.StorageConnectionString, parameterPairs.Select(x => x.SqliteParameter).ToList());
+        object? primaryKey = DbInterface.RetrieveScalar("SELECT id FROM original_trainer WHERE public_id = @public_id AND secret_id = @secret_id", Lookup.DefaultStorageConnectionString, parameterPairs.Select(x => x.SqliteParameter).ToList());
         if (primaryKey == null || primaryKey == DBNull.Value)
         {
             return -1;

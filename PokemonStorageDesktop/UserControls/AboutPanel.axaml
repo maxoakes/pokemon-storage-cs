@@ -147,37 +147,16 @@
             <StackPanel>
                 <Border Classes="Header">
                     <StackPanel>
-                        <TextBlock x:Name="tbHeaderTitle" Classes="HeaderTitle" Text="Pokémon"/>
-                        <TextBlock x:Name="tbHeaderSubtitle" Classes="HeaderSubtitle" Text="Nickname"/>
+                        <TextBlock x:Name="tbHeaderTitle" Classes="HeaderTitle" Text=""/>
+                        <TextBlock x:Name="tbHeaderSubtitle" Classes="HeaderSubtitle" Text=""/>
                     </StackPanel>
                 </Border>
                 <Border Classes="Subheader VerticalShadow">
                     <StackPanel>
-                        <TextBlock x:Name="tbOriginalTrainer" Classes="SubheaderTitle" Text="Ash (12345-01234)"/>
+                        <TextBlock x:Name="tbOriginalTrainer" Classes="SubheaderTitle" Text=""/>
                     </StackPanel>
                 </Border>
                 <WrapPanel Name="OverviewBadgeBanner" Classes="BadgeBanner">
-                    <Border Name="LanguageBadge" Classes="Badge">
-                        <TextBlock Name="LanguageValue" Text="LANG"/>
-                    </Border>
-                    <Border Name="FormBadge" Classes="Badge">
-                        <TextBlock  Name="FormValue" Text="FORM"/>
-                    </Border>
-                    <Border Name="EggBadge" Classes="Badge">
-                        <TextBlock  Name="EggValue" Text="EGG"/>
-                    </Border>
-                    <Border Name="ShinyBadge" Classes="Badge">
-                        <TextBlock  Name="ShinyValue" Text="SHINY"/>
-                    </Border>
-                    <Border Name="GenderBadge" Classes="Badge">
-                        <TextBlock  Name="GenderValue" Text="GENDER"/>
-                    </Border>
-                    <Border Name="FatefulBadge" Classes="Badge">
-                        <TextBlock  Name="FatefulValue" Text="Fateful Encounter"/>
-                    </Border>
-                    <Border Name="ObedienceBadge" Classes="Badge">
-                        <TextBlock  Name="ObedienceValue" Text="Obedient"/>
-                    </Border>
                 </WrapPanel>
                 
                 <!-- Overview -->
@@ -186,35 +165,35 @@
                         <TextBlock Classes="SectionTitle" Text="Overview"/>
                         <Grid Classes="FieldRow">
                         <TextBlock Classes="Label" Text="Personality Value"/>
-                        <TextBlock x:Name="tbPersonalityValue" Classes="Value" Text="2147483647" Grid.Column="1"/>
+                        <TextBlock x:Name="tbPersonalityValue" Classes="Value" Text="" Grid.Column="1"/>
                         </Grid>
                         <Grid Classes="FieldRow">
                             <TextBlock Classes="Label" Text="Nature"/>
-                            <TextBlock x:Name="tbNatureValue" Classes="Value" Text="Modest" Grid.Column="1"/>
+                            <TextBlock x:Name="tbNatureValue" Classes="Value" Text="" Grid.Column="1"/>
                         </Grid>
                         <Grid Classes="FieldRow">
                             <TextBlock Classes="Label" Text="Ability"/>
-                            <TextBlock x:Name="tbAbilityValue" Classes="Value" Text="Overgrow (0)" Grid.Column="1"/>
+                            <TextBlock x:Name="tbAbilityValue" Classes="Value" Text="" Grid.Column="1"/>
                         </Grid>
                         <Grid Classes="FieldRow">
                             <TextBlock Classes="Label" Text="Level"/>
-                            <TextBlock x:Name="tbLevelValue" Classes="Value" Text="15" Grid.Column="1"/>
+                            <TextBlock x:Name="tbLevelValue" Classes="Value" Text="" Grid.Column="1"/>
                         </Grid>
                         <Grid Classes="FieldRow">
                             <TextBlock Classes="Label" Text="Experience"/>
-                            <TextBlock x:Name="tbExperienceValue" Classes="Value" Text="3375" Grid.Column="1"/>
+                            <TextBlock x:Name="tbExperienceValue" Classes="Value" Text="" Grid.Column="1"/>
                         </Grid>
                         <Grid Classes="FieldRow">
                             <TextBlock Classes="Label" Text="Friendship"/>
-                            <TextBlock x:Name="tbFriendshipValue" Classes="Value" Text="120" Grid.Column="1"/>
+                            <TextBlock x:Name="tbFriendshipValue" Classes="Value" Text="" Grid.Column="1"/>
                         </Grid>
                         <Grid Classes="FieldRow">
                             <TextBlock Classes="Label" Text="Held Item"/>
-                            <TextBlock x:Name="tbHeldItemValue" Classes="Value" Text="None" Grid.Column="1"/>
+                            <TextBlock x:Name="tbHeldItemValue" Classes="Value" Text="" Grid.Column="1"/>
                         </Grid>
                         <Grid Classes="FieldRow">
                             <TextBlock Classes="Label" Text="Pokerus"/>
-                            <TextBlock x:Name="tbPokerusValue" Classes="Value" Text="Yes (2 days remaining)" Grid.Column="1"/>
+                            <TextBlock x:Name="tbPokerusValue" Classes="Value" Text="" Grid.Column="1"/>
                         </Grid>
                     </StackPanel>
                 </Border>
@@ -225,35 +204,35 @@
                         <TextBlock Classes="SectionTitle" Text="Origin"/>
                         <Grid Classes="FieldRow">
                             <TextBlock Classes="Label" Text="Game"/>
-                            <TextBlock  x:Name="tbOriginGameValue" Classes="Value" Text="HeartGold" Grid.Column="1"/>
+                            <TextBlock  x:Name="tbOriginGameValue" Classes="Value" Text="" Grid.Column="1"/>
                         </Grid>
                         <Grid Classes="FieldRow">
                             <TextBlock Classes="Label" Text="Met Level"/>
-                            <TextBlock  x:Name="tbOriginMetLevelValue" Classes="Value" Text="2" Grid.Column="1"/>
+                            <TextBlock  x:Name="tbOriginMetLevelValue" Classes="Value" Text="" Grid.Column="1"/>
                         </Grid>
                         <Grid Classes="FieldRow">
                             <TextBlock Classes="Label" Text="Met Date"/>
-                            <TextBlock x:Name="tbOriginMetDateValue" Classes="Value" Text="2/5/2020" Grid.Column="1"/>
+                            <TextBlock x:Name="tbOriginMetDateValue" Classes="Value" Text="" Grid.Column="1"/>
                         </Grid>
                         <Grid Classes="FieldRow">
                             <TextBlock Classes="Label" Text="Met Location"/>
-                            <TextBlock x:Name="tbOriginMetLocationValue" Classes="Value" Text="Victory Road" Grid.Column="1"/>
+                            <TextBlock x:Name="tbOriginMetLocationValue" Classes="Value" Text="" Grid.Column="1"/>
                         </Grid>
                         <Grid Classes="FieldRow">
                             <TextBlock Classes="Label" Text="Pokéball"/>
-                            <TextBlock x:Name="tbOriginPokeballValue" Classes="Value" Text="Nest Ball" Grid.Column="1"/>
+                            <TextBlock x:Name="tbOriginPokeballValue" Classes="Value" Text="" Grid.Column="1"/>
                         </Grid>
                         <Grid Classes="FieldRow">
                             <TextBlock Classes="Label" Text="Encounter"/>
-                            <TextBlock x:Name="tbOriginEncounterTypeValue" Classes="Value" Text="Grass" Grid.Column="1"/>
+                            <TextBlock x:Name="tbOriginEncounterTypeValue" Classes="Value" Text="" Grid.Column="1"/>
                         </Grid>
                         <Grid Classes="FieldRow">
                             <TextBlock Classes="Label" Text="Egg Receive Date"/>
-                            <TextBlock x:Name="tbOriginEggReceiveValue" Classes="Value" Text="2/1/2020" Grid.Column="1"/>
+                            <TextBlock x:Name="tbOriginEggReceiveValue" Classes="Value" Text="" Grid.Column="1"/>
                         </Grid>
                         <Grid Classes="FieldRow">
                             <TextBlock Classes="Label" Text="Hatch Location"/>
-                            <TextBlock x:Name="tbOriginEggHatchLocationValue" Classes="Value" Text="Daycare Couple" Grid.Column="1"/>
+                            <TextBlock x:Name="tbOriginEggHatchLocationValue" Classes="Value" Text="" Grid.Column="1"/>
                         </Grid>
                     </StackPanel>
                 </Border>
@@ -269,34 +248,34 @@
                             <TextBlock Classes="TableHeader" Text="EV" Grid.Row="0" Grid.Column="3"/>
 
                             <TextBlock x:Name="tbHp" Classes="TableKey" Text="HP" Grid.Row="1" Grid.Column="0"/>
-                            <TextBlock x:Name="tbHPCalcValue" Classes="TableValue" Text="45" Grid.Row="1" Grid.Column="1"/>
-                            <TextBlock x:Name="tbHPIVValue" Classes="TableValue" Text="31" Grid.Row="1" Grid.Column="2"/>
-                            <TextBlock x:Name="tbHPEVValue" Classes="TableValue" Text="252" Grid.Row="1" Grid.Column="3"/>
+                            <TextBlock x:Name="tbHPCalcValue" Classes="TableValue" Text="" Grid.Row="1" Grid.Column="1"/>
+                            <TextBlock x:Name="tbHPIVValue" Classes="TableValue" Text="" Grid.Row="1" Grid.Column="2"/>
+                            <TextBlock x:Name="tbHPEVValue" Classes="TableValue" Text="" Grid.Row="1" Grid.Column="3"/>
 
                             <TextBlock x:Name="tbAttack" Classes="TableKey" Text="Attack" Grid.Row="2" Grid.Column="0"/>
-                            <TextBlock x:Name="tbAttackCalcValue" Classes="TableValue" Text="49" Grid.Row="2" Grid.Column="1"/>
-                            <TextBlock x:Name="tbAttackIVValue" Classes="TableValue" Text="31" Grid.Row="2" Grid.Column="2"/>
-                            <TextBlock x:Name="tbAttackEVValue" Classes="TableValue" Text="252" Grid.Row="2" Grid.Column="3"/>
+                            <TextBlock x:Name="tbAttackCalcValue" Classes="TableValue" Text="" Grid.Row="2" Grid.Column="1"/>
+                            <TextBlock x:Name="tbAttackIVValue" Classes="TableValue" Text="" Grid.Row="2" Grid.Column="2"/>
+                            <TextBlock x:Name="tbAttackEVValue" Classes="TableValue" Text="" Grid.Row="2" Grid.Column="3"/>
 
                             <TextBlock x:Name="tbDefense" Classes="TableKey" Text="Defense" Grid.Row="3" Grid.Column="0"/>
-                            <TextBlock x:Name="tbDefenseCalcValue" Classes="TableValue" Text="49" Grid.Row="3" Grid.Column="1"/>
-                            <TextBlock x:Name="tbDefenseIVValue" Classes="TableValue" Text="31" Grid.Row="3" Grid.Column="2"/>
-                            <TextBlock x:Name="tbDefenseEVValue" Classes="TableValue" Text="252" Grid.Row="3" Grid.Column="3"/>
+                            <TextBlock x:Name="tbDefenseCalcValue" Classes="TableValue" Text="" Grid.Row="3" Grid.Column="1"/>
+                            <TextBlock x:Name="tbDefenseIVValue" Classes="TableValue" Text="" Grid.Row="3" Grid.Column="2"/>
+                            <TextBlock x:Name="tbDefenseEVValue" Classes="TableValue" Text="" Grid.Row="3" Grid.Column="3"/>
 
                             <TextBlock x:Name="tbSpAtk" Classes="TableKey" Text="Sp. Atk" Grid.Row="4" Grid.Column="0"/>
-                            <TextBlock x:Name="tbSpAtkCalcValue" Classes="TableValue" Text="65" Grid.Row="4" Grid.Column="1"/>
-                            <TextBlock x:Name="tbSpAtkIVValue" Classes="TableValue" Text="31" Grid.Row="4" Grid.Column="2"/>
-                            <TextBlock x:Name="tbSpAtkEVValue" Classes="TableValue" Text="252" Grid.Row="4" Grid.Column="3"/>
+                            <TextBlock x:Name="tbSpAtkCalcValue" Classes="TableValue" Text="" Grid.Row="4" Grid.Column="1"/>
+                            <TextBlock x:Name="tbSpAtkIVValue" Classes="TableValue" Text="" Grid.Row="4" Grid.Column="2"/>
+                            <TextBlock x:Name="tbSpAtkEVValue" Classes="TableValue" Text="" Grid.Row="4" Grid.Column="3"/>
 
                             <TextBlock x:Name="tbSpDef" Classes="TableKey" Text="Sp. Def" Grid.Row="5" Grid.Column="0"/>
-                            <TextBlock x:Name="tbSpDefCalcValue" Classes="TableValue" Text="65" Grid.Row="5" Grid.Column="1"/>
-                            <TextBlock x:Name="tbSpDefIVValue" Classes="TableValue" Text="31" Grid.Row="5" Grid.Column="2"/>
-                            <TextBlock x:Name="tbSpDefEVValue" Classes="TableValue" Text="252" Grid.Row="5" Grid.Column="3"/>
+                            <TextBlock x:Name="tbSpDefCalcValue" Classes="TableValue" Text="" Grid.Row="5" Grid.Column="1"/>
+                            <TextBlock x:Name="tbSpDefIVValue" Classes="TableValue" Text="" Grid.Row="5" Grid.Column="2"/>
+                            <TextBlock x:Name="tbSpDefEVValue" Classes="TableValue" Text="" Grid.Row="5" Grid.Column="3"/>
 
                             <TextBlock x:Name="tbSpeed" Classes="TableKey" Text="Speed" Grid.Row="6" Grid.Column="0"/>
-                            <TextBlock x:Name="tbSpeedCalcValue" Classes="TableValue" Text="45" Grid.Row="6" Grid.Column="1"/>
-                            <TextBlock x:Name="tbSpeedIVValue" Classes="TableValue" Text="31" Grid.Row="6" Grid.Column="2"/>
-                            <TextBlock x:Name="tbSpeedEVValue" Classes="TableValue" Text="252" Grid.Row="6" Grid.Column="3"/>
+                            <TextBlock x:Name="tbSpeedCalcValue" Classes="TableValue" Text="" Grid.Row="6" Grid.Column="1"/>
+                            <TextBlock x:Name="tbSpeedIVValue" Classes="TableValue" Text="" Grid.Row="6" Grid.Column="2"/>
+                            <TextBlock x:Name="tbSpeedEVValue" Classes="TableValue" Text="" Grid.Row="6" Grid.Column="3"/>
                         </Grid>
                     </StackPanel>
                 </Border>
@@ -309,22 +288,18 @@
                             <TextBlock Classes="Label" Text="Move" Grid.Row="0" Grid.Column="0"/>
                             <TextBlock Classes="TableHeader" Text="PP" Grid.Row="0" Grid.Column="1"/>
                             <TextBlock Classes="TableHeader" Text="PP Ups" Grid.Row="0" Grid.Column="2"/>
-
-                            <TextBlock x:Name="tbMove1Name" Classes="TableKey" Text="Tackle" Grid.Row="1" Grid.Column="0"/>
-                            <TextBlock x:Name="tbMove1PP" Classes="TableValue" Text="42" Grid.Row="1" Grid.Column="1"/>
-                            <TextBlock x:Name="tbMove1PowerUps" Classes="TableValue" Text="3" Grid.Row="1" Grid.Column="2"/>
-
-                            <TextBlock x:Name="tbMove2Name" Classes="TableKey" Text="Vine Whip" Grid.Row="2" Grid.Column="0"/>
-                            <TextBlock x:Name="tbMove2PP" Classes="TableValue" Text="10" Grid.Row="2" Grid.Column="1"/>
-                            <TextBlock x:Name="tbMove2PowerUps" Classes="TableValue" Text="0" Grid.Row="2" Grid.Column="2"/>
-
-                            <TextBlock x:Name="tbMove3Name" Classes="TableKey" Text="Leech Seed" Grid.Row="3" Grid.Column="0"/>
-                            <TextBlock x:Name="tbMove3PP" Classes="TableValue" Text="12" Grid.Row="3" Grid.Column="1"/>
-                            <TextBlock x:Name="tbMove3PowerUps" Classes="TableValue" Text="1" Grid.Row="3" Grid.Column="2"/>
-
-                            <TextBlock x:Name="tbMove4Name" Classes="TableKey" Text="Roar" Grid.Row="4" Grid.Column="0"/>
-                            <TextBlock x:Name="tbMove4PP" Classes="TableValue" Text="15" Grid.Row="4" Grid.Column="1"/>
-                            <TextBlock x:Name="tbMove4PowerUps" Classes="TableValue" Text="0" Grid.Row="4" Grid.Column="2"/>
+                            <TextBlock x:Name="tbMove1Name" Classes="TableKey" Text="" Grid.Row="1" Grid.Column="0"/>
+                            <TextBlock x:Name="tbMove1PP" Classes="TableValue" Text="" Grid.Row="1" Grid.Column="1"/>
+                            <TextBlock x:Name="tbMove1PowerUps" Classes="TableValue" Text="" Grid.Row="1" Grid.Column="2"/>
+                            <TextBlock x:Name="tbMove2Name" Classes="TableKey" Text="" Grid.Row="2" Grid.Column="0"/>
+                            <TextBlock x:Name="tbMove2PP" Classes="TableValue" Text="" Grid.Row="2" Grid.Column="1"/>
+                            <TextBlock x:Name="tbMove2PowerUps" Classes="TableValue" Text="" Grid.Row="2" Grid.Column="2"/>
+                            <TextBlock x:Name="tbMove3Name" Classes="TableKey" Text="" Grid.Row="3" Grid.Column="0"/>
+                            <TextBlock x:Name="tbMove3PP" Classes="TableValue" Text="" Grid.Row="3" Grid.Column="1"/>
+                            <TextBlock x:Name="tbMove3PowerUps" Classes="TableValue" Text="" Grid.Row="3" Grid.Column="2"/>
+                            <TextBlock x:Name="tbMove4Name" Classes="TableKey" Text="" Grid.Row="4" Grid.Column="0"/>
+                            <TextBlock x:Name="tbMove4PP" Classes="TableValue" Text="" Grid.Row="4" Grid.Column="1"/>
+                            <TextBlock x:Name="tbMove4PowerUps" Classes="TableValue" Text="" Grid.Row="4" Grid.Column="2"/>
                         </Grid>
                     </StackPanel>
                 </Border>
@@ -333,14 +308,7 @@
                 <Border Classes="Section">
                     <StackPanel Name="RibbonSection">
                         <TextBlock x:Name="tbRibbons" Classes="SectionTitle" Text="Ribbons"/>
-                        <WrapPanel Name="RibbonBadgeBanner" Classes="BadgeBanner">
-                        <Border Classes="Badge HoennRibbon">
-                            <TextBlock x:Name="tbRibbonName" Text="Champion"/>
-                        </Border>
-                        <Border Classes="Badge SinnohRibbon">
-                            <TextBlock x:Name="tbRibbonName2" Text="Champion"/>
-                        </Border>
-                    </WrapPanel>
+                        <WrapPanel Name="RibbonBadgeBanner" Classes="BadgeBanner"/>
                     </StackPanel>
                 </Border>
 
@@ -350,43 +318,43 @@
                         <TextBlock x:Name="tbAdditionalInfo" Classes="SectionTitle" Text="Additional Info"/>
                         <Grid Classes="FieldRow">
                             <TextBlock Classes="Label" Text="PC Markings"/>
-                            <TextBlock x:Name="tbMarkingsValue" Classes="Value" Text="SSCQW" Grid.Column="1"/>
+                            <TextBlock x:Name="tbMarkingsValue" Classes="Value" Text="" Grid.Column="1"/>
                         </Grid>
                         <Grid Classes="FieldRow">
                             <TextBlock Classes="Label" Text="Shiny Leaves Data"/>
-                            <TextBlock x:Name="tbShinyLeavesValue" Classes="Value" Text="25" Grid.Column="1"/>
+                            <TextBlock x:Name="tbShinyLeavesValue" Classes="Value" Text="" Grid.Column="1"/>
                         </Grid>
                         <Grid Classes="FieldRow">
                             <TextBlock Classes="Label" Text="Gen3Misc Data"/>
-                            <TextBlock Name="Gen3MiscValue" x:Name="tbGen3MiscValue" Classes="Value" Text="2" Grid.Column="1"/>
+                            <TextBlock Name="Gen3MiscValue" x:Name="tbGen3MiscValue" Classes="Value" Text="" Grid.Column="1"/>
                         </Grid>
                         <Grid Classes="FieldRow">
                             <TextBlock Classes="Label" Text="Walking Mood"/>
-                            <TextBlock x:Name="tbWalkingMoodValue" Classes="Value" Text="100" Grid.Column="1"/>
+                            <TextBlock x:Name="tbWalkingMoodValue" Classes="Value" Text="" Grid.Column="1"/>
                         </Grid>
                         <Grid Classes="FieldRow">
                             <TextBlock Classes="Label" Text="Coolness"/>
-                            <TextBlock x:Name="tbCoolnessValue" Classes="Value" Text="0" Grid.Column="1"/>
+                            <TextBlock x:Name="tbCoolnessValue" Classes="Value" Text="" Grid.Column="1"/>
                         </Grid>
                         <Grid Classes="FieldRow">
                             <TextBlock Classes="Label" Text="Beauty"/>
-                            <TextBlock x:Name="tbBeautyValue" Classes="Value" Text="0" Grid.Column="1"/>
+                            <TextBlock x:Name="tbBeautyValue" Classes="Value" Text="" Grid.Column="1"/>
                         </Grid>
                         <Grid Classes="FieldRow">
                             <TextBlock Classes="Label" Text="Cuteness"/>
-                            <TextBlock x:Name="tbCutenessValue" Classes="Value" Text="0" Grid.Column="1"/>
+                            <TextBlock x:Name="tbCutenessValue" Classes="Value" Text="" Grid.Column="1"/>
                         </Grid>
                         <Grid Classes="FieldRow">
                             <TextBlock Classes="Label" Text="Smartness"/>
-                            <TextBlock x:Name="tbSmartinessValue" Classes="Value" Text="0" Grid.Column="1"/>
+                            <TextBlock x:Name="tbSmartinessValue" Classes="Value" Text="" Grid.Column="1"/>
                         </Grid>
                         <Grid Classes="FieldRow">
                             <TextBlock Classes="Label" Text="Toughness"/>
-                            <TextBlock x:Name="tbToughnessValue" Classes="Value" Text="0" Grid.Column="1"/>
+                            <TextBlock x:Name="tbToughnessValue" Classes="Value" Text="" Grid.Column="1"/>
                         </Grid>
                         <Grid Classes="FieldRow">
                             <TextBlock Classes="Label" Text="Sheen"/>
-                            <TextBlock x:Name="tbSheenValue" Classes="Value" Text="0" Grid.Column="1"/>
+                            <TextBlock x:Name="tbSheenValue" Classes="Value" Text="" Grid.Column="1"/>
                         </Grid>
                     </StackPanel>
                 </Border>

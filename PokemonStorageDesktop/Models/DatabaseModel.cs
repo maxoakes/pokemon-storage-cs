@@ -17,7 +17,7 @@ public class DatabaseModel : StorageModel
         ConnectionString = connectionString;
         
         List<Int64> primaryKeys = DbInterface.RetrieveTable("SELECT id FROM pokemon", connectionString).AsEnumerable().Select(x => x.Field<Int64>("id")).ToList();
-        List<PartyPokemon> databasePokemon = primaryKeys.Select(x => new PartyPokemon(x)).ToList();
+        List<PartyPokemon> databasePokemon = primaryKeys.Select(x => new PartyPokemon(x, connectionString)).ToList();
         PokemonLists.Add("Database", databasePokemon.Select(x => new PokemonModel(x)).ToList());
     }
 
