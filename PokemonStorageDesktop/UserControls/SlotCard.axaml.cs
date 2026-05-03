@@ -8,6 +8,7 @@ using Avalonia.Media.Imaging;
 using PokemonStorageLibrary;
 using PokemonStorageLibrary.Models;
 using Avalonia.Interactivity;
+using PokemonStorageDesktop.Models;
 
 namespace PokemonStorageDesktop.UserControls;
 
@@ -27,6 +28,10 @@ public partial class SlotCard : UserControl
         tbNickname.Text = Pokemon.Nickname;
         tbOriginalTrainer.Text = $"O/T: {Pokemon.OriginalTrainer.Name}";
         tbInformation1.Text = $"Lv. {Pokemon.Level} {Pokemon.GetGenderCharacter()}\n{Lookup.GetDatabaseIdentityById(Pokemon.Nature.Id, DatabaseObject.Natures).Name}";
+        tbInformation2.Text = Pokemon.DatabaseTag;
+
+        borderCard.Background = new SolidColorBrush(PokemonModel.GetColorFromTypeString(Pokemon.Type1.Identifier));
+        borderName.Background = new SolidColorBrush(PokemonModel.GetColorFromTypeString(Pokemon.Type2.Identifier));
     }
 
     protected override async void OnLoaded(RoutedEventArgs e)

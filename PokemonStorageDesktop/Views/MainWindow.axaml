@@ -43,9 +43,6 @@
         <Style Selector="TabControl.PrimaryTabControl">
             <Setter Property="Background" Value="{StaticResource LightBackgroundColor}"/>
         </Style>
-        <Style Selector="ScrollViewer /template/ ScrollContentPresenter#PART_ContentPresenter">
-            <Setter Property="BoxShadow" Value="inset 0 0 16 4 rgba(15, 15, 15, .5)"/>
-        </Style>
         <Style Selector="TabControl.PrimaryTabControl /template/ ContentPresenter#PART_SelectedContentHost">
             <Setter Property="Background">
                 <ImageBrush 
@@ -59,13 +56,20 @@
             <Setter Property="BorderThickness" Value="2 0 2 0"/>
             <Setter Property="BorderBrush" Value="{StaticResource LightAccentColorAlternate}"/>
         </Style>
-
-        <!-- Bottom Panel -->
-        <Style Selector="WrapPanel#OpenWrapPanel">
-            <Setter Property="HorizontalAlignment" Value="Left"/>
-        </Style>
     </Window.Styles>
-    <Grid>
+    
+    <DockPanel>
+        <Menu DockPanel.Dock="Top">
+            <MenuItem Header="_File">
+                <MenuItem x:Name="itemExit" Header="Exit" Click="Exit_Click"/>
+            </MenuItem>
+            <MenuItem Header="_Sources">
+                <MenuItem x:Name="itemOpenSaveFile" Name="OpenSaveFile" Header="Open Save File" Click="OpenSource_Click"/>
+                <MenuItem x:Name="itemOpenDatabase" Name="OpenDatabase" Header="Open Database (Advanced)" Click="OpenSource_Click"/>
+                <Separator/>
+                <MenuItem x:Name="itemDeleteSelectedSource" Name="DeleteSelectedSource" Header="Remove Selected Tab" Click="OpenSource_Click"/>
+            </MenuItem>
+        </Menu>
         <DockPanel LastChildFill="True">
             <Border DockPanel.Dock="Right">
                 <local:AboutPanel x:Name="AboutPanel" Name="AboutPanel" />
@@ -73,21 +77,5 @@
             <TabControl x:Name="tabControl" Classes="PrimaryTabControl" TabStripPlacement="Left">
             </TabControl>
         </DockPanel>
-        <WrapPanel Name="OpenWrapPanel" Classes="BottomTransparentPanel">
-            <SplitButton 
-                x:Name="btnOpen"
-                Classes="Accented"
-                Name="OpenSaveFileDefault"
-                Content="Open Save File" 
-                Click="OpenSource_Click">
-                <SplitButton.Flyout>
-                    <MenuFlyout Placement="RightEdgeAlignedTop">
-                        <MenuItem x:Name="itemOpenSaveFile" Name="OpenSaveFile" Header="Open Save File" Click="OpenSource_Click"/>
-                        <MenuItem x:Name="itemOpenDatabase" Name="OpenDatabase" Header="Open Database (Advanced)" Click="OpenSource_Click"/>
-                        <MenuItem x:Name="itemDeleteSelectedSource" Name="DeleteSelectedSource" Header="Remove Selected Tab" Click="OpenSource_Click"/>
-                    </MenuFlyout>
-                </SplitButton.Flyout>
-            </SplitButton>
-        </WrapPanel>
-    </Grid>
+    </DockPanel>
 </Window>

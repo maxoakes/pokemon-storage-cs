@@ -15,8 +15,7 @@
             <Setter Property="Margin" Value="0"/>
             <Setter Property="Padding" Value="0"/>
             <Setter Property="Width" Value="145"/>
-            <Setter Property="Height" Value="225"/>
-            <Setter Property="Background" Value="{StaticResource MediumBackgroundColor}"/>
+            <Setter Property="Height" Value="250"/>
             <Setter Property="CornerRadius" Value="{StaticResource StandardCornerRadius}"/>
             <Setter Property="Cursor" Value="Hand"/>
         </Style>
@@ -36,13 +35,12 @@
         </Style>
 
         <Style Selector="Border.HeaderTitle">
-            <Setter Property="Background" Value="White"/>
             <Setter Property="Padding" Value="0 4"/>
         </Style>
 
         <Style Selector="TextBlock.Nickname">
             <Setter Property="FontWeight" Value="Bold"/>
-            <Setter Property="FontSize" Value="{StaticResource SecondaryTextSize}"/>
+            <Setter Property="FontSize" Value="{StaticResource PrimaryTextSize}"/>
             <Setter Property="HorizontalAlignment" Value="Center"/>
             <Setter Property="Foreground" Value="{StaticResource SecondaryDarkTextColor}"/>
         </Style>
@@ -52,6 +50,12 @@
         </Style>
 
         <Style Selector="TextBlock.Info">
+            <Setter Property="FontSize" Value="{StaticResource PrimaryTextSize}"/>
+            <Setter Property="HorizontalAlignment" Value="Left"/>
+            <Setter Property="Foreground" Value="{StaticResource SecondaryDarkTextColor}"/>
+        </Style>
+
+        <Style Selector="TextBlock.InfoSmall">
             <Setter Property="FontSize" Value="{StaticResource SecondaryTextSize}"/>
             <Setter Property="HorizontalAlignment" Value="Left"/>
             <Setter Property="Foreground" Value="{StaticResource SecondaryDarkTextColor}"/>
@@ -72,7 +76,7 @@
     </UserControl.Styles>
 
     <Border Classes="Spacing">
-        <Border Classes="CardBorder PanelShadow" Name="CardBorder">
+        <Border x:Name="borderCard" Classes="CardBorder PanelShadow" Name="CardBorder">
             <DockPanel>
                 <Border Classes="Footer" DockPanel.Dock="Bottom">
                     <CheckBox x:Name="cbTransfer" Name="TransferCheckbox" Classes="Transfer"/>
@@ -82,7 +86,7 @@
                     <Border Classes="SpriteFrame">
                         <Image x:Name="imageSprite" Name="PokemonSprite" Classes="Sprite"/>
                     </Border>
-                    <Border Classes="HeaderTitle">
+                    <Border x:Name="borderName" Classes="HeaderTitle">
                         <TextBlock x:Name="tbNickname" Name="NicknameValue" Classes="Nickname" Text="Nickname"/>
                     </Border>
                 </StackPanel>
@@ -90,6 +94,7 @@
                 <StackPanel Classes="InfoPanel">
                     <TextBlock x:Name="tbOriginalTrainer" Name="OriginalTrainerValue" Classes="Info" Text="O/T: Ash"/>
                     <TextBlock x:Name="tbInformation1" Name="LevelGenderValue" Classes="Info" Text="Lv. 56 (M)"/>
+                    <TextBlock x:Name="tbInformation2" Name="DatabaseValue" Classes="InfoSmall" Text="4-mono-bug-1"/>
                 </StackPanel>
             </DockPanel>
         </Border>

@@ -70,6 +70,27 @@ public partial class CardViewerContainer : UserControl
             throw new InvalidOperationException("Unable to access TopLevel for file dialog.");
         }
 
+        if (StorageModel is SaveFileModel saveFileModel)
+        {
+            if (saveFileModel.Game.GenerationId <= 2)
+            {
+                DialogBoxYesNo applyPersonalityDialog = new DialogBoxYesNo(
+                    "You are about to transfer Pokemon from a game that did not use personality values. Would you like to apply personality values to the selected Pokemon?",
+                    "Yes, Apply Personality Values",
+                    "No, Keep Them As Zero",
+                    "Cancel Transfer"
+                );
+
+                int result = await applyPersonalityDialog.ShowDialog<int>(MainWindow);
+                if (result == 1)
+                {
+                    SelectedPokemon.ForEach(x => x.AssignRandomPersonalityValue());
+                    SelectedPokemon.ForEach(x => x.SetAbilityFromPersonalityValue());
+                }
+                if (result == -1) return;
+            }
+        }
+
         Control? senderControl = sender as Control;
         Console.WriteLine(senderControl?.Name);
         switch (senderControl?.Name)
@@ -81,9 +102,9 @@ public partial class CardViewerContainer : UserControl
                 {
                     Title = "Save JSON Export",
                     SuggestedFileName = suggestedJsonName,
-                    FileTypeChoices = new[] {
+                    FileTypeChoices = [
                         new FilePickerFileType("JSON File") { Patterns = ["*.json"] }
-                    },
+                    ],
                 });
                 if (jsonFileOutput?.Path.AbsoluteUri is not null)
                 {
@@ -103,9 +124,9 @@ public partial class CardViewerContainer : UserControl
                 {
                     Title = "Save JSON Export",
                     SuggestedFileName = suggestedShowdownName,
-                    FileTypeChoices = new[] {
+                    FileTypeChoices = [
                         new FilePickerFileType("Plain text File") { Patterns = ["*.txt"] }
-                    },
+                    ],
                 });
                 if (showdownFileOutput?.Path.AbsoluteUri is not null)
                 {
@@ -122,8 +143,14 @@ public partial class CardViewerContainer : UserControl
                 StorageModel? selectedStorageModel = MainWindow.StorageModels.Find(x => x.DisplayTitle == senderControl?.Name);
                 if (selectedStorageModel != null)
                 {
+                    if (selectedStorageModel is DatabaseModel)
+                    {
+                        DialogBoxTextField databaseTagDialog = new DialogBoxTextField($"Assign a database tag to the selected Pokemon.");
+                        string tag = await databaseTagDialog.ShowDialog<string>(MainWindow);
+                        SelectedPokemon.ForEach(x => x.DatabaseTag = tag);
+                    }
                     int result = selectedStorageModel.ImportPokemon(SelectedPokemon);
-                    DialogBoxOk storageModelTransferDialog = new DialogBoxOk($"Transfered {result} Pokemon to {selectedStorageModel.DisplayTitle}.");
+                    DialogBoxOk storageModelTransferDialog = new DialogBoxOk($"Transferred {result} Pokemon to {selectedStorageModel.DisplayTitle}.");
                     await storageModelTransferDialog.ShowDialog<bool>(MainWindow);
                 }
                 break;

@@ -42,7 +42,7 @@ public abstract class SaveData
         Array.Copy(content, OriginalData, content.Length);
         Array.Copy(content, ModifiedData, content.Length);
         Game = game;
-        Language = Lookup.GetLanguageByIdentifier(language, LanguageType.Iso3166);
+        Language = Lookup.GetLanguageByIdentifier(language, LanguageType.Iso639);
     }
 
     #region Abstract Declarations

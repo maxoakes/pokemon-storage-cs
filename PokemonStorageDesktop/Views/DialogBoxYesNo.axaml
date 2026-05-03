@@ -4,7 +4,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d" d:DesignWidth="500" d:DesignHeight="200"
         SizeToContent="WidthAndHeight"
-        x:Class="PokemonStorageDesktop.Views.DialogBoxOk"
+        x:Class="PokemonStorageDesktop.Views.DialogBoxYesNo"
         Title="Message">
     <Window.Styles>
         <Style Selector="Border#Container">
@@ -46,7 +46,9 @@
         <StackPanel>
             <TextBlock x:Name="lblContent" Name="Header" Text="Dialog text" TextWrapping="Wrap" />
             <WrapPanel>
-                <Button x:Name="btnOk" Classes="Button" Content="Ok" Click="Ok_Click" />
+                <Button x:Name="btnYes" Classes="Button" Content="Yes" Click="Yes_Click" />
+                <Button x:Name="btnNo" Classes="Button" Content="No" Click="No_Click" />
+                <Button x:Name="btnCancel" Classes="Button" Content="Cancel" Click="Cancel_Click" />
             </WrapPanel>
         </StackPanel>
     </Border>

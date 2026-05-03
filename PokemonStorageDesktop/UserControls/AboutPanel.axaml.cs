@@ -1,10 +1,8 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Interactivity;
-using Avalonia.Markup.Xaml;
+using Avalonia.Media;
+using PokemonStorageDesktop.Models;
 using PokemonStorageLibrary;
 using PokemonStorageLibrary.Models;
 
@@ -24,6 +22,9 @@ public partial class AboutPanel : UserControl
             return;
         }
 
+        borderTitle.Background = new SolidColorBrush(PokemonModel.GetColorFromTypeString(pokemon.Type1.Identifier));
+        borderSubtitle.Background = new SolidColorBrush(PokemonModel.GetColorFromTypeString(pokemon.Type2.Identifier));
+
         // Clear the overview badges
         WrapPanel? overviewBadgePanel = this.FindControl<WrapPanel>("OverviewBadgeBanner");
         if (overviewBadgePanel != null)
@@ -31,8 +32,8 @@ public partial class AboutPanel : UserControl
             overviewBadgePanel.Children.RemoveAll(overviewBadgePanel.Children.OfType<Border>());
 
             // Add badges to the overview section
-            overviewBadgePanel.Children.Add(NewBadge("Language", pokemon.LanguageId.ToString(), "Badge Language"));
-            overviewBadgePanel.Children.Add(NewBadge("Gender", pokemon.Gender.ToString(), $"Badge {pokemon.Gender.ToString()}"));
+            overviewBadgePanel.Children.Add(NewBadge("Language", Lookup.GetLanguageById(pokemon.LanguageId).Iso639.ToUpper(), "Badge Language"));
+            overviewBadgePanel.Children.Add(NewBadge("Gender", pokemon.Gender.ToString(), $"Badge {pokemon.Gender}"));
             if ((pokemon.IsShinyPersonalityValue && pokemon.Origin.Game.GenerationId > 2) 
                 || (pokemon.IsShinyAttackIv && pokemon.Origin.Game.GenerationId < 3))
             {

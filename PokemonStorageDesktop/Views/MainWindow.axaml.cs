@@ -112,4 +112,9 @@ public partial class MainWindow : Window
                 break;
         }
     }
+
+    private void Exit_Click(object? sender, RoutedEventArgs e)
+    {
+        Close();
+    }
 }

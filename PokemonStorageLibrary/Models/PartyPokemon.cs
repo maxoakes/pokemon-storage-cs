@@ -19,7 +19,9 @@ public partial class PartyPokemon
     public byte AbilityNumber { get; set; }
     public ushort AbilityId { get; set; }
     public DatabaseIdentity AbilityIdentity { get { return Lookup.GetDatabaseIdentityById(AbilityId, DatabaseObject.Abilities); } }
-    public Nature? Nature { get { return GetNatureFromPersonalityValue(); } }
+    public Nature Nature { get { return GetNatureFromPersonalityValue(); } }
+    public PokemonType Type1 { get { return Lookup.GetPokemonType(PokemonIdentity.PokemonId, 1); } }
+    public PokemonType Type2 { get { return Lookup.GetPokemonType(PokemonIdentity.PokemonId, 2); } }
     
 
     // Nickname
@@ -59,13 +61,17 @@ public partial class PartyPokemon
 
     public byte Gen3Misc { get; set; }
 
+    // Database Items
+    public long DatabasePrimaryKey { get; set; }
+    public string DatabaseTag { get; set; }
+
     #region Constructors
 
     public PartyPokemon(Game game)
     {
         // Overview
         Origin = new Origin(game.GenerationId);
-        LanguageId = (byte)Lookup.GetIdByIdentifier("en", DatabaseObject.Languages).Id;
+        LanguageId = (byte)Lookup.GetIdByIdentifier("en", DatabaseObject.Languages);
         OriginalTrainer = new Trainer("???", 0, 0, 0);
         PokemonIdentity = new PokemonIdentity();
         AlternateFormId = 0;
@@ -108,6 +114,8 @@ public partial class PartyPokemon
 
         ShinyLeaves = 0;
         Gen3Misc = 0;
+        DatabasePrimaryKey = 0;
+        DatabaseTag = "";
     }
 
     public PartyPokemon(Int64 primaryKey, string connectionString)
@@ -160,6 +168,8 @@ public partial class PartyPokemon
             Origin = new(row.Field<Int64>("fk_origin"));
             OriginalTrainer = new((Int64)row.Field<Int64>("fk_original_trainer"));
             Stats = new(this, row.Field<Int64>("fk_stats"));
+            DatabasePrimaryKey = row.Field<Int64>("id");
+            DatabaseTag = row.Field<string>("tag") ?? "";
         };
 
         DataTable movesDataTable = DbInterface.RetrieveTable($"SELECT * FROM move_set WHERE pokemon_id = @PokemonId", connectionString, parameters);
@@ -196,10 +206,8 @@ public partial class PartyPokemon
         return shinyValue < 8;
     }
 
-    public Nature? GetNatureFromPersonalityValue()
+    public Nature GetNatureFromPersonalityValue()
     {
-        if (PersonalityValue == 0) return null;
-
         int pNature = (int)(PersonalityValue % 25);
         return Lookup.GetNatureByGameIndex(pNature);
     }
@@ -424,23 +432,6 @@ public partial class PartyPokemon
         return (long)DbInterface.RetrieveScalar("SELECT * FROM pokemon_dex_numbers WHERE pokedex_id=1 AND species_id=@Id", Lookup.VeekunConnectionString, parameters);
     }
 
-    public Types GetTypes()
-    {
-        List<SqliteParameter> parameters = [
-            new SqliteParameter("Id", SqliteType.Integer) { Value = PokemonIdentity.PokemonId }
-        ];
-
-        DataTable gameDataTable = DbInterface.RetrieveTable("SELECT * FROM pokemon_types WHERE pokemon_id=@Id", Lookup.VeekunConnectionString, parameters);
-
-        Types types = new();
-        foreach (DataRow row in gameDataTable.Rows)
-        {
-            if (row.Field<Int64>("slot") == 1) types.Slot1 = (byte)row.Field<Int64>("type_id");
-            if (row.Field<Int64>("slot") == 2) types.Slot2 = (byte)row.Field<Int64>("type_id");
-        }
-        return types;
-    }
-
     public byte GetCatchRate()
     {
         List<SqliteParameter> parameters = [
@@ -468,10 +459,16 @@ public partial class PartyPokemon
 
     #region Setters
 
-    private static UInt32 GeneratePersonalityValue()
+    public void AssignRandomPersonalityValue()
     {
         Random random = new();
-        return (uint)random.NextInt64(UInt32.MaxValue);
+        PersonalityValue = (uint)random.NextInt64(UInt32.MaxValue);
+    }
+
+    public void SetAbilityFromPersonalityValue()
+    {
+        AbilityNumber = (byte)(PersonalityValue % 1);
+        AbilityId = GetAbilityIdByAbilityNumber(AbilityNumber);
     }
 
     #endregion
@@ -541,7 +538,8 @@ public partial class PartyPokemon
             new SqliteParameterPair("ribbon_hoenn_data", SqliteType.Integer, Ribbons.HoennSet),
             new SqliteParameterPair("fk_stats", SqliteType.Integer, Stats.InsertIntoDatabase()),
             new SqliteParameterPair("fk_origin", SqliteType.Integer, Origin.InsertIntoDatabase()),
-            new SqliteParameterPair("fk_original_trainer", SqliteType.Integer, OriginalTrainer.GetDatabasePrimaryKeyAndInsertIfNotExist()),          
+            new SqliteParameterPair("fk_original_trainer", SqliteType.Integer, OriginalTrainer.GetDatabasePrimaryKeyAndInsertIfNotExist()),
+            new SqliteParameterPair("tag", SqliteType.Text, DatabaseTag),
         ];
 
         int primaryKey = DbInterface.InsertIntoDatabase("pokemon", parameters, connectionString);

@@ -57,7 +57,7 @@ public class SaveDataGeneration1 : SaveData
         byte[] seen = Utility.GetBytes(ModifiedData, 0x25B6, 0x13);
         for (int i = 0; i < 151; i++)
         {
-            PokemonIdentity pokemon = Lookup.GetPokemonBySpeciesId(i+1, Lookup.GetIdByIdentifier(Language.Identifier, DatabaseObject.Languages).Id);
+            PokemonIdentity pokemon = Lookup.GetPokemonBySpeciesId(i+1, (int)Lookup.GetIdByIdentifier(Language.Identifier, DatabaseObject.Languages));
             int ownedBit = owned[i >> 3] >> (i & 7) & 1;
             int seenBit = seen[i >> 3] >> (i & 7) & 1;
             Console.WriteLine($"{seenBit}/{ownedBit} - {pokemon.SpeciesName}");
@@ -194,9 +194,8 @@ public class SaveDataGeneration1 : SaveData
         bytes[0x00] = (byte)Lookup.GetGameIndexById(p.PokemonIdentity.FormId, SupplementObject.Pokemon, 1);
         bytes[0x03] = p.Level;
         
-        Types types = p.GetTypes();
-        byte t1 = GetTypeGameIndexByIndex(types.Slot1);
-        byte t2 = GetTypeGameIndexByIndex(types.Slot2);
+        byte t1 = GetTypeGameIndexByIndex(p.Type1.Id);
+        byte t2 = GetTypeGameIndexByIndex(p.Type2.Id);
         if (t2 == 255) t2 = t1;
         bytes[0x05] = t1;
         bytes[0x06] = t2;

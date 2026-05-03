@@ -109,16 +109,12 @@ public struct AbilityMapping
     }
 }
 
-public struct Types
+public struct PokemonType(long slot, long id, string identifier, long generation)
 {
-    public byte Slot1;
-    public byte Slot2;
-
-    public Types()
-    {
-        Slot1 = 255;
-        Slot2 = 255;
-    }
+    public byte Slot = (byte)slot;
+    public byte Id = (byte)id;
+    public string Identifier = identifier;
+    public int Generation = (int)generation;
 }
 
 #endregion
@@ -209,19 +205,27 @@ public class Lookup
                 "",
         };
         DataRow row = DbInterface.RetrieveSingleRow(query, VeekunConnectionString, parameters);
+        if (row == null)
+        {
+            return new DatabaseIdentity(0, "", "");
+        }
+        else
+        {
+            return new DatabaseIdentity(
+                row.Field<Int64>("id"),
+                row.Field<string>("identifier") ?? "",
+                row.Field<string>("name") ?? ""
+            );
+        }
 
-        return new DatabaseIdentity(
-            row.Field<Int64>("id"),
-            row.Field<string>("identifier") ?? "",
-            row.Field<string>("name") ?? ""
-        );
+
     }
 
     #endregion
 
     #region Get by Identifier
 
-    public static DatabaseIdentity GetIdByIdentifier(string identifier, DatabaseObject databaseObject)
+    public static long GetIdByIdentifier(string identifier, DatabaseObject databaseObject)
     {
         List<SqliteParameter> parameters = [
             new SqliteParameter("Identifier", SqliteType.Text) { Value = identifier },
@@ -254,12 +258,14 @@ public class Lookup
                 "",
         };
         DataRow row = DbInterface.RetrieveSingleRow(query, VeekunConnectionString, parameters);
-
-        return new DatabaseIdentity(
-            row.Field<Int64>("id"),
-            row.Field<string>("identifier") ?? "",
-            row.Field<string>("name") ?? ""
-        );
+        if (row == null)
+        {
+            return 0;
+        }
+        else
+        {
+            return row.Field<Int64>("id");
+        }
     }
 
     #endregion
@@ -288,16 +294,17 @@ public class Lookup
 
         return new Game(
             (byte)row.Field<Int64>("id"),
-            (byte)row.Field<Int64>("version_group_id"),
             (byte)row.Field<Int64>("generation_id"),
+            (byte)row.Field<Int64>("version_group_id"),
             row.Field<string>("name") ?? ""
         );
     }
 
-    public static Game GetGameByVersionId(int versionId)
+    public static Game GetGameByVersionId(int versionId, int languageId=9)
     {
         List<SqliteParameter> parameters = [
-            new SqliteParameter("Id", SqliteType.Integer) { Value = versionId }
+            new SqliteParameter("Id", SqliteType.Integer) { Value = versionId },
+            new SqliteParameter("Language", SqliteType.Integer) { Value = languageId }
         ];
 
         DataRow row = DbInterface.RetrieveSingleRow("""
@@ -311,15 +318,19 @@ public class Lookup
                 LEFT JOIN version_groups vg ON vg.id = v.version_group_id 
                 LEFT JOIN version_names vn ON v.id = vn.version_id 
             WHERE 
-                v.id LIKE @Id
+                v.id LIKE @Id AND vn.local_language_id=@Language
         """, VeekunConnectionString, parameters);
 
-        return new Game(
-            row.Field<Int64>("id"),
-            row.Field<Int64>("version_group_id"),
-            row.Field<Int64>("generation_id"),
-            row.Field<string>("name") ?? ""
-        );
+        if (row == null) return new Game(0, 0, 0, "");
+        else
+        {
+            return new Game(
+                row.Field<Int64>("id"),
+                row.Field<Int64>("generation_id"),
+                row.Field<Int64>("version_group_id"),
+                row.Field<string>("name") ?? ""
+            );
+        }
     }
 
     public static Language GetLanguageById(int id)
@@ -361,6 +372,28 @@ public class Lookup
             row.Field<string>("iso3166") ?? "",
             row.Field<string>("identifier") ?? ""
         );
+    }
+
+
+    public static PokemonType GetPokemonType(ushort pokemonId, int slot)
+    {
+        List<SqliteParameter> parameters = [
+            new SqliteParameter("Id", SqliteType.Integer) { Value = pokemonId },
+            new SqliteParameter("Slot", SqliteType.Integer) { Value = slot }
+        ];
+
+        DataRow row = DbInterface.RetrieveSingleRow("SELECT pt.pokemon_id, pt.slot, t.id, t.identifier, t.generation_id  FROM pokemon_types pt LEFT JOIN types t ON pt.type_id = t.id WHERE pt.pokemon_id=@Id AND pt.slot=@Slot", VeekunConnectionString, parameters);
+
+        if (row == null) return new PokemonType(slot, 255, "", 1);
+        else
+        {
+            return new PokemonType(
+                row.Field<Int64>("slot"),
+                row.Field<Int64>("id"),
+                row.Field<string>("identifier") ?? "",
+                row.Field<Int64>("generation_id")
+            );
+        }
     }
 
     #endregion
@@ -437,7 +470,7 @@ public class Lookup
             _ => 
                 "",
         };
-        return (ushort)DbInterface.RetrieveScalar(query, VeekunConnectionString, parameters);
+        return Convert.ToUInt16(DbInterface.RetrieveScalar(query, VeekunConnectionString, parameters));
     }
 
     #endregion
@@ -470,7 +503,7 @@ public class Lookup
             _ => 
                 "",
         };
-        return (ushort)DbInterface.RetrieveScalar(query, VeekunConnectionString, parameters);
+        return Convert.ToUInt16(DbInterface.RetrieveScalar(query, SupplementConnectionString, parameters));
     }
 
     public static Nature GetNatureByGameIndex(int index)

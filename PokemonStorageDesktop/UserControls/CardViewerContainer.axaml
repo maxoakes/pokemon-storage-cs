@@ -9,26 +9,31 @@
         <Style Selector="WrapPanel#TransferWrapPanel">
             <Setter Property="HorizontalAlignment" Value="Right"/>
         </Style>
-        <Style Selector="ScrollViewer">
+        <Style Selector="ScrollViewer.MainContentScroller">
             <Setter Property="Padding" Value="8"/>
         </Style>
+        <Style Selector="Border.MainContent">
+            <Setter Property="BoxShadow" Value="inset 0 0 16 4 rgba(15, 15, 15, .5)"/>
+        </Style>
     </UserControl.Styles>
-    <Grid x:Name="gridContainer">
-        <ScrollViewer>
-            <StackPanel x:Name="parentPanel">
-            </StackPanel>
-        </ScrollViewer>
-        <WrapPanel Name="TransferWrapPanel" Classes="BottomTransparentPanel">
-            <SplitButton 
-                x:Name="btnTransferSelected"
-                Name="DEAFULT_Json"
-                Classes="Accented"
-                Content="Export Selected to JSON" 
-                Click="ExportSelected_Click">
-                <SplitButton.Flyout>
-                    <MenuFlyout Placement="RightEdgeAlignedTop"/>
-                </SplitButton.Flyout>
-            </SplitButton>
-        </WrapPanel>
-    </Grid>
+    <Border Classes="MainContent">
+        <Grid x:Name="gridContainer" >
+            <ScrollViewer Classes="MainContentScroller">
+                <StackPanel x:Name="parentPanel">
+                </StackPanel>
+            </ScrollViewer>
+            <WrapPanel Name="TransferWrapPanel" Classes="BottomTransparentPanel">
+                <SplitButton 
+                    x:Name="btnTransferSelected"
+                    Name="DEAFULT_Json"
+                    Classes="Accented"
+                    Content="Export Selected to JSON" 
+                    Click="ExportSelected_Click">
+                    <SplitButton.Flyout>
+                        <MenuFlyout Placement="RightEdgeAlignedTop"/>
+                    </SplitButton.Flyout>
+                </SplitButton>
+            </WrapPanel>
+        </Grid>
+    </Border>
 </UserControl>

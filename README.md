@@ -2,13 +2,26 @@
 
 This was originally written in Python (https://github.com/maxoakes/pokemon-storage), but doing byte-level operations in a dynamically-typed language was a wild choice, so I am migrating to C# since I know it about as much as I do Python.
 
-Currently only supports a MySQL database that stores the vulkeen-pokemon database. One day I will add support for the sqlite version, which I should have done in the first place but w/e.
+This program allows the transfer of Pokemon between generations 1-4, and to a local sqlite database. 
 
-## Instructions
+## Limitations
 
-1. Rename `appsettings.json.example` to `appsettings`.
-2. Add the connection string to the database that stores the vulkeen-pokemon database.
-3. ???
-4. Profit
+* Currently only supports main series generations 1, 2, 3 and 4.
+* Currently the only supported database are local `.sqlite` databases
+* Supported on Linux and Windows. I don't know how to test it on Mac, but if it works for you, that is great.
 
-Once I get this fleshed out more I will add a lot more detailed instructions.
+## Todo
+
+* Add more/swappable themes
+* Support other database types
+* Support Generation 5
+* Support Generation 6
+* Support Generation 7
+* Support Generation 8
+* Support Generation 9
+
+## AI Usage Disclosure
+
+AI was used in the following capacities during development:
+* Github Co-pilot autocomplete of repetitive lines and declarations
+* ChatGPT used to convert the properties of the `PartyPokemon` class into HTML version of the right-side About panel, then the convertion of that HTML to `.axaml`. This has since been extensively reviewed and revised. 

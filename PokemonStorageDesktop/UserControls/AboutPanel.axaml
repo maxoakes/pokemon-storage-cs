@@ -18,21 +18,23 @@
 
         <!-- Banner -->
         <Style Selector="Border.Header">
-            <Setter Property="Background" Value="{StaticResource PrimaryVariableColor}"/>
             <Setter Property="Padding" Value="12"/>
+            <!-- <Setter Property="BoxShadow" Value="0 4 2 0 rgba(15, 15, 15, .5)"/> -->
+        </Style>
+        <Style Selector="StackPanel.EntireHeaderBanner">
+            <Setter Property="ClipToBounds" Value="true"/>
         </Style>
         <Style Selector="Border.Subheader">
-            <Setter Property="Background" Value="{StaticResource SecondaryVariableColor}"/>
             <Setter Property="Padding" Value="12"/>
         </Style>
         <Style Selector="TextBlock.HeaderTitle">
-            <Setter Property="Foreground" Value="{StaticResource PrimaryLightTextColor}"/>
+            <Setter Property="Foreground" Value="{StaticResource PrimaryDarkTextColor}"/>
             <Setter Property="FontSize" Value="{StaticResource HeaderTextSize}"/>
             <Setter Property="FontWeight" Value="Bold"/>
             <Setter Property="HorizontalAlignment" Value="Center"/>
         </Style>
         <Style Selector="TextBlock.HeaderSubtitle">
-            <Setter Property="Foreground" Value="{StaticResource PrimaryLightTextColor}"/>
+            <Setter Property="Foreground" Value="{StaticResource PrimaryDarkTextColor}"/>
             <Setter Property="FontSize" Value="{StaticResource SubheaderTextSize}"/>
             <Setter Property="FontWeight" Value="Regular"/>
             <Setter Property="FontStyle" Value="Italic"/>
@@ -40,7 +42,7 @@
             <Setter Property="HorizontalAlignment" Value="Center"/>
         </Style>
         <Style Selector="TextBlock.SubheaderTitle">
-            <Setter Property="Foreground" Value="{StaticResource PrimaryLightTextColor}"/>
+            <Setter Property="Foreground" Value="{StaticResource PrimaryDarkTextColor}"/>
             <Setter Property="FontSize" Value="{StaticResource PrimaryTextSize}"/>
             <Setter Property="FontWeight" Value="Regular"/>
             <Setter Property="HorizontalAlignment" Value="Center"/>
@@ -100,7 +102,7 @@
         <Style Selector="Border.Badge">
             <Setter Property="Margin" Value="2"/>
             <Setter Property="Padding" Value="8,4"/>
-            <Setter Property="CornerRadius" Value="{StaticResource TinyCornerRadius}"/>
+            <Setter Property="CornerRadius" Value="{StaticResource StandardCornerRadius}"/>
             <Setter Property="Background" Value="{StaticResource UNSET_COLOR}"/>
         </Style>
         <Style Selector="Border.Badge > TextBlock">
@@ -108,54 +110,56 @@
             <Setter Property="FontSize" Value="10"/>
         </Style>
         <Style Selector="Border.MALE">
-            <Setter Property="Background" Value="Blue"/>
+            <Setter Property="Background" Value="#5E5EFF"/>
         </Style>
         <Style Selector="Border.FEMALE">
-            <Setter Property="Background" Value="Red"/>
+            <Setter Property="Background" Value="#FF3B9D"/>
         </Style>
         <Style Selector="Border.GENDERLESS">
             <Setter Property="Background" Value="Gray"/>
         </Style>
         <Style Selector="Border.Shiny">
-            <Setter Property="Background" Value="Goldenrod"/>
+            <Setter Property="Background" Value="#20C4DA"/>
         </Style>
         <Style Selector="Border.Language">
-            <Setter Property="Background" Value="Chartreuse"/>
+            <Setter Property="Background" Value="#7FBB42"/>
         </Style>
         <Style Selector="Border.Form">
-            <Setter Property="Background" Value="Coral"/>
+            <Setter Property="Background" Value="#EE8058"/>
         </Style>
         <Style Selector="Border.Egg">
-            <Setter Property="Background" Value="Cornsilk"/>
+            <Setter Property="Background" Value="#E7CF6F"/>
         </Style>
         <Style Selector="Border.Obedient">
-            <Setter Property="Background" Value="BlueViolet"/>
+            <Setter Property="Background" Value="#A94DFF"/>
         </Style>
         <Style Selector="Border.Fateful">
-            <Setter Property="Background" Value="BlueViolet"/>
+            <Setter Property="Background" Value="#CD27FF"/>
         </Style>
         <Style Selector="Border.HoennRibbon">
-            <Setter Property="Background" Value="DarkSalmon"/>
+            <Setter Property="Background" Value="#B8DA69"/>
         </Style>
         <Style Selector="Border.SinnohRibbon">
-            <Setter Property="Background" Value="Goldenrod"/>
+            <Setter Property="Background" Value="#36A1E9"/>
         </Style>
     </UserControl.Styles>
 
     <ScrollViewer>
         <Border Classes="AboutCard">
             <StackPanel>
-                <Border Classes="Header">
-                    <StackPanel>
-                        <TextBlock x:Name="tbHeaderTitle" Classes="HeaderTitle" Text=""/>
-                        <TextBlock x:Name="tbHeaderSubtitle" Classes="HeaderSubtitle" Text=""/>
-                    </StackPanel>
-                </Border>
-                <Border Classes="Subheader VerticalShadow">
-                    <StackPanel>
-                        <TextBlock x:Name="tbOriginalTrainer" Classes="SubheaderTitle" Text=""/>
-                    </StackPanel>
-                </Border>
+                <StackPanel Classes="EntireHeaderBanner">
+                    <Border x:Name="borderTitle" Classes="Header">
+                        <StackPanel>
+                            <TextBlock x:Name="tbHeaderTitle" Classes="HeaderTitle" Text=""/>
+                            <TextBlock x:Name="tbHeaderSubtitle" Classes="HeaderSubtitle" Text=""/>
+                        </StackPanel>
+                    </Border>
+                    <Border x:Name="borderSubtitle" Classes="Subheader">
+                        <StackPanel>
+                            <TextBlock x:Name="tbOriginalTrainer" Classes="SubheaderTitle" Text=""/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
                 <WrapPanel Name="OverviewBadgeBanner" Classes="BadgeBanner">
                 </WrapPanel>
                 

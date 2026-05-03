@@ -150,7 +150,7 @@ public static class DbInterface
     public static DataRow RetrieveSingleRow(string query, string connectionString, List<SqliteParameter>? parameters = null, bool isStoredProcedure = false)
     {
         DataTable dataTable = RetrieveTable(query, connectionString, parameters, isStoredProcedure);
-        return dataTable.AsEnumerable().First();
+        return dataTable.AsEnumerable().FirstOrDefault();
     }
 
     /// <summary>

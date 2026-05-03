@@ -13,6 +13,7 @@ public class StatStructure
 
     public StatStructure(PartyPokemon pokemon, bool isModern, StatHextuple iv, StatHextuple ev)
     {
+        PartyPokemon = pokemon;
         BuildStats(isModern, iv, ev);
     }
 
@@ -48,6 +49,7 @@ public class StatStructure
             ev.SpecialDefense = (ushort)row.Field<Int64>("spd_ev");
         }
         
+        PartyPokemon = pokemon;
         BuildStats(isModern, iv, ev);
     }
 
