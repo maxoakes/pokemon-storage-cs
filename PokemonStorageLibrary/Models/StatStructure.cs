@@ -5,7 +5,7 @@ namespace PokemonStorageLibrary.Models;
 
 public class StatStructure
 {
-    public PartyPokemon PartyPokemon { get; }
+    private PartyPokemon PartyPokemon { get; }
     public bool IsModernSystemByDefault { get; private set; }
     private StatHextuple BaseStats { get; set; }
     public StatSet Modern { get; private set; }

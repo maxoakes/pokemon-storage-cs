@@ -5,6 +5,9 @@
         mc:Ignorable="d" d:DesignWidth="500" d:DesignHeight="200"
         SizeToContent="WidthAndHeight"
         x:Class="PokemonStorageDesktop.Views.DialogBoxYesNo"
+        WindowStartupLocation="CenterOwner"
+        CanMinimize="False"
+        CanMaximize="False"
         Title="Message">
     <Window.Styles>
         <Style Selector="Border#Container">
@@ -29,7 +32,7 @@
         <Style Selector="Button.Button">
             <Setter Property="Margin" Value="2"/>
             <Setter Property="Padding" Value="2"/>
-            <Setter Property="Width" Value="120"/>
+            <Setter Property="MinWidth" Value="120"/>
             <Setter Property="Background" Value="{StaticResource LightAccentColor}"/>
             <Setter Property="HorizontalAlignment" Value="Left"/>
             <Setter Property="VerticalAlignment" Value="Stretch"/>
@@ -45,7 +48,7 @@
     <Border Name="Container">
         <StackPanel>
             <TextBlock x:Name="lblContent" Name="Header" Text="Dialog text" TextWrapping="Wrap" />
-            <WrapPanel>
+            <WrapPanel x:Name="buttonContainer">
                 <Button x:Name="btnYes" Classes="Button" Content="Yes" Click="Yes_Click" />
                 <Button x:Name="btnNo" Classes="Button" Content="No" Click="No_Click" />
                 <Button x:Name="btnCancel" Classes="Button" Content="Cancel" Click="Cancel_Click" />

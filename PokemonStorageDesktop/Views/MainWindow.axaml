@@ -7,8 +7,7 @@
         x:Class="PokemonStorageDesktop.Views.MainWindow"
         Icon="/Assets/avalonia-logo.ico"
         Title="Pokemon Storage"
-        Width="600" 
-        Height="600">
+        WindowState="Maximized">
     <Window.Styles>
         <!-- Tabs -->
         <Style Selector="TabControl.PrimaryTabControl > TabItem > Border">

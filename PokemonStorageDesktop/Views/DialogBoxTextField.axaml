@@ -5,6 +5,9 @@
         mc:Ignorable="d" d:DesignWidth="500" d:DesignHeight="200"
         SizeToContent="WidthAndHeight"
         x:Class="PokemonStorageDesktop.Views.DialogBoxTextField"
+        WindowStartupLocation="CenterOwner"
+        CanMinimize="False"
+        CanMaximize="False"
         Title="Message">
     <Window.Styles>
         <Style Selector="Border#Container">
@@ -29,7 +32,7 @@
         <Style Selector="Button.Button">
             <Setter Property="Margin" Value="2"/>
             <Setter Property="Padding" Value="2"/>
-            <Setter Property="Width" Value="120"/>
+            <Setter Property="MinWidth" Value="120"/>
             <Setter Property="Background" Value="{StaticResource LightAccentColor}"/>
             <Setter Property="HorizontalAlignment" Value="Left"/>
             <Setter Property="VerticalAlignment" Value="Stretch"/>

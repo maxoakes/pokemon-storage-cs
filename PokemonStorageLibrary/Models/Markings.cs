@@ -59,13 +59,13 @@ public class Markings
     {
         var result = new List<string>();
 
-        if (Circle) result.Add("CIRCLE");
-        if (Square) result.Add("SQUARE");
-        if (Triangle) result.Add("TRIANGLE");
-        if (Heart) result.Add("HEART");
-        if (Star) result.Add("STAR");
-        if (Diamond) result.Add("DIAMOND");
+        if (Circle) result.Add("⏺");
+        if (Square) result.Add("⏹");
+        if (Triangle) result.Add("▲");
+        if (Heart) result.Add("❤");
+        if (Star) result.Add("★");
+        if (Diamond) result.Add("◆");
 
-        return string.Join(";", result);
+        return string.Join(" ", result);
     }
 }

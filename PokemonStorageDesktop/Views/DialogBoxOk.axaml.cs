@@ -13,9 +13,10 @@ public partial class DialogBoxOk : Window
         btnOk.Content = "Ok";
     }
 
-    public DialogBoxOk(string label, string buttonText="Ok")
+    public DialogBoxOk(string label, string title="Message", string buttonText="Ok")
     {
         InitializeComponent();
+        Title=title;
         lblContent.Text = label;
         btnOk.Content = buttonText;
     }

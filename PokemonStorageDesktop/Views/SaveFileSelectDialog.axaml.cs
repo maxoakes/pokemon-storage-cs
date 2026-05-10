@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Avalonia;
@@ -68,6 +70,15 @@ public partial class SaveFileSelectDialog : Window
             if (files.Count >= 1)
             {
                 tbFilepath?.Text = files[0].Path.LocalPath;
+                string filename = Path.GetFileNameWithoutExtension(files[0].Path.LocalPath);
+                foreach (string version in ddVersion.Items.AsEnumerable().Select(x => x?.ToString() ?? ""))
+                {
+                    if (filename.ToLower().Split(" ").ToList().Contains(version.ToLower()))
+                    {
+                        ddVersion.SelectedItem = version;
+                        break;
+                    }
+                }
             }
         }
     }

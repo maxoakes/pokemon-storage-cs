@@ -15,9 +15,10 @@ public partial class DialogBoxYesNo : Window
         btnCancel.Content = "Cancel";
     }
 
-    public DialogBoxYesNo(string label, string yesText="Yes", string noText="No", string cancelText="Cancel")
+    public DialogBoxYesNo(string label, string title="Message", string yesText="Yes", string noText="No", string cancelText="Cancel")
     {
         InitializeComponent();
+        Title = title;
         lblContent.Text = label;
         btnYes.Content = yesText;
         btnNo.Content = noText;
@@ -34,6 +35,6 @@ public partial class DialogBoxYesNo : Window
     }
     private async void Cancel_Click(object? sender, RoutedEventArgs e)
     {
-        this.Close(-1);
+        this.Close(null);
     }
 }

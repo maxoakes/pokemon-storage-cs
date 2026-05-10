@@ -25,7 +25,7 @@
             <WrapPanel Name="TransferWrapPanel" Classes="BottomTransparentPanel">
                 <SplitButton 
                     x:Name="btnTransferSelected"
-                    Name="DEAFULT_Json"
+                    Name="DEFAULT_Json"
                     Classes="Accented"
                     Content="Export Selected to JSON" 
                     Click="ExportSelected_Click">

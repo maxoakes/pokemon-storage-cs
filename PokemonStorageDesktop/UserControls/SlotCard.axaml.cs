@@ -48,7 +48,12 @@ public partial class SlotCard : UserControl
         string baseUrl = "https://img.pokemondb.net/sprites";
         string versionRoot = GetVersionRootName();
         string shiny = Pokemon.IsShinyPersonalityValue ? "shiny" : "normal";
-        string female = Pokemon.DoesSpeciesHaveGenderDifference() && Pokemon.Origin.Game.VersionId > 6 ? "-f" : "";
+        string female = 
+            Pokemon.DoesSpeciesHaveGenderDifference() && 
+            Pokemon.Gender == Gender.FEMALE && 
+            Pokemon.Origin.Game.VersionGroupId > 7 
+                ? "-f" 
+                : "";
 
         return $"{baseUrl}/{versionRoot}/{shiny}/{Pokemon.PokemonIdentity.SpeciesIdentifier}{female}.png";
     }

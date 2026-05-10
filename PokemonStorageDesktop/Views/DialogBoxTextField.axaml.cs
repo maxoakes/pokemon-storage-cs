@@ -14,9 +14,10 @@ public partial class DialogBoxTextField : Window
         btnCancel.Content = "Cancel";
     }
 
-    public DialogBoxTextField(string label, string doneText="Done", string cancelText="Cancel")
+    public DialogBoxTextField(string label, string title="Message", string doneText="Done", string cancelText="Cancel")
     {
         InitializeComponent();
+        Title=title;
         lblContent.Text = label;
         btnDone.Content = doneText;
         btnCancel.Content = cancelText;

@@ -88,16 +88,16 @@ public partial class AboutPanel : UserControl
         // Header
         tbHeaderTitle.Text = pokemon.PokemonIdentity.SpeciesName;
         tbHeaderSubtitle.Text = pokemon.Nickname;
-        tbOriginalTrainer.Text = $"{pokemon.OriginalTrainer.Name} ({pokemon.OriginalTrainer.PublicId}-{pokemon.OriginalTrainer.PublicId})";
+        tbOriginalTrainer.Text = $"{pokemon.OriginalTrainer.Name} ({pokemon.OriginalTrainer.PublicId}-{pokemon.OriginalTrainer.SecretId})";
 
         // Overview Section
         tbPersonalityValue.Text = pokemon.PersonalityValue.ToString();
         tbNatureValue.Text = Lookup.GetDatabaseIdentityById(pokemon.Nature.Id, DatabaseObject.Natures).Name;
-        tbAbilityValue.Text = pokemon.AbilityIdentity.Name;
+        tbAbilityValue.Text = string.IsNullOrWhiteSpace(pokemon.AbilityIdentity.Name) ? "Unknown" : pokemon.AbilityIdentity.Name;
         tbLevelValue.Text = pokemon.Level.ToString();
         tbExperienceValue.Text = pokemon.ExperiencePoints.ToString();
         tbFriendshipValue.Text = pokemon.Friendship.ToString();
-        tbHeldItemValue.Text = pokemon.HeldItemIdentity.Name ?? "None";
+        tbHeldItemValue.Text = string.IsNullOrWhiteSpace(pokemon.HeldItemIdentity.Name) ? "None" : pokemon.HeldItemIdentity.Name;
         string pokerusString =
             pokemon.PokerusStrain == 0 
             ? "No" 
@@ -115,8 +115,19 @@ public partial class AboutPanel : UserControl
         tbOriginEggHatchLocationValue.Text = pokemon.Origin.EggHatchLocationIdentity.Name;
         
         // Stats Section - use Modern stats
-        tbStatsSectionTitle.Text = $"Stats {(pokemon.Stats.IsModernSystemByDefault ? "Modern" : "Old")}";
         var statSet = pokemon.Stats.Modern;
+
+        if (pokemon.Stats.IsModernSystemByDefault)
+        {
+            tbStatsSectionTitle.Text = $"Stats (Modern)";
+            statSet = pokemon.Stats.Modern;
+        }
+        else
+        {
+            tbStatsSectionTitle.Text = $"Stats (Legacy)";
+            statSet = pokemon.Stats.Old;
+        }
+        
         if (statSet != null)
         {
             tbHPCalcValue.Text = statSet.HP?.Value.ToString() ?? "";
@@ -192,10 +203,10 @@ public partial class AboutPanel : UserControl
         }
 
         // Additional Info Section
-        tbMarkingsValue.Text = pokemon.Coolness.ToString();
-        tbShinyLeavesValue.Text = pokemon.Coolness.ToString();
-        tbGen3MiscValue.Text = pokemon.Coolness.ToString();
-        tbWalkingMoodValue.Text = pokemon.Coolness.ToString();
+        tbMarkingsValue.Text = pokemon.Markings.ToString();
+        tbShinyLeavesValue.Text = pokemon.ShinyLeaves.ToString();
+        tbGen3MiscValue.Text = pokemon.Gen3Misc.ToString();
+        tbWalkingMoodValue.Text = pokemon.WalkingMood.ToString();
         tbCoolnessValue.Text = pokemon.Coolness.ToString();
         tbBeautyValue.Text = pokemon.Beauty.ToString();
         tbCutenessValue.Text = pokemon.Cuteness.ToString();

@@ -26,10 +26,10 @@ public partial class MainWindow : Window
     {
         if (StorageModels.Any(x => x.DisplayTitle == storageModel.DisplayTitle))
         {
-            DialogBoxOk dialogBoxOk = new DialogBoxOk("A connection to this source already exists!")
-            {
-                WindowStartupLocation = WindowStartupLocation.CenterScreen
-            };
+            DialogBoxOk dialogBoxOk = new DialogBoxOk(
+                "A connection to this source already exists!",
+                "Connection Already Exists"
+            );
             await dialogBoxOk.ShowDialog<bool>(this);
             return;
         };
@@ -64,6 +64,9 @@ public partial class MainWindow : Window
         CardViewerContainers.Add(cardViewerContainer);
         
         CardViewerContainers.ForEach(x => x.SetExportOptions(StorageModels));
+
+        // Automatically switch to new tab
+        tabControl.SelectedIndex = tabControl.Items.Count-1;
     }
 
     protected override async void OnOpened(EventArgs e)
@@ -88,11 +91,24 @@ public partial class MainWindow : Window
 
                 if (await saveFileSelectDialog.ShowDialog<bool>(this))
                 {
-                    await AddTab(new SaveFileModel(
-                        saveFileSelectDialog.SelectedFilepath,
-                        saveFileSelectDialog.SelectedVersionGroup,
-                        saveFileSelectDialog.SelectedLanguage
-                    ));
+                    try
+                    {
+                        await AddTab(new SaveFileModel(
+                            saveFileSelectDialog.SelectedFilepath,
+                            saveFileSelectDialog.SelectedVersionGroup,
+                            saveFileSelectDialog.SelectedLanguage
+                        ));
+                    }
+                    catch (Exception ex)
+                    {
+                        DialogBoxOk failedOpenFileDialog = new (
+                            $"Failed to open save file. Was the correct version and language selected?\n\n{ex.Message}\n\n{ex.StackTrace}",
+                            "File Parse Failed"
+                        );
+                        await failedOpenFileDialog.ShowDialog<bool>(this);
+                        return;
+                    }
+
                 }
                 break;
             case "OpenDatabase":

@@ -56,9 +56,7 @@ public partial class PartyPokemon
     public bool Obedience { get; set; }
     public RibbonSet Ribbons { get; set; }
     public Markings Markings { get; set; }
-
     public byte ShinyLeaves { get; set; }
-
     public byte Gen3Misc { get; set; }
 
     // Database Items
@@ -221,13 +219,6 @@ public partial class PartyPokemon
     public ushort GetAbilityNumberFromAbilityId()
     {
         return GetAbilityIdByAbilityNumber(AbilityNumber);
-    }
-
-    private string GetPersonalityString()
-    {
-        string binary = Convert.ToString(PersonalityValue, 2).PadLeft(32, '0');
-        string[] bytes = Enumerable.Range(0, 4).Select(i => binary.Substring(i * 8, 8)).ToArray();
-        return string.Join(" ", bytes);
     }
 
     public void AssignGenderByAttackIv()

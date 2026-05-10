@@ -64,11 +64,7 @@ public partial class CardViewerContainer : UserControl
 
     private async void ExportSelected_Click(object? sender, RoutedEventArgs e)
     {
-        TopLevel? topLevel = TopLevel.GetTopLevel(this);
-        if (topLevel == null)
-        {
-            throw new InvalidOperationException("Unable to access TopLevel for file dialog.");
-        }
+        TopLevel? topLevel = TopLevel.GetTopLevel(this) ?? throw new InvalidOperationException("Unable to access TopLevel for file dialog.");
 
         if (StorageModel is SaveFileModel saveFileModel)
         {
@@ -76,18 +72,26 @@ public partial class CardViewerContainer : UserControl
             {
                 DialogBoxYesNo applyPersonalityDialog = new DialogBoxYesNo(
                     "You are about to transfer Pokemon from a game that did not use personality values. Would you like to apply personality values to the selected Pokemon?",
-                    "Yes, Apply Personality Values",
-                    "No, Keep Them As Zero",
+                    "Personality Value Application",
+                    "Yes, Apply Values",
+                    "No, Do Not Change",
                     "Cancel Transfer"
                 );
 
-                int result = await applyPersonalityDialog.ShowDialog<int>(MainWindow);
-                if (result == 1)
+                int? result = await applyPersonalityDialog.ShowDialog<int?>(MainWindow);
+                if (result.HasValue && result.Value == 1)
                 {
                     SelectedPokemon.ForEach(x => x.AssignRandomPersonalityValue());
                     SelectedPokemon.ForEach(x => x.SetAbilityFromPersonalityValue());
                 }
-                if (result == -1) return;
+                else if (result.HasValue && result.Value == 0)
+                {
+                    // Do nothing
+                }
+                else
+                {
+                    return;
+                }
             }
         }
 
@@ -113,7 +117,10 @@ public partial class CardViewerContainer : UserControl
                         jsonFileOutput?.Path.AbsolutePath ?? $"./{suggestedJsonName}", 
                         JsonConvert.SerializeObject(SelectedPokemon, Formatting.Indented)
                     );
-                    DialogBoxOk jsonTransferDialog = new DialogBoxOk($"Transfered {SelectedPokemon.Count} Pokemon to:\n{jsonFileOutput?.Path.AbsoluteUri}");
+                    DialogBoxOk jsonTransferDialog = new DialogBoxOk(
+                        $"Transfered {SelectedPokemon.Count} Pokemon to:\n{jsonFileOutput?.Path.AbsoluteUri}",
+                        "Successful Transfer"
+                    );
                     await jsonTransferDialog.ShowDialog<bool>(MainWindow);
                 }
                 break;
@@ -135,7 +142,10 @@ public partial class CardViewerContainer : UserControl
                         showdownFileOutput?.Path.AbsolutePath ?? $"./{suggestedShowdownName}", 
                         string.Join("\n\n\n", SelectedPokemon.Select(x => x.GetPokemonShowdownString()))
                     );
-                    DialogBoxOk showdownTransferDialog = new DialogBoxOk($"Transfered {SelectedPokemon.Count} Pokemon to\n{showdownFileOutput?.Path.AbsoluteUri}");
+                    DialogBoxOk showdownTransferDialog = new DialogBoxOk(
+                        $"Transfered {SelectedPokemon.Count} Pokemon to\n{showdownFileOutput?.Path.AbsoluteUri}",
+                        "Successful Transfer"
+                    );
                     await showdownTransferDialog.ShowDialog<bool>(MainWindow);
                 }
                 break;
@@ -145,12 +155,18 @@ public partial class CardViewerContainer : UserControl
                 {
                     if (selectedStorageModel is DatabaseModel)
                     {
-                        DialogBoxTextField databaseTagDialog = new DialogBoxTextField($"Assign a database tag to the selected Pokemon.");
+                        DialogBoxTextField databaseTagDialog = new DialogBoxTextField(
+                            "Assign a database tag to the selected Pokemon:",
+                            "Database Tag Assignment"
+                        );
                         string tag = await databaseTagDialog.ShowDialog<string>(MainWindow);
                         SelectedPokemon.ForEach(x => x.DatabaseTag = tag);
                     }
                     int result = selectedStorageModel.ImportPokemon(SelectedPokemon);
-                    DialogBoxOk storageModelTransferDialog = new DialogBoxOk($"Transferred {result} Pokemon to {selectedStorageModel.DisplayTitle}.");
+                    DialogBoxOk storageModelTransferDialog = new DialogBoxOk(
+                        $"Transferred {result} Pokemon to {selectedStorageModel.DisplayTitle}.",
+                        "Successful Transfer"
+                    );
                     await storageModelTransferDialog.ShowDialog<bool>(MainWindow);
                 }
                 break;

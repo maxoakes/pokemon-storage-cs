@@ -20,6 +20,10 @@ public class SaveDataGeneration1 : SaveData
         for (int i = 0; i < BoxOffsets.Length; i++)
         {
             int thisOffset = CurrentBoxNumber == i ? 0x30C0 : BoxOffsets[i];
+
+            // Skip the box if it is not initialized
+            if (ModifiedData[thisOffset] == 0xFF) continue;
+            
             BoxData.Add(new Generation1Box(Utility.GetBytes(ModifiedData, thisOffset, BoxSize), (byte)i, Game, Language.Identifier));
         }
         ParseOriginalTrainer();
@@ -129,9 +133,11 @@ public class SaveDataGeneration1 : SaveData
     // https://bulbapedia.bulbagarden.net/wiki/Pok%C3%A9mon_data_structure_(Generation_I)
     public override PartyPokemon GetPartyPokemonFromBoxBytes(byte[] data)
     {
-        PartyPokemon p = new(Game);
-        p.Origin = new Origin(Game.VersionId);
-        p.LanguageId = (byte)Language.Id;
+        PartyPokemon p = new(Game)
+        {
+            Origin = new Origin(Game.VersionId),
+            LanguageId = Language.Id
+        };
         p.PokemonIdentity = Lookup.GetPokemonByFormId(Lookup.GetIdByGameIndex(Utility.GetByte(data, 0x00), SupplementObject.Pokemon, 1), p.LanguageId); 
         p.ExperiencePoints = Utility.GetUnsignedNumber<uint>(data, 0x0E, 3, true);
         p.Friendship = p.GetBaseHappiness();
@@ -312,6 +318,10 @@ public class SaveDataGeneration1 : SaveData
             string originalTrainerName = Utility.GetDecodedString(originalTrainerNameBytes, Game, lang);
 
             byte[] pokemonBytes = Utility.GetBytes(storageBytes, pokemonOffset + (pokemonSize * i), pokemonSize);
+            
+            // Check for invalid Pokemon
+            if (pokemonBytes[0] > 0xBE) continue;
+
             PartyPokemon pokemon = GetPartyPokemonFromBoxBytes(pokemonBytes);
             pokemon.Nickname = nickname;
             pokemon.HasNickname = pokemon.DoesNicknameExist();

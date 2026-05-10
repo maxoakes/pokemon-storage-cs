@@ -132,12 +132,19 @@ public class SaveDataGeneration4 : SaveData
     /// </summary>
     protected override void ParseBoxPokemon()
     {
-        int boxSize = Game.VersionGroupId == 10 ? 0x1000 : 0xFF0;
+        int boxSize = 0x1000;
+        int pokemonOffset = 0x00;
+        int boxNameOffset = 0x12008;
+
+        if (Game.VersionGroupId == 9)
+        {
+            boxSize = 0xFF0;
+            pokemonOffset = 0x04;
+            boxNameOffset = 0x11EE4;
+        }
+
         for (int i = 0; i < 18; i++)
         {
-            int pokemonOffset = (Game.VersionGroupId == 10) ? 0x00 : 0x04;
-            int boxNameOffset = (Game.VersionGroupId == 10) ? 0x12008 : 0x11EE4;
-            
             byte[] boxNameBytes = Utility.GetBytes(StorageBlocks[StorageBlockIndex].Data, boxNameOffset + (i * 40), 40);
             string boxName = Utility.GetDecodedString(boxNameBytes, Game, Language.Iso639);
             if (!BoxList.ContainsKey(boxName)) BoxList.Add(boxName, []);
@@ -238,7 +245,7 @@ public class SaveDataGeneration4 : SaveData
                     p.Smartness = Utility.GetUnsignedNumber<byte>(blockBytes, 0x19, 1);
                     p.Toughness = Utility.GetUnsignedNumber<byte>(blockBytes, 0x1A, 1);
                     p.Sheen = Utility.GetUnsignedNumber<byte>(blockBytes, 0x1B, 1);
-                    p.Ribbons.HoennSet = Utility.GetUnsignedNumber<uint>(blockBytes, 0x1C, 4);
+                    p.Ribbons.SinnohSet1 = Utility.GetUnsignedNumber<uint>(blockBytes, 0x1C, 4);
                     break;
 
                 case 'B':
