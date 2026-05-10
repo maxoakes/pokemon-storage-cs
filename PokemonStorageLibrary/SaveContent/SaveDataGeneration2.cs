@@ -246,9 +246,11 @@ public class SaveDataGeneration2 : SaveData
     // https://bulbapedia.bulbagarden.net/wiki/Pok%C3%A9mon_data_structure_(Generation_II)
     public override PartyPokemon GetPartyPokemonFromBoxBytes(byte[] data)
     {
-        PartyPokemon p = new(Game);
-        p.Origin = new Origin(Game.VersionId);
-        p.LanguageId = Language.Id;
+        PartyPokemon p = new(Game)
+        {
+            Origin = new Origin(Game.VersionId),
+            LanguageId = Language.Id
+        };
 
         p.PokemonIdentity = Lookup.GetPokemonByFormId(Lookup.GetIdByGameIndex(Utility.GetByte(data, 0x00), SupplementObject.Pokemon, 2), p.LanguageId);
         p.HeldItemId = Lookup.GetIdByGameIndex(Utility.GetUnsignedNumber<byte>(data, 0x01, 1, true), SupplementObject.Items, 2);

@@ -397,7 +397,7 @@ public partial class PartyPokemon
                     LEFT JOIN pokemon_species ps ON ps.growth_rate_id=e.growth_rate_id
                 WHERE 
                     ps.id = @Id AND
-                    e.experience > @Experience
+                    e.experience >= @Experience
                 ORDER BY ps.id, `level` 
         """, Lookup.VeekunConnectionString, parameters);
 

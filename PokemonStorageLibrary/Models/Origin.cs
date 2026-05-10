@@ -8,7 +8,7 @@ public class Origin
     // General
     public bool FatefulEncounter { get; set; }
     public byte EncounterMethodId { get; set; }
-    public DatabaseIdentity EncounterMethodIdentity { get { return Lookup.GetDatabaseIdentityById(EncounterMethodId, DatabaseObject.EncounterMethods); } }
+    public DatabaseIdentity EncounterMethodIdentity { get { return Lookup.GetEncounterTypeByGameIndex(EncounterMethodId); } }
     public byte CatchBallId { get; set; }
     public DatabaseIdentity CatchBallIdentity { get { return Lookup.GetDatabaseIdentityById(CatchBallId, DatabaseObject.Items); } }
     public Game Game { get; set; }
@@ -32,7 +32,7 @@ public class Origin
     public Origin(byte versionId)
     {
         FatefulEncounter = false;
-        EncounterMethodId = 0;
+        EncounterMethodId = 2; // Tall Grass
         CatchBallId = 4; // 4=Pokeball
         Game = Lookup.GetGameByVersionId(versionId);
         EggReceiveDate = null;

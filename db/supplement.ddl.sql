@@ -2083,19 +2083,21 @@ INSERT INTO catch_ball_game_index (game_index, item_index) VALUES
 CREATE TABLE IF NOT EXISTS encounter_types_game_index(
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     game_index INTEGER NOT NULL,
-    identifier INTEGER NOT NULL
+    identifier TEXT NOT NULL,
+    local_language_id INTEGER NOT NULL,
+    name TEXT
 );
 
-INSERT INTO encounter_types_game_index (game_index, identifier) VALUES
-(0, "palpark-egg-event"),
-(2, "tall-grass"),
-(4, "dialgia-palkia-event"),
-(5, "cave"),
-(7, "water"),
-(9, "building"),
-(10, "safari-zone"),
-(11, "starter-fossil-gift"),
-(24, "starter-fossil-gift");
+INSERT INTO encounter_types_game_index (game_index, identifier, local_language_id, name) VALUES
+(0, "palpark-egg-event", 9, "PalPark, Egg or Event"),
+(2, "tall-grass", 9, "Tall Grass"),
+(4, "dialgia-palkia-event", 9, "Dialgia/Palkia Event"),
+(5, "cave", 9, "Dungeon"),
+(7, "water", 9, "Water"),
+(9, "building", 9, "Building"),
+(10, "safari-zone", 9, "Safari Zone"),
+(11, "starter-fossil-gift", 9, "Starter, Fossil or Gift"),
+(24, "starter-fossil-gift", 9, "Starter, Fossil or Gift");
 
 CREATE TABLE IF NOT EXISTS game_origin_game_index(
     id INTEGER PRIMARY KEY AUTOINCREMENT,

@@ -31,6 +31,9 @@ public partial class CardViewerContainer : UserControl
             cardGroup.SetBannerText(boxName);
             parentPanel.Children.Add(cardGroup);
         }
+        
+        // Add padding at the end to prevent the last card from being cut off
+        parentPanel.Children.Add(new Border { Height = 64 });
     }
 
     public void SetExportOptions(List<StorageModel> storageModels)

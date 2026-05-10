@@ -17,7 +17,6 @@ public enum LanguageType
 public enum DatabaseObject
 {
     Abilities,
-    EncounterMethods,
     Generations,
     Items,
     Languages,
@@ -181,8 +180,6 @@ public class Lookup
         {
             DatabaseObject.Abilities => 
                 "SELECT i.id, i.identifier, n.name FROM abilities i LEFT JOIN ability_names n ON i.id = n.ability_id WHERE n.local_language_id = @LanguageId AND i.id = @Id",
-            DatabaseObject.EncounterMethods =>
-                "SELECT i.id, i.identifier, n.name FROM encounter_methods i LEFT JOIN encounter_method_prose n ON i.id = n.encounter_method_id WHERE n.local_language_id = @LanguageId AND i.id = @Id",
             DatabaseObject.Generations =>
                 "SELECT i.id, i.identifier, n.name FROM generations i LEFT JOIN generation_names n ON i.id = n.generation_id WHERE n.local_language_id = @LanguageId AND i.id = @Id",
             DatabaseObject.Items =>
@@ -234,8 +231,6 @@ public class Lookup
         {
             DatabaseObject.Abilities => 
                 "SELECT id FROM abilities WHERE identifier = @Identifier",
-            DatabaseObject.EncounterMethods =>
-                "SELECT id FROM encounter_methods WHERE identifier = @Identifier",
             DatabaseObject.Generations =>
                 "SELECT id FROM generations WHERE identifier = @Identifier",
             DatabaseObject.Items =>
@@ -328,6 +323,30 @@ public class Lookup
                 row.Field<Int64>("id"),
                 row.Field<Int64>("generation_id"),
                 row.Field<Int64>("version_group_id"),
+                row.Field<string>("name") ?? ""
+            );
+        }
+    }
+
+    public static DatabaseIdentity GetEncounterTypeByGameIndex(int gameIndex, int languageId=9)
+    {
+        List<SqliteParameter> parameters = [
+            new SqliteParameter("Id", SqliteType.Integer) { Value = gameIndex },
+            new SqliteParameter("Language", SqliteType.Integer) { Value = languageId }
+        ];
+
+        DataRow row = DbInterface.RetrieveSingleRow(
+            "SELECT * FROM encounter_types_game_index WHERE game_index=@Id AND local_language_id=@Language", 
+            SupplementConnectionString, 
+            parameters
+        );
+
+        if (row == null) return new DatabaseIdentity(0, "", "");
+        else
+        {
+            return new DatabaseIdentity(
+                row.Field<Int64>("game_index"),
+                row.Field<string>("identifier") ?? "",
                 row.Field<string>("name") ?? ""
             );
         }
@@ -455,8 +474,6 @@ public class Lookup
         {
             SupplementObject.Balls => 
                 "SELECT game_index FROM catch_ball_game_index WHERE item_index = @Id",
-            SupplementObject.EncounterMethods =>
-                "SELECT game_index FROM encounter_types_game_index WHERE encounter_method_index = @Id",
             SupplementObject.GameOrigins =>
                 "SELECT game_index FROM game_origin_game_index WHERE version_id = @Id",
             SupplementObject.Items =>
@@ -470,7 +487,7 @@ public class Lookup
             _ => 
                 "",
         };
-        return Convert.ToUInt16(DbInterface.RetrieveScalar(query, VeekunConnectionString, parameters));
+        return Convert.ToUInt16(DbInterface.RetrieveScalar(query, SupplementConnectionString, parameters));
     }
 
     #endregion

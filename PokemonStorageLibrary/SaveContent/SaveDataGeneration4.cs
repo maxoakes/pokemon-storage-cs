@@ -132,15 +132,15 @@ public class SaveDataGeneration4 : SaveData
     /// </summary>
     protected override void ParseBoxPokemon()
     {
-        int boxSize = 0x1000;
-        int pokemonOffset = 0x00;
-        int boxNameOffset = 0x12008;
+        int boxSize = 0xFF0;
+        int pokemonOffset = 0x04;
+        int boxNameOffset = 0x11EE4;
 
-        if (Game.VersionGroupId == 9)
+        if (Game.VersionGroupId == 10)
         {
-            boxSize = 0xFF0;
-            pokemonOffset = 0x04;
-            boxNameOffset = 0x11EE4;
+            boxSize = 0x1000;
+            pokemonOffset = 0x00;
+            boxNameOffset = 0x12008;
         }
 
         for (int i = 0; i < 18; i++)
@@ -541,7 +541,8 @@ public class SaveDataGeneration4 : SaveData
         byte[] nicknameData = Utility.GetEncodedString(p.Nickname, 10, Game, Language.Iso639);
         Buffer.BlockCopy(nicknameData, 0, c, 0x00, 20);
 
-        c[0x15] = (byte)Lookup.GetGameIndexById(p.Origin.Game.VersionId, SupplementObject.GameOrigins, 4);
+        ushort gameOfOrigin = Lookup.GetGameIndexById(p.Origin.Game.VersionId, SupplementObject.GameOrigins, 4);
+        c[0x15] = (byte)(gameOfOrigin > 0xf ? 0 : gameOfOrigin);
 
         byte[] sinnohRibbon2Data = BitConverter.GetBytes(p.Ribbons.SinnohSet2);
         Buffer.BlockCopy(sinnohRibbon2Data, 0, c, 0x18, 4);

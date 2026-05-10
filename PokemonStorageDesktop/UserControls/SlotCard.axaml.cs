@@ -39,14 +39,25 @@ public partial class SlotCard : UserControl
         if (Design.IsDesignMode) return;
 
         RenderOptions.SetBitmapInterpolationMode(imageSprite, BitmapInterpolationMode.None);
-        imageSprite.Source = await GetImageFromUrl(BuildSpriteUrl());
+        int targetVersionId = Pokemon.Origin.Game.VersionId;
+        while (true)
+        {
+            imageSprite.Source = await GetImageFromUrl(BuildSpriteUrl(targetVersionId));
+            if (imageSprite.Source != null || targetVersionId < 1) break;
+            else 
+            {
+                Console.WriteLine("Attempting next lowest version group for sprite");
+                targetVersionId--;
+            }
+        }
+        
     }
 
-    public string BuildSpriteUrl()
+    public string BuildSpriteUrl(int versionId)
     {
         //https://img.pokemondb.net/sprites/heartgold-soulsilver/normal/pikachu-f.png
         string baseUrl = "https://img.pokemondb.net/sprites";
-        string versionRoot = GetVersionRootName();
+        string versionRoot = GetVersionRootName(versionId);
         string shiny = Pokemon.IsShinyPersonalityValue ? "shiny" : "normal";
         string female = 
             Pokemon.DoesSpeciesHaveGenderDifference() && 
@@ -58,9 +69,9 @@ public partial class SlotCard : UserControl
         return $"{baseUrl}/{versionRoot}/{shiny}/{Pokemon.PokemonIdentity.SpeciesIdentifier}{female}.png";
     }
 
-    private string GetVersionRootName()
+    private string GetVersionRootName(int versionId)
     {
-        switch (Pokemon.Origin.Game.VersionId)
+        switch (versionId)
         {
             case 1: return "red-blue";
             case 2: return "red-blue";

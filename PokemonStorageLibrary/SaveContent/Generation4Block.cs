@@ -1,6 +1,4 @@
 
-using Microsoft.Extensions.Logging;
-
 namespace PokemonStorageLibrary.SaveContent;
 
 class Generation4Block
@@ -96,7 +94,7 @@ class Generation4Block
                     break;
                 case 9: // Platinum
                     DataOffset = thisBlockOffset+0x0CF2C;
-                    FooterOffset = thisBlockOffset+0x1E2CC;
+                    FooterOffset = thisBlockOffset+0x1F0FC;
                     DataLength = FooterOffset-DataOffset;
                     FooterLength = 0x14;
                     break;

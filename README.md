@@ -12,8 +12,8 @@ This program allows the transfer of Pokemon between generations 1-4, and to a lo
 
 ## Todo
 
-* Remove unused info when showing Pokemon from older versions
-* [BUG] Pokemon origin game version not loading correctly on some occasions, need to find source
+* [BUG] Transferring directly from earlier gen to a newer one gives incomplete data or incorrect data. Need to find origin of error: reading from source, OR writing to destination
+* Remove or make generic unused info when showing Pokemon from older versions
 * Make theme consistant and clean it up
 * Add more/swappable themes
 * Refactor everything, remove unused things, combine things that are similar
