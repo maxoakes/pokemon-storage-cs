@@ -69,35 +69,6 @@ public partial class CardViewerContainer : UserControl
     {
         TopLevel? topLevel = TopLevel.GetTopLevel(this) ?? throw new InvalidOperationException("Unable to access TopLevel for file dialog.");
 
-        if (StorageModel is SaveFileModel saveFileModel)
-        {
-            if (saveFileModel.Game.GenerationId <= 2)
-            {
-                DialogBoxYesNo applyPersonalityDialog = new DialogBoxYesNo(
-                    "You are about to transfer Pokemon from a game that did not use personality values. Would you like to apply personality values to the selected Pokemon?",
-                    "Personality Value Application",
-                    "Yes, Apply Values",
-                    "No, Do Not Change",
-                    "Cancel Transfer"
-                );
-
-                int? result = await applyPersonalityDialog.ShowDialog<int?>(MainWindow);
-                if (result.HasValue && result.Value == 1)
-                {
-                    SelectedPokemon.ForEach(x => x.AssignRandomPersonalityValue());
-                    SelectedPokemon.ForEach(x => x.SetAbilityFromPersonalityValue());
-                }
-                else if (result.HasValue && result.Value == 0)
-                {
-                    // Do nothing
-                }
-                else
-                {
-                    return;
-                }
-            }
-        }
-
         Control? senderControl = sender as Control;
         Console.WriteLine(senderControl?.Name);
         switch (senderControl?.Name)
@@ -156,6 +127,32 @@ public partial class CardViewerContainer : UserControl
                 StorageModel? selectedStorageModel = MainWindow.StorageModels.Find(x => x.DisplayTitle == senderControl?.Name);
                 if (selectedStorageModel != null)
                 {
+                    if (SelectedPokemon.Any(x => x.PersonalityValue == 0))
+                    {
+                        DialogBoxYesNo applyPersonalityDialog = new DialogBoxYesNo(
+                            "Some of the Pokemon you are about to transfer do not have a personality value. Would you like to apply one to those that do not have one?",
+                            "Personality Value Application",
+                            "Yes, Apply Values",
+                            "No, Do Not Change",
+                            "Cancel Transfer"
+                        );
+
+                        int? pvDialog = await applyPersonalityDialog.ShowDialog<int?>(MainWindow);
+                        if (pvDialog.HasValue && pvDialog.Value == 1)
+                        {
+                            SelectedPokemon.ForEach(x => x.AssignRandomPersonalityValue());
+                            SelectedPokemon.ForEach(x => x.SetAbilityFromPersonalityValue());
+                        }
+                        else if (pvDialog.HasValue && pvDialog.Value == 0)
+                        {
+                            // Do nothing
+                        }
+                        else
+                        {
+                            return;
+                        }
+                    }
+
                     if (selectedStorageModel is DatabaseModel)
                     {
                         DialogBoxTextField databaseTagDialog = new DialogBoxTextField(
@@ -165,10 +162,11 @@ public partial class CardViewerContainer : UserControl
                         string tag = await databaseTagDialog.ShowDialog<string>(MainWindow);
                         SelectedPokemon.ForEach(x => x.DatabaseTag = tag);
                     }
-                    int result = selectedStorageModel.ImportPokemon(SelectedPokemon);
-                    string resultMessage = result != SelectedPokemon.Count ?
-                        $"Not all Pokemon were transferred to {selectedStorageModel.DisplayTitle}. ({result}/{SelectedPokemon.Count})" :
-                        $"Successfully transferred all {result} Pokemon to {selectedStorageModel.DisplayTitle}.";
+                    
+                    int successfulTransfers = selectedStorageModel.ImportPokemon(SelectedPokemon);
+                    string resultMessage = successfulTransfers != SelectedPokemon.Count ?
+                        $"Not all Pokemon were transferred to {selectedStorageModel.DisplayTitle}. ({successfulTransfers}/{SelectedPokemon.Count})" :
+                        $"Successfully transferred all {successfulTransfers} Pokemon to {selectedStorageModel.DisplayTitle}.";
                         
                     DialogBoxOk storageModelTransferDialog = new DialogBoxOk(resultMessage, "Successful Transfer");
                     await storageModelTransferDialog.ShowDialog<bool>(MainWindow);

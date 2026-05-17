@@ -22,59 +22,60 @@ public class SaveDataGeneration4 : SaveData
             new(content, game, false, true),
         ];
 
-        if (Game.VersionGroupId == 10)
+        if (Game.VersionGroupId != 9)
         {
-            if (GeneralBlocks[0].Int1 > GeneralBlocks[1].Int2) GeneralBlockIndex = 0;
+            if (GeneralBlocks[0].LargeCount > GeneralBlocks[1].SmallCount) GeneralBlockIndex = 0;
             if (GeneralBlocks[GeneralBlockIndex].IsChecksumValid) GeneralBlockIndex = (GeneralBlockIndex + 1) % 2;
 
-            if (StorageBlocks[0].Int1 > StorageBlocks[1].Int2) StorageBlockIndex = 0;
+            if (StorageBlocks[0].LargeCount > StorageBlocks[1].SmallCount) StorageBlockIndex = 0;
             if (StorageBlocks[GeneralBlockIndex].IsChecksumValid) StorageBlockIndex = (StorageBlockIndex + 1) % 2;
         }
         else
         {
             // https://projectpokemon.org/home/docs/gen-4/dp-save-structure-r74/
             // Choose the general block to write to
-            GeneralBlockIndex = GeneralBlocks[0].Int2 > GeneralBlocks[1].Int2 ? 0 : 1;
+            GeneralBlockIndex = GeneralBlocks[0].SmallCount > GeneralBlocks[1].SmallCount ? 0 : 1;
             if (!GeneralBlocks[GeneralBlockIndex].IsChecksumValid) GeneralBlockIndex = (GeneralBlockIndex + 1) % 2;
 
             // Choose the storage block to write to
-            if (StorageBlocks[0].Int1 > StorageBlocks[1].Int1)
+            if (StorageBlocks[0].LargeCount > StorageBlocks[1].LargeCount)
             {
                 StorageBlockIndex = 0;
             }
-            else if (StorageBlocks[0].Int1 < StorageBlocks[1].Int1)
+            else if (StorageBlocks[0].LargeCount < StorageBlocks[1].LargeCount)
             {
                 StorageBlockIndex = 1;
             }
             else
             {
-                StorageBlockIndex = GeneralBlocks[0].Int1 > GeneralBlocks[1].Int1 ? 0 : 1;
+                StorageBlockIndex = StorageBlocks[0].SmallCount > StorageBlocks[1].SmallCount ? 0 : 1;
             }
             
-            if (!(StorageBlocks[StorageBlockIndex].Int2 == GeneralBlocks[GeneralBlockIndex].Int2 && StorageBlocks[StorageBlockIndex].IsChecksumValid))
+            if (!GeneralBlocks[GeneralBlockIndex].IsChecksumValid || !StorageBlocks[StorageBlockIndex].IsChecksumValid)
             {
                 GeneralBlockIndex = (GeneralBlockIndex + 1) % 2;
                 StorageBlockIndex = (StorageBlockIndex + 1) % 2;
-                if (!StorageBlocks[StorageBlockIndex].IsChecksumValid && !GeneralBlocks[GeneralBlockIndex].IsChecksumValid)
+                if (!StorageBlocks[StorageBlockIndex].IsChecksumValid || !GeneralBlocks[GeneralBlockIndex].IsChecksumValid)
                 {
                     throw new Exception("Gen 4 load error");
                 }
             }
+            Console.WriteLine($"Selected Storage:{StorageBlockIndex}, General:{GeneralBlockIndex}");
             
             int i = 0;
             foreach (var block in GeneralBlocks)
             {
                 Console.WriteLine($"General_{i}: Real:{block.Checksum} ?== Calculated:{block.GetCalculatedChecksum()}");
-                Console.WriteLine($"General_{i}: GenSave:{block.Int2}");
-                Console.WriteLine($"General_{i}: StorSave:{block.Int1}");
+                Console.WriteLine($"General_{i}: GenSave:{block.SmallCount}");
+                Console.WriteLine($"General_{i}: StorSave:{block.LargeCount}");
                 i++;
             }
             i = 0;
             foreach (var block in StorageBlocks)
             {
                 Console.WriteLine($"Storage_{i}: Real:{block.Checksum} ?== Calculated:{block.GetCalculatedChecksum()}");
-                Console.WriteLine($"Storage_{i}: GenSave:{block.Int2}");
-                Console.WriteLine($"Storage_{i}: StorSave:{block.Int1}");
+                Console.WriteLine($"Storage_{i}: GenSave:{block.SmallCount}");
+                Console.WriteLine($"Storage_{i}: StorSave:{block.LargeCount}");
                 i++;
             }
         }
@@ -316,7 +317,15 @@ public class SaveDataGeneration4 : SaveData
                     byte eggDay = Utility.GetUnsignedNumber<byte>(blockBytes, 0x12, 1);
                     if (eggDay > 0)
                     {
-                        p.Origin.EggReceiveDate = new DateTime(eggYear + 2000, eggMonth, eggDay);
+                        try
+                        {
+                            p.Origin.EggReceiveDate = new DateTime(eggYear + 2000, eggMonth, eggDay);
+                        }
+                        catch
+                        {
+                            p.Origin.EggReceiveDate = new DateTime(2000, 1, 1);
+                        }
+                        
                     }
 
                     byte metYear = Utility.GetUnsignedNumber<byte>(blockBytes, 0x13, 1);
@@ -324,7 +333,14 @@ public class SaveDataGeneration4 : SaveData
                     byte metDay = Utility.GetUnsignedNumber<byte>(blockBytes, 0x15, 1);
                     if (metDay > 0)
                     {
-                        p.Origin.MetDateTime = new DateTime(metYear + 2000, metMonth, metDay);
+                        try
+                        {
+                            p.Origin.MetDateTime = new DateTime(metYear + 2000, metMonth, metDay);
+                        }
+                        catch
+                        {
+                            p.Origin.MetDateTime = DateTime.Now;
+                        }
                     }
                     
                     p.Origin.EggHatchLocationId = Lookup.GetIdByGameIndex(Utility.GetUnsignedNumber<ushort>(blockBytes, 0x16, 2), SupplementObject.Locations, 4);
@@ -357,8 +373,7 @@ public class SaveDataGeneration4 : SaveData
             }
         }
 
-        // Calculations        
-        // Console.WriteLine($"Done reading: {PokemonIdentity.SpeciesIdentifier}");
+        // Calculations
         p.Stats = new(p, true, iv, ev);
         return p;
     }
@@ -446,7 +461,7 @@ public class SaveDataGeneration4 : SaveData
         // A block
         byte[] a = new byte[0x20];
 
-        byte[] speciesData = BitConverter.GetBytes(Lookup.GetGameIndexById(p.PokemonIdentity.FormId, SupplementObject.Pokemon, 4));
+        byte[] speciesData = BitConverter.GetBytes(Lookup.GetGameIndexById(p.PokemonIdentity.SpeciesId, SupplementObject.Pokemon, 4));
         Buffer.BlockCopy(speciesData, 0, a, 0x00, 2);
  
         byte[] itemData = BitConverter.GetBytes(Lookup.GetGameIndexById(p.HeldItemId, SupplementObject.Items, 4));
@@ -700,7 +715,8 @@ public class SaveDataGeneration4 : SaveData
         };
 
         int s = (int)(((pv & 0x3E000) >> 0xD) % 24);
-        return unencrypt ? blockOrder[s] : inverseOrder[s];
+        // return unencrypt ? blockOrder[s] : inverseOrder[s];
+        return blockOrder[s];
     }
 
     public void SaveStructureToModifiedBytes()

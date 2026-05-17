@@ -50,8 +50,8 @@ class Generation4Block
     public const int BACKUP_OFFSET = 0x40000;
     public ushort Checksum { get { return Utility.GetUnsignedNumber<ushort>(Footer, FooterLength-2, 2); } }
     public bool IsChecksumValid { get { return Checksum == GetCalculatedChecksum(); } }
-    public uint Int1 { get { return Utility.GetUnsignedNumber<uint>(Footer, 0x00, 4); } }
-    public uint Int2 { get { return Utility.GetUnsignedNumber<uint>(Footer, 0x04, 4); } }
+    public uint LargeCount { get { return Utility.GetUnsignedNumber<uint>(Footer, 0x00, 4); } }
+    public uint SmallCount { get { return Utility.GetUnsignedNumber<uint>(Footer, 0x04, 4); } }
 
     public Generation4Block(byte[] content, Game game, bool isSmall, bool isBackup = false)
     {

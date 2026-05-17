@@ -506,6 +506,7 @@ public class SaveDataGeneration2 : SaveData
 
             byte[] originalTrainerNameBytes = Utility.GetBytes(storageBytes, originalTrainerNameOffset + (0xB * i), 0xB);
             string originalTrainerName = Utility.GetDecodedString(originalTrainerNameBytes, Game, lang);
+            if (string.IsNullOrWhiteSpace(originalTrainerName)) originalTrainerName = "TRAINER";
 
             byte[] pokemonBytes = Utility.GetBytes(storageBytes, pokemonOffset + (pokemonSize * i), 32);
             PartyPokemon pokemon = GetPartyPokemonFromBoxBytes(pokemonBytes);

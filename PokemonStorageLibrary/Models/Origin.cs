@@ -41,7 +41,7 @@ public class Origin
         MetLevel = 0;
         MetLocationId = 0;
         MetLocationPlatinumId = 0;
-        MetDateTime = null;
+        MetDateTime = DateTime.Now;
     }
 
     public Origin(Int64 pokemonPrimaryKey)
