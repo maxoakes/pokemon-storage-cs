@@ -409,7 +409,9 @@ public partial class PartyPokemon
             // Edge case, level 100
             if (row.Field<Int64>("level") == 100 && row.Field<Int64>("experience") == ExperiencePoints) return 100;
 
-            return (byte)Math.Max(row.Field<Int64>("level")-1, 0);
+            // Set next level if exactly on level border
+            if (row.Field<Int64>("experience") == ExperiencePoints) return (byte)row.Field<Int64>("level");
+            else return (byte)Math.Max(row.Field<Int64>("level") - 1, 0);
         }
         return 0;
     }

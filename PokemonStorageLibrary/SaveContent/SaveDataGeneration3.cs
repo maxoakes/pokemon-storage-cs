@@ -5,7 +5,8 @@ namespace PokemonStorageLibrary.SaveContent;
 
 public class SaveDataGeneration3 : SaveData
 {
-    private int[] SaveOffsets = [0x000000, 0x00E000];
+    private static readonly List<int> ValidVersionIds = [1,2,3,4,5,15];
+    private static readonly int[] SaveOffsets = [0x000000, 0x00E000];
     private int SaveIndex { get; set; }
     private List<Generation3Section> Sections = [];
 
@@ -409,10 +410,13 @@ public class SaveDataGeneration3 : SaveData
         byte[] m = new byte[12];
         m[0x00] = (byte)(p.PokerusDaysRemaining + (p.PokerusStrain << 4));
         m[0x01] = (byte)Lookup.GetGameIndexById(p.Origin.MetLocationId, SupplementObject.Locations, 3);
+        int formattedMetLevel = p.Origin.MetLevel == 0 ? p.Level : p.Origin.MetLevel;
+        int rawVersionId = Lookup.GetGameIndexById(p.Origin.Game.VersionId, SupplementObject.GameOrigins, 3);
+        int rawCatchBallId = Lookup.GetGameIndexById(p.Origin.CatchBallId, SupplementObject.Items, 3);
         ushort origin = (ushort)(
-            p.Origin.MetLevel + 
-            (Lookup.GetGameIndexById(p.Origin.Game.VersionId, SupplementObject.GameOrigins, 3) << 7) + 
-            (Lookup.GetGameIndexById(p.Origin.CatchBallId, SupplementObject.Items, 3) << 11) +
+            formattedMetLevel + 
+            ((ValidVersionIds.Contains(rawVersionId) ? rawVersionId : Lookup.GetGameIndexById(Game.VersionId, SupplementObject.GameOrigins, 3)) << 7) + 
+            ((rawCatchBallId < 13 ? rawCatchBallId : 4) << 11) +
             (((byte)p.OriginalTrainer.Gender) << 15)
         );
         byte[] originData = [.. BitConverter.GetBytes(origin)];
@@ -479,13 +483,15 @@ public class SaveDataGeneration3 : SaveData
     {
         int slot = 0;
         byte[] boxData = GetBoxDataBytes();
-        for (int i = 0; i < 420; i += 80)
+        for (int i = 0; i < 420; i++)
         {
+            int offset = i*80;
             slot++;
-            if (boxData[i + 0x4] > 0) continue;
+            UInt64 thisUnencryptedPokemonData = Utility.GetUnsignedNumber<UInt64>(boxData, offset + 0x4, 8);
+            if (thisUnencryptedPokemonData > 0) continue;
             else
             {
-                Buffer.BlockCopy(GetBoxBytesFromPartyPokemon(pokemon), 0, boxData, i + 0x4, 80);
+                Buffer.BlockCopy(GetBoxBytesFromPartyPokemon(pokemon), 0, boxData, offset + 0x4, 80);
                 break;
             }
         }
@@ -500,13 +506,15 @@ public class SaveDataGeneration3 : SaveData
         {
             AddPokemonToNextOpenBox(partyPokemon);
             WriteToPokedex((int)partyPokemon.GetNationalDexNumber());
-            bool isValidWrite = AreAllChecksumsValid();
-            
-            if (!isValidWrite)
-            {
-                throw new InvalidDataException("Checksum after Pokemon write was not valid!");
-            }
             i++;
+        }
+        
+        SaveBoxDataSectionsToBytes();
+        bool isValidWrite = AreAllChecksumsValid();
+        
+        if (!isValidWrite)
+        {
+            throw new InvalidDataException("Checksum after Pokemon write was not valid!");
         }
 
         File.Copy(filepath, filepath + ".original", overwriteBackup);

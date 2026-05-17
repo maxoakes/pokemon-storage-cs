@@ -50,6 +50,16 @@ public class Move
         return (byte)(baseline * (1 + (increasedAmount * 0.2f)));
     }
 
+    public byte GetGenerationId()
+    {
+        if (Id == 0) return 0;
+        
+        List<SqliteParameter> parameters = [
+            new SqliteParameter("Id", SqliteType.Integer) { Value = Id }
+        ];
+        return (byte)(Int64)DbInterface.RetrieveScalar("SELECT generation_id FROM moves WHERE id=@Id", Lookup.VeekunConnectionString, parameters);
+    }
+
     public int InsertIntoDatabase(int pokemonPrimaryKey)
     {
         List<SqliteParameterPair> parameterPairs =

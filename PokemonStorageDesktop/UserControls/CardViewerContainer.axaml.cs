@@ -166,10 +166,11 @@ public partial class CardViewerContainer : UserControl
                         SelectedPokemon.ForEach(x => x.DatabaseTag = tag);
                     }
                     int result = selectedStorageModel.ImportPokemon(SelectedPokemon);
-                    DialogBoxOk storageModelTransferDialog = new DialogBoxOk(
-                        $"Transferred {result} Pokemon to {selectedStorageModel.DisplayTitle}.",
-                        "Successful Transfer"
-                    );
+                    string resultMessage = result != SelectedPokemon.Count ?
+                        $"Not all Pokemon were transferred to {selectedStorageModel.DisplayTitle}. ({result}/{SelectedPokemon.Count})" :
+                        $"Successfully transferred all {result} Pokemon to {selectedStorageModel.DisplayTitle}.";
+                        
+                    DialogBoxOk storageModelTransferDialog = new DialogBoxOk(resultMessage, "Successful Transfer");
                     await storageModelTransferDialog.ShowDialog<bool>(MainWindow);
                 }
                 break;

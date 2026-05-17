@@ -393,7 +393,6 @@ public class Lookup
         );
     }
 
-
     public static PokemonType GetPokemonType(ushort pokemonId, int slot)
     {
         List<SqliteParameter> parameters = [
@@ -413,6 +412,15 @@ public class Lookup
                 row.Field<Int64>("generation_id")
             );
         }
+    }
+
+    public static byte GetGenerationIntroduced(ushort speciesId)
+    {
+        List<SqliteParameter> parameters = [
+            new SqliteParameter("Id", SqliteType.Integer) { Value = speciesId }
+        ];
+
+        return (byte)(Int64)DbInterface.RetrieveScalar("SELECT generation_id FROM pokemon_species WHERE id=@Id", VeekunConnectionString, parameters);
     }
 
     #endregion

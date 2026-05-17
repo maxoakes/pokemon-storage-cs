@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using PokemonStorageLibrary;
 using PokemonStorageLibrary.Models;
 using PokemonStorageLibrary.SaveContent;
@@ -79,6 +80,8 @@ public class SaveFileModel : StorageModel
 
     public override int ImportPokemon(List<PartyPokemon> partyPokemonList)
     {
-        return GameState?.AppendPokemonAndSave(partyPokemonList, SaveFilePath) ?? 0;
+        List<PartyPokemon> confirmedList = partyPokemonList
+            .Where(x => Lookup.GetGenerationIntroduced(x.PokemonIdentity.SpeciesId) <= Game.GenerationId).ToList();
+        return GameState?.AppendPokemonAndSave(confirmedList, SaveFilePath) ?? 0;
     }
 }

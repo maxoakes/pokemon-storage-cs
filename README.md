@@ -1,6 +1,6 @@
 # Pokemon Storage
 
-This was originally written in Python (https://github.com/maxoakes/pokemon-storage), but doing byte-level operations in a dynamically-typed language was a wild choice, so I am migrating to C# since I know it about as much as I do Python.
+This was originally written in Python (https://github.com/maxoakes/pokemon-storage), but doing byte-level operations in a dynamically-typed language was a wild choice, so I migrated to C# since it is statically-typed and I know it more than Python.
 
 This program allows the transfer of Pokemon between generations 1-4, and to a local sqlite database. 
 
@@ -12,7 +12,8 @@ This program allows the transfer of Pokemon between generations 1-4, and to a lo
 
 ## Todo
 
-* [BUG] Transferring directly from earlier gen to a newer one gives incomplete data or incorrect data. Need to find origin of error: reading from source, OR writing to destination
+* [BUG] Red -> Heartgold Dragonair results in egg?
+* [BUG] Gen 4 date caught is 0 value
 * Remove or make generic unused info when showing Pokemon from older versions
 * Make theme consistant and clean it up
 * Add more/swappable themes
