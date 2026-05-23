@@ -221,10 +221,10 @@ public partial class PartyPokemon
         return GetAbilityIdByAbilityNumber(AbilityNumber);
     }
 
-    public void AssignGenderByAttackIv()
+    public Gender GetGenderByAttackIv()
     {
         int ratio = GetGenderRate();
-        Gender = ratio switch
+        return ratio switch
         {
             0 => Gender.MALE,
             8 => Gender.FEMALE,
@@ -455,7 +455,7 @@ public partial class PartyPokemon
     public void AssignRandomPersonalityValue()
     {
         Random random = new();
-        PersonalityValue = (uint)random.NextInt64(UInt32.MaxValue);
+        PersonalityValue = (uint)random.NextInt64(UInt32.MaxValue);        
     }
 
     public void SetAbilityFromPersonalityValue()

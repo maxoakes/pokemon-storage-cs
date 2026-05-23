@@ -331,7 +331,9 @@ public class SaveDataGeneration2 : SaveData
         p.Origin.CatchBallId = (byte)Lookup.GetIdByIdentifier("poke-ball", DatabaseObject.Items);
 
         // Calculations
-        p.AssignGenderByAttackIv();
+        if (p.Origin.MetLevel == 0) p.Origin.MetLevel = 5;
+        if (p.Origin.MetLocationId == 0) p.Origin.MetLocationId = 254; // Link Trade Arrive
+        p.Gender = p.GetGenderByAttackIv();
         return p;
     }
 
@@ -339,8 +341,8 @@ public class SaveDataGeneration2 : SaveData
     {
         byte[] bytes = new byte[0x20];
         Array.Fill<byte>(bytes, 0);
-        bytes[0x00] = (byte)Lookup.GetGameIndexById(p.PokemonIdentity.FormId, SupplementObject.Pokemon, 2);
-        bytes[0x01] = (byte)Lookup.GetGameIndexById(p.HeldItemId, SupplementObject.Items, 2);
+        bytes[0x00] = (byte)(Lookup.GetGameIndexById(p.PokemonIdentity.FormId, SupplementObject.Pokemon, 2) ?? 0); // Default = ???
+        bytes[0x01] = (byte)(Lookup.GetGameIndexById(p.HeldItemId, SupplementObject.Items, 2) ?? 0); // Default = Nothing;
         
         byte[] otid = [.. BitConverter.GetBytes(p.OriginalTrainer.PublicId).Reverse()];
         Buffer.BlockCopy(otid, 0, bytes, 0x06, 2);
@@ -381,7 +383,10 @@ public class SaveDataGeneration2 : SaveData
             else if (p.Origin.MetDateTime.Value.TimeOfDay.Hours > 3 || p.Origin.MetDateTime.Value.TimeOfDay.Hours < 10) timeOfDay = 1;
         }
         bytes[0x1D] = (byte)((timeOfDay << 6) + p.Level);
-        bytes[0x1E] = (byte)(((int)p.OriginalTrainer.Gender << 7) + Lookup.GetGameIndexById(p.Origin.MetLocationId, SupplementObject.Locations, 2));        
+        bytes[0x1E] = (byte)(
+            ((int)p.OriginalTrainer.Gender << 7) + 
+            Lookup.GetGameIndexById(p.Origin.MetLocationId, SupplementObject.Locations, 2) ?? 0 // Default = Pokemon Center
+        );        
         bytes[0x1F] = p.Level;
         return bytes;
     }
@@ -398,7 +403,10 @@ public class SaveDataGeneration2 : SaveData
 
         if (targetSlot > boxCapacity) return -1;
         
-        BoxData[boxId].SpeciesIds[targetSlot] = (byte)(pokemon.IsEgg ? 0xFD : Lookup.GetGameIndexById(pokemon.PokemonIdentity.FormId, SupplementObject.Pokemon, 2));
+        BoxData[boxId].SpeciesIds[targetSlot] = (byte)(
+            pokemon.IsEgg 
+            ? 0xFD 
+            : Lookup.GetGameIndexById(pokemon.PokemonIdentity.FormId, SupplementObject.Pokemon, 2) ?? 0);
         try
         {
             BoxData[boxId].SpeciesIds[targetSlot+1] = 0xFF;

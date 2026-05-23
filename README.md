@@ -12,8 +12,6 @@ This program allows the transfer of Pokemon between generations 1-4, and to a lo
 
 ## Todo
 
-* [BUG] Red -> Heartgold Dragonair results in egg?
-* [BUG] Gen 4 date caught is 0 value
 * Remove or make generic unused info when showing Pokemon from older versions
 * Make theme consistant and clean it up
 * Add more/swappable themes

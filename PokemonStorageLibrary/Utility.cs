@@ -214,6 +214,7 @@ public static class Utility
         Array.Fill<byte>(builtBytes, 0);
         for (int i = 0; i < data.Length; i++)
         {
+            if (i == data.Length) break;
             ushort value = Lookup.GetEncodedCharacterByCharacter(data[i], game.GenerationId, lang);
             if (!useShort)
             {
@@ -225,27 +226,29 @@ public static class Utility
                 Array.Copy(bytes, 0, builtBytes, i*2, 2);
             }
         }
-        switch (game.VersionGroupId)
+        if (maxStringLength > data.Length)
         {
-            case 1:
-            case 2:
-            case 3:
-            case 4:
-                builtBytes[data.Length] = 0x50;
-                break;
-            case 5:
-            case 6:
-            case 7:
-                builtBytes[data.Length] = 0xFF;
-                break;
-            case 8:
-            case 9:
-            case 10:
-                builtBytes[data.Length * 2] = 0xFF;
-                builtBytes[data.Length * 2 + 1] = 0xFF;
-                break;
+            switch (game.VersionGroupId)
+            {
+                case 1:
+                case 2:
+                case 3:
+                case 4:
+                    builtBytes[data.Length] = 0x50;
+                    break;
+                case 5:
+                case 6:
+                case 7:
+                    builtBytes[data.Length] = 0xFF;
+                    break;
+                case 8:
+                case 9:
+                case 10:
+                    builtBytes[data.Length * 2] = 0xFF;
+                    builtBytes[data.Length * 2 + 1] = 0xFF;
+                    break;
+            }
         }
-
         return builtBytes;
     }
 

@@ -5,7 +5,6 @@ namespace PokemonStorageLibrary.SaveContent;
 
 public class SaveDataGeneration1 : SaveData
 {
-    private bool IsYellow { get; }
     private int BoxSize = 0x462;
     private int CurrentBoxNumber { get; }
     private int[] BoxOffsets =          [0x4000, 0x4462, 0x48C4, 0x4D26, 0x5188, 0x55EA, 0x6000, 0x6462, 0x68C4, 0x6D26, 0x7188, 0x75EA];
@@ -14,7 +13,6 @@ public class SaveDataGeneration1 : SaveData
 
     public SaveDataGeneration1(byte[] content, Game game, string language) : base(content, game, language)
     {
-        IsYellow = game.GameName.Equals("yellow", StringComparison.OrdinalIgnoreCase);
         CurrentBoxNumber = Utility.GetByte(ModifiedData, 0x284C) & 0x7F;
 
         for (int i = 0; i < BoxOffsets.Length; i++)
@@ -189,7 +187,9 @@ public class SaveDataGeneration1 : SaveData
         p.Stats = new(p, false, iv, ev);
 
         // Calculations
-        p.AssignGenderByAttackIv();
+        p.Origin.MetLevel = p.Level;
+        p.Origin.MetLocationId = 254; // Link Trade Arrive
+        p.Gender = p.GetGenderByAttackIv();
         return p;
     }
 
@@ -198,7 +198,7 @@ public class SaveDataGeneration1 : SaveData
         byte[] bytes = new byte[0x21];
         Array.Fill<byte>(bytes, 0);
         // Index number of species
-        bytes[0x00] = (byte)Lookup.GetGameIndexById(p.PokemonIdentity.FormId, SupplementObject.Pokemon, 1);
+        bytes[0x00] = (byte)(Lookup.GetGameIndexById(p.PokemonIdentity.FormId, SupplementObject.Pokemon, 1) ?? 0xB5); // Default = Missingno;
         // Level
         bytes[0x03] = p.Level;
         
@@ -262,7 +262,7 @@ public class SaveDataGeneration1 : SaveData
 
         if (targetSlot > 20) return -1;
         
-        BoxData[boxId].SpeciesIds[targetSlot] = (byte)Lookup.GetGameIndexById(pokemon.PokemonIdentity.FormId, SupplementObject.Pokemon, 1);
+        BoxData[boxId].SpeciesIds[targetSlot] = (byte)(Lookup.GetGameIndexById(pokemon.PokemonIdentity.FormId, SupplementObject.Pokemon, 1) ?? 0xBE);
         try
         {
             BoxData[boxId].SpeciesIds[targetSlot+1] = 0xFF;

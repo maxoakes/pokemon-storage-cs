@@ -345,7 +345,7 @@ public class SaveDataGeneration3 : SaveData
         byte[] nicknameData = Utility.GetEncodedString(p.Nickname, 10, Game, Language.Iso639);
         Buffer.BlockCopy(nicknameData, 0, bytes, 0x08, 10);
 
-        bytes[0x12] = (byte)Lookup.GetGameIndexById(p.LanguageId, SupplementObject.Languages, 3);
+        bytes[0x12] = (byte)(Lookup.GetGameIndexById(p.LanguageId, SupplementObject.Languages, 3) ?? 2); // Default = English
         bytes[0x13] = 2;
 
         byte[] otNameData = Utility.GetEncodedString(p.OriginalTrainer.Name, 7, Game, Language.Iso639);
@@ -356,10 +356,10 @@ public class SaveDataGeneration3 : SaveData
         // Subsections
         // Growth
         byte[] g = new byte[12];
-        byte[] speciesData = BitConverter.GetBytes(Lookup.GetGameIndexById(p.PokemonIdentity.FormId, SupplementObject.Pokemon, 3));
+        byte[] speciesData = BitConverter.GetBytes(Lookup.GetGameIndexById(p.PokemonIdentity.FormId, SupplementObject.Pokemon, 3) ?? 0); // Default = ???
         Buffer.BlockCopy(speciesData, 0, g, 0x00, 2);
  
-        byte[] itemData = BitConverter.GetBytes(Lookup.GetGameIndexById(p.HeldItemId, SupplementObject.Items, 3));
+        byte[] itemData = BitConverter.GetBytes(Lookup.GetGameIndexById(p.HeldItemId, SupplementObject.Items, 3) ?? 0); // Default = Nothing
         Buffer.BlockCopy(itemData, 0, g, 0x02, 2);
 
         byte[] experienceData = BitConverter.GetBytes(p.ExperiencePoints);
@@ -409,13 +409,23 @@ public class SaveDataGeneration3 : SaveData
         // Misc
         byte[] m = new byte[12];
         m[0x00] = (byte)(p.PokerusDaysRemaining + (p.PokerusStrain << 4));
-        m[0x01] = (byte)Lookup.GetGameIndexById(p.Origin.MetLocationId, SupplementObject.Locations, 3);
+
+        ushort? locationId = Lookup.GetGameIndexById(p.Origin.MetLocationId, SupplementObject.Locations, 3);
+        if (locationId.HasValue) m[0x01] = (byte)locationId;
+        else m[0x01] = 0xFE; // In-game trade
+
         int formattedMetLevel = p.Origin.MetLevel == 0 ? p.Level : p.Origin.MetLevel;
-        int rawVersionId = Lookup.GetGameIndexById(p.Origin.Game.VersionId, SupplementObject.GameOrigins, 3);
-        int rawCatchBallId = Lookup.GetGameIndexById(p.Origin.CatchBallId, SupplementObject.Items, 3);
+        
+        ushort? rawVersionId = Lookup.GetGameIndexById(p.Origin.Game.VersionId, SupplementObject.GameOrigins, 3);
+        int treatedVersionId =
+            rawVersionId.HasValue && ValidVersionIds.Contains(rawVersionId.Value)
+            ? rawVersionId.Value
+            : Lookup.GetGameIndexById(Game.VersionId, SupplementObject.GameOrigins, 3) ?? 1;
+
+        int rawCatchBallId = Lookup.GetGameIndexById(p.Origin.CatchBallId, SupplementObject.Items, 3) ?? 4;
         ushort origin = (ushort)(
             formattedMetLevel + 
-            ((ValidVersionIds.Contains(rawVersionId) ? rawVersionId : Lookup.GetGameIndexById(Game.VersionId, SupplementObject.GameOrigins, 3)) << 7) + 
+            (treatedVersionId << 7) + 
             ((rawCatchBallId < 13 ? rawCatchBallId : 4) << 11) +
             (((byte)p.OriginalTrainer.Gender) << 15)
         );

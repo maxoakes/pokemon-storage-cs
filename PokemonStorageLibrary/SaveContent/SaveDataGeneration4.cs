@@ -461,10 +461,10 @@ public class SaveDataGeneration4 : SaveData
         // A block
         byte[] a = new byte[0x20];
 
-        byte[] speciesData = BitConverter.GetBytes(Lookup.GetGameIndexById(p.PokemonIdentity.SpeciesId, SupplementObject.Pokemon, 4));
+        byte[] speciesData = BitConverter.GetBytes(Lookup.GetGameIndexById(p.PokemonIdentity.SpeciesId, SupplementObject.Pokemon, 4) ?? 0);
         Buffer.BlockCopy(speciesData, 0, a, 0x00, 2);
  
-        byte[] itemData = BitConverter.GetBytes(Lookup.GetGameIndexById(p.HeldItemId, SupplementObject.Items, 4));
+        byte[] itemData = BitConverter.GetBytes(Lookup.GetGameIndexById(p.HeldItemId, SupplementObject.Items, 4) ?? 0);
         Buffer.BlockCopy(itemData, 0, a, 0x02, 2);
 
         byte[] otIdPublicData = [.. BitConverter.GetBytes(p.OriginalTrainer.PublicId)];
@@ -479,7 +479,7 @@ public class SaveDataGeneration4 : SaveData
         a[0x0C] = p.Friendship;
         a[0x0D] = (byte)p.AbilityId;
         a[0x0E] = p.Markings.AsGen4Byte();
-        a[0x0F] = (byte)Lookup.GetGameIndexById(p.LanguageId, SupplementObject.Languages, 4);
+        a[0x0F] = (byte)(Lookup.GetGameIndexById(p.LanguageId, SupplementObject.Languages, 4) ?? 2);
         a[0x10] = (byte)p.Stats.Modern.HP.Ev;
         a[0x11] = (byte)p.Stats.Modern.Attack.Ev;
         a[0x12] = (byte)p.Stats.Modern.Defense.Ev;
@@ -544,10 +544,10 @@ public class SaveDataGeneration4 : SaveData
         
         b[0x19] = p.ShinyLeaves;
         
-        byte[] platEggLocationData = BitConverter.GetBytes(Lookup.GetGameIndexById(p.Origin.EggHatchLocationPlatinumId, SupplementObject.Locations, 4));
+        byte[] platEggLocationData = BitConverter.GetBytes(Lookup.GetGameIndexById(p.Origin.EggHatchLocationPlatinumId, SupplementObject.Locations, 4) ?? 0x07D1);
         Buffer.BlockCopy(platEggLocationData, 0, b, 0x1C, 2);
 
-        byte[] platLocation = BitConverter.GetBytes(Lookup.GetGameIndexById(p.Origin.MetLocationPlatinumId, SupplementObject.Locations, 4));
+        byte[] platLocation = BitConverter.GetBytes(Lookup.GetGameIndexById(p.Origin.MetLocationPlatinumId, SupplementObject.Locations, 4) ?? 0x07D1);
         Buffer.BlockCopy(platLocation, 0, b, 0x1E, 2);
 
         // C block
@@ -556,7 +556,7 @@ public class SaveDataGeneration4 : SaveData
         byte[] nicknameData = Utility.GetEncodedString(p.Nickname, 10, Game, Language.Iso639);
         Buffer.BlockCopy(nicknameData, 0, c, 0x00, 20);
 
-        ushort gameOfOrigin = Lookup.GetGameIndexById(p.Origin.Game.VersionId, SupplementObject.GameOrigins, 4);
+        ushort gameOfOrigin = Lookup.GetGameIndexById(p.Origin.Game.VersionId, SupplementObject.GameOrigins, 4) ?? 0;
         c[0x15] = (byte)(gameOfOrigin > 0xf ? 0 : gameOfOrigin);
 
         byte[] sinnohRibbon2Data = BitConverter.GetBytes(p.Ribbons.SinnohSet2);
@@ -576,17 +576,17 @@ public class SaveDataGeneration4 : SaveData
         d[0x14] = (byte)(p.Origin.MetDateTime.HasValue ? p.Origin.MetDateTime.Value.Month : 0);
         d[0x15] = (byte)(p.Origin.MetDateTime.HasValue ? p.Origin.MetDateTime.Value.Day : 0);
 
-        byte[] dpEggLocationData = [.. BitConverter.GetBytes(Lookup.GetGameIndexById(p.Origin.EggHatchLocationId, SupplementObject.Locations, 4))];
+        byte[] dpEggLocationData = [.. BitConverter.GetBytes(Lookup.GetGameIndexById(p.Origin.EggHatchLocationId, SupplementObject.Locations, 4) ?? 0x07D1)];
         Buffer.BlockCopy(dpEggLocationData, 0, d, 0x16, 2);
 
-        byte[] dpMetLocationData = [.. BitConverter.GetBytes(Lookup.GetGameIndexById(p.Origin.MetLocationId, SupplementObject.Locations, 4))];
+        byte[] dpMetLocationData = [.. BitConverter.GetBytes(Lookup.GetGameIndexById(p.Origin.MetLocationId, SupplementObject.Locations, 4) ?? 0x07D1)];
         Buffer.BlockCopy(dpMetLocationData, 0, d, 0x18, 2);
 
         d[0x1A] = (byte)(p.PokerusDaysRemaining + (p.PokerusStrain << 4));
-        d[0x1B] = (byte)Lookup.GetGameIndexById(p.Origin.CatchBallId, SupplementObject.Balls, 4);
+        d[0x1B] = (byte)(Lookup.GetGameIndexById(p.Origin.CatchBallId, SupplementObject.Balls, 4) ?? 4);
         d[0x1C] = (byte)(p.Origin.MetLevel + (p.OriginalTrainer.Gender == Gender.FEMALE ? 0x80 : 0));
         d[0x1D] = p.Origin.EncounterMethodId;
-        d[0x1E] = (byte)Lookup.GetGameIndexById(p.Origin.CatchBallId, SupplementObject.Balls, 4);
+        d[0x1E] = (byte)(Lookup.GetGameIndexById(p.Origin.CatchBallId, SupplementObject.Balls, 4) ?? 4);
         d[0x1F] = p.WalkingMood;
 
         // Arrange substructure

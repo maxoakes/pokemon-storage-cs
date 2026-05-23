@@ -471,7 +471,7 @@ public class Lookup
 
     #region Get Game Index
 
-    public static ushort GetGameIndexById(int id, SupplementObject supplementObject, int generation = 0)
+    public static ushort? GetGameIndexById(int id, SupplementObject supplementObject, int generation = 0)
     {
         List<SqliteParameter> parameters = [
             new SqliteParameter("Id", SqliteType.Integer) { Value = id },
@@ -495,7 +495,9 @@ public class Lookup
             _ => 
                 "",
         };
-        return Convert.ToUInt16(DbInterface.RetrieveScalar(query, SupplementConnectionString, parameters));
+        object? result = DbInterface.RetrieveScalar(query, SupplementConnectionString, parameters);
+        if (result == null) return null;
+        else return Convert.ToUInt16(result);
     }
 
     #endregion
