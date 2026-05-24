@@ -70,11 +70,6 @@ public abstract class SaveData
     public abstract bool AreAllChecksumsValid();
 
     /// <summary>
-    /// Print the seen/owned status of all Pokemon of ModifiedData
-    /// </summary>
-    public abstract void PrintPokedex();
-
-    /// <summary>
     /// Set the ModifiedData content to state that the Pokemon of a certain index has been seen and/or owned
     /// </summary>
     /// <param name="nationalIndex">Index of the Pokemon to alter</param>
@@ -111,34 +106,4 @@ public abstract class SaveData
     public abstract int AppendPokemonAndSave(List<PartyPokemon> partyPokemonList, string filepath, bool overwriteBackup=true);
 
     #endregion
-
-    /// <summary>
-    /// Returns a single object that contains a dictionary of party Pokemon and all box Pokemon.
-    /// </summary>
-    /// <returns></returns>
-    public object GetEntireStorageObject()
-    {
-        var pokemonStorageDictionary = new Dictionary<string, Dictionary<string, PartyPokemon>>();
-        foreach ((int index, PartyPokemon pokemon) in Party)
-        {
-            if (!pokemonStorageDictionary.ContainsKey("Party"))
-                pokemonStorageDictionary["Party"] = [];
-
-            pokemonStorageDictionary["Party"].Add(index.ToString(), pokemon);
-        }
-
-        foreach ((string box, Dictionary<int, PartyPokemon> boxDictionary) in BoxList)
-        {
-            if (!pokemonStorageDictionary.ContainsKey(box))
-                pokemonStorageDictionary[box] = [];
-
-            foreach ((int slot, PartyPokemon pokemon) in boxDictionary)
-            {
-                string slotId = slot.ToString();
-                if (!pokemonStorageDictionary[box].ContainsKey(slotId.ToString()))
-                    pokemonStorageDictionary[box].Add(slotId.ToString(), pokemon);
-            }
-        }
-        return pokemonStorageDictionary;
-    }
 }

@@ -131,9 +131,4 @@ class Generation4Block
         Footer.CopyTo(data, DataLength);
         return data;
     }
-    
-    public void WriteBytesToData(byte[] input, int offset)
-    {
-        Array.Copy(input, 0, Data, offset, input.Length);
-    }
 }

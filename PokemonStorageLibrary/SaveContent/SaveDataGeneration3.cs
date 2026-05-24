@@ -24,7 +24,6 @@ public class SaveDataGeneration3 : SaveData
         }
         ParseOriginalTrainer();
         AreAllChecksumsValid();
-        // PrintPokedex();
         ParsePartyPokemon();
         ParseBoxPokemon();
     }
@@ -261,20 +260,6 @@ public class SaveDataGeneration3 : SaveData
         return p;
     }
 
-    public override void PrintPokedex()
-    {
-        Generation3Section readPokedex = Sections.First(x => x.SectionId == 0);
-        byte[] ownedBytes = Utility.GetBytes(readPokedex.Data, 0x0028, 49);
-        byte[] seenBytes = Utility.GetBytes(readPokedex.Data, 0x005C, 49);
-        for (int i = 0; i < 386; i++)
-        {
-            PokemonIdentity pokemon = Lookup.GetPokemonBySpeciesId(i+1, Language.Id);
-            int ownedBit = ownedBytes[i >> 3] >> (i & 7) & 1;
-            int seenBit = seenBytes[i >> 3] >> (i & 7) & 1;
-            Console.WriteLine($"{seenBit}/{ownedBit} - {pokemon.SpeciesName}");
-        }
-    }
-
     public override void WriteToPokedex(int nationalIndex, bool seen = true, bool owned = true)
     {
         Generation3Section readPokedex = Sections.First(x => x.SectionId == 0);
@@ -505,7 +490,18 @@ public class SaveDataGeneration3 : SaveData
                 break;
             }
         }
-        SaveBoxDataBytesToSections(boxData);
+        
+        foreach (Generation3Section section in Sections)
+        {
+            if (section.SectionId < 5) continue;
+            byte[] newData = new byte[3968];
+            Array.Fill<byte>(newData, 0x00);
+
+            int dataLength = section.SectionId == 13 ? 2000 : 3968;
+            Buffer.BlockCopy(boxData, (section.SectionId-5)*3968, newData, 0, dataLength);
+            section.Data = newData;
+            section.Checksum = section.GetCalculatedChecksum();
+        }
         return slot;
     }
 
@@ -519,7 +515,13 @@ public class SaveDataGeneration3 : SaveData
             i++;
         }
         
-        SaveBoxDataSectionsToBytes();
+        int physicalSectionOffset = 0;
+        foreach (Generation3Section section in Sections)
+        {
+            Buffer.BlockCopy(section.GetBytes(), 0, ModifiedData, SaveOffsets[SaveIndex] + (physicalSectionOffset * 0x1000), 0x1000);
+            physicalSectionOffset++;
+        }
+
         bool isValidWrite = AreAllChecksumsValid();
         
         if (!isValidWrite)
@@ -567,31 +569,6 @@ public class SaveDataGeneration3 : SaveData
             if (section.SectionId >= 5) bytes.AddRange(section.Data);
         }
         return bytes.ToArray();
-    }
-
-    public void SaveBoxDataBytesToSections(byte[] boxData)
-    {
-        foreach (Generation3Section section in Sections)
-        {
-            if (section.SectionId < 5) continue;
-            byte[] newData = new byte[3968];
-            Array.Fill<byte>(newData, 0x00);
-
-            int dataLength = section.SectionId == 13 ? 2000 : 3968;
-            Buffer.BlockCopy(boxData, (section.SectionId-5)*3968, newData, 0, dataLength);
-            section.Data = newData;
-            section.Checksum = section.GetCalculatedChecksum();
-        }
-    }
-
-    public void SaveBoxDataSectionsToBytes()
-    {
-        int physicalSectionOffset = 0;
-        foreach (Generation3Section section in Sections)
-        {
-            Buffer.BlockCopy(section.GetBytes(), 0, ModifiedData, SaveOffsets[SaveIndex] + (physicalSectionOffset * 0x1000), 0x1000);
-            physicalSectionOffset++;
-        }
     }
 
     #endregion

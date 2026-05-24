@@ -593,26 +593,5 @@ public class Lookup
         );
     }
 
-    public static PokemonIdentity GetPokemonBySpeciesId(int speciesId, int languageId)
-    {
-        List<SqliteParameter> parameters = [
-            new SqliteParameter("Id", SqliteType.Integer) { Value = speciesId },
-            new SqliteParameter("Lang", SqliteType.Integer) { Value = languageId }
-        ];
-
-        Int64 formId = (Int64)DbInterface.RetrieveScalar(""" 
-            SELECT 
-                pf.id
-            FROM 
-                pokemon p  
-                LEFT JOIN pokemon_forms pf ON p.id=pf.pokemon_id 
-                LEFT JOIN pokemon_species ps ON p.species_id=ps.id
-            WHERE ps.id = @Id
-            ORDER BY ps."order", pf."order" 
-        """, VeekunConnectionString, parameters);
-
-        return GetPokemonByFormId((ushort)formId, languageId);
-    }
-
     #endregion
 }

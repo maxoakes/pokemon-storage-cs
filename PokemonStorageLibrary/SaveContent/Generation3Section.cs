@@ -24,9 +24,6 @@ class Generation3Section
             Real = Checksum,
             Calculated = GetCalculatedChecksum()
         };
-
-        // Console.WriteLine($"1-Real:{Convert.ToString(checksumEvaluation.Real, 2)}");
-        // Console.WriteLine($"1-Calc:{Convert.ToString(checksumEvaluation.Calculated, 2)}");
     }
 
     public byte[] GetBytes()

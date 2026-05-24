@@ -378,38 +378,6 @@ public class SaveDataGeneration4 : SaveData
         return p;
     }
 
-    public override void PrintPokedex()
-    {
-        int offset = 0x0;
-        switch (Game.VersionGroupId)
-        {
-            case 8:
-                offset = 0x12DC;
-                break;
-            case 9:
-                offset = 0x1328;
-                break;
-            case 10:
-                offset = 0x12B8;
-                break;
-        }
-        int capturedOffset = offset + 4;
-        byte[] ownedBytes = Utility.GetBytes(GeneralBlocks[GeneralBlockIndex].Data, capturedOffset, 0x3F);
-        byte[] seenBytes = Utility.GetBytes(GeneralBlocks[GeneralBlockIndex].Data, capturedOffset+0x40, 0x3F);
-        byte[] femaleBytes = Utility.GetBytes(GeneralBlocks[GeneralBlockIndex].Data, capturedOffset+0x80, 0x3F);
-        byte[] maleBytes = Utility.GetBytes(GeneralBlocks[GeneralBlockIndex].Data, capturedOffset+0xC0, 0x3F);
-        for (int i = 0; i < 493; i++)
-        {
-            PokemonIdentity pokemon = Lookup.GetPokemonBySpeciesId(i+1, Language.Id);
-            int ownedBit = ownedBytes[i >> 3] >> (i & 7) & 1;
-            int seenBit = seenBytes[i >> 3] >> (i & 7) & 1;
-            int femaleBit = femaleBytes[i >> 3] >> (i & 7) & 1;
-            int maleBit = maleBytes[i >> 3] >> (i & 7) & 1;
-            Console.WriteLine($"{seenBit}/{ownedBit}({femaleBit}|{maleBit}) - {pokemon.SpeciesName}");
-        }
-        return;
-    }
-
     public override void WriteToPokedex(int nationalIndex, bool seen = true, bool owned = true)
     {
         int offset = 0x0;
@@ -719,35 +687,6 @@ public class SaveDataGeneration4 : SaveData
         return blockOrder[s];
     }
 
-    public void SaveStructureToModifiedBytes()
-    {
-        foreach (var block in GeneralBlocks)
-        {
-            block.WriteCalculatedChecksum();
-            byte[] data = block.GetBlockData();
-            Buffer.BlockCopy(data, 0, ModifiedData, block.DataOffset, data.Length);
-        }
-
-        foreach (var block in StorageBlocks)
-        {
-            block.WriteCalculatedChecksum();
-            byte[] data = block.GetBlockData();
-            Buffer.BlockCopy(data, 0, ModifiedData, block.DataOffset, data.Length);
-        }
-    }
-
-    public void UpdateGeneralBlock(byte[] input, int offset)
-    {
-        GeneralBlocks[0].WriteBytesToData(input, offset);
-        GeneralBlocks[1].WriteBytesToData(input, offset);
-    }
-
-    public void UpdateStorageBlock(byte[] input, int offset)
-    {
-        StorageBlocks[0].WriteBytesToData(input, offset);
-        StorageBlocks[1].WriteBytesToData(input, offset);
-    }
-
     public override int AppendPokemonAndSave(List<PartyPokemon> partyPokemonList, string filepath, bool overwriteBackup=true)
     {
         int i = 0;
@@ -755,7 +694,21 @@ public class SaveDataGeneration4 : SaveData
         {
             AddPokemonToNextOpenBox(partyPokemon);
             WriteToPokedex((int)partyPokemon.GetNationalDexNumber());
-            SaveStructureToModifiedBytes();
+
+            foreach (var block in GeneralBlocks)
+            {
+                block.WriteCalculatedChecksum();
+                byte[] data = block.GetBlockData();
+                Buffer.BlockCopy(data, 0, ModifiedData, block.DataOffset, data.Length);
+            }
+
+            foreach (var block in StorageBlocks)
+            {
+                block.WriteCalculatedChecksum();
+                byte[] data = block.GetBlockData();
+                Buffer.BlockCopy(data, 0, ModifiedData, block.DataOffset, data.Length);
+            }
+
             bool isValidWrite = AreAllChecksumsValid();
 
             if (!isValidWrite)

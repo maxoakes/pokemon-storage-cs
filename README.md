@@ -12,11 +12,10 @@ This program allows the transfer of Pokemon between generations 1-4, and to a lo
 
 ## Todo
 
-* Remove or make generic unused info when showing Pokemon from older versions
+* Remove unused info when showing Pokemon from older versions
 * Make theme consistant and clean it up
 * Add more/swappable themes
 * Refactor everything, remove unused things, combine things that are similar
-* Support other database types
 * Support Generation 5
 * Support Generation 6
 * Support Generation 7

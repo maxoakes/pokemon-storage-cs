@@ -81,47 +81,6 @@ public class SaveDataGeneration2 : SaveData
         }
     }
 
-    public override void PrintPokedex()
-    {
-        int ownedOffset;
-        int seenOffset;
-        if (IsCrystal)
-        {
-            if (IsJapanese)
-            {
-                ownedOffset = 0x29AA;
-                seenOffset = 0x29CA;
-            }
-            else
-            {
-                ownedOffset = 0x2A27;
-                seenOffset = 0x2A47;
-            }
-        }
-        else
-        {
-            if (IsJapanese)
-            {
-                ownedOffset = 0x29CE;
-                seenOffset = 0x29EE;
-            }
-            else
-            {
-                ownedOffset = 0x2A4C;
-                seenOffset = 0x2A6C;
-            }
-        }
-        byte[] owned = Utility.GetBytes(ModifiedData, ownedOffset, 0x32);
-        byte[] seen = Utility.GetBytes(ModifiedData, seenOffset, 0x32);
-        for (int i = 0; i < 251; i++)
-        {
-            PokemonIdentity pokemon = Lookup.GetPokemonBySpeciesId(i+1, Language.Id);
-            int ownedBit = owned[i >> 3] >> (i & 7) & 1;
-            int seenBit = seen[i >> 3] >> (i & 7) & 1;
-            Console.WriteLine($"{seenBit}/{ownedBit} - {pokemon.SpeciesName}");
-        }
-    }
-
     public override void WriteToPokedex(int nationalIndex, bool seen=true, bool owned=true)
     {
         int ownedOffset;
@@ -486,16 +445,14 @@ public class SaveDataGeneration2 : SaveData
         }
     }
 
-    public void CopyToCurrentBoxData(int boxId)
-    {
-        Array.Copy(BoxData[boxId].GetBoxBytes(), 0, ModifiedData, CurrentBoxDataOffset, BoxData[boxId].GetBoxBytes().Length);
-    }
-
     public void ApplyBoxData(int boxId)
     {
         if (boxId < 0) return;
         byte[] newBoxData = BoxData[boxId].GetBoxBytes();
-        if (boxId == CurrentBoxNumber) CopyToCurrentBoxData(boxId);
+        if (boxId == CurrentBoxNumber)
+        {
+            Array.Copy(BoxData[boxId].GetBoxBytes(), 0, ModifiedData, CurrentBoxDataOffset, BoxData[boxId].GetBoxBytes().Length);
+        }
         Array.Copy(newBoxData, 0, ModifiedData, BoxOffsets[boxId], newBoxData.Length);
     }
 

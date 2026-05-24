@@ -53,19 +53,6 @@ public class SaveDataGeneration1 : SaveData
         }
     }
 
-    public override void PrintPokedex()
-    {
-        byte[] owned = Utility.GetBytes(ModifiedData, 0x25A3, 0x13);
-        byte[] seen = Utility.GetBytes(ModifiedData, 0x25B6, 0x13);
-        for (int i = 0; i < 151; i++)
-        {
-            PokemonIdentity pokemon = Lookup.GetPokemonBySpeciesId(i+1, (int)Lookup.GetIdByIdentifier(Language.Identifier, DatabaseObject.Languages));
-            int ownedBit = owned[i >> 3] >> (i & 7) & 1;
-            int seenBit = seen[i >> 3] >> (i & 7) & 1;
-            Console.WriteLine($"{seenBit}/{ownedBit} - {pokemon.SpeciesName}");
-        }
-    }
-
     public override void WriteToPokedex(int nationalIndex, bool seen=true, bool owned=true)
     {
         int bitIndex = nationalIndex - 1;
@@ -285,7 +272,14 @@ public class SaveDataGeneration1 : SaveData
         foreach (PartyPokemon partyPokemon in partyPokemonList)
         {
             int boxId = AddPokemonToNextOpenBox(partyPokemon);
-            ApplyBoxData(boxId);
+            if (boxId < 0) continue;
+            
+            byte[] newBoxData = BoxData[boxId].GetBoxBytes();
+            if (boxId == CurrentBoxNumber)
+            {
+                Array.Copy(BoxData[boxId].GetBoxBytes(), 0, ModifiedData, 0x30C0, BoxData[boxId].GetBoxBytes().Length);
+            }
+            Array.Copy(newBoxData, 0, ModifiedData, BoxOffsets[boxId], newBoxData.Length);
 
             WriteToPokedex((int)partyPokemon.GetNationalDexNumber());
             i++;
@@ -315,19 +309,6 @@ public class SaveDataGeneration1 : SaveData
         {
             ModifiedData[BoxChecksumOffsets[i]] = CalculateChecksum(ModifiedData, BoxOffsets[i], BoxSize);
         }
-    }
-
-    public void CopyToCurrentBoxData(int boxId)
-    {
-        Array.Copy(BoxData[boxId].GetBoxBytes(), 0, ModifiedData, 0x30C0, BoxData[boxId].GetBoxBytes().Length);
-    }
-
-    public void ApplyBoxData(int boxId)
-    {
-        if (boxId < 0) return;
-        byte[] newBoxData = BoxData[boxId].GetBoxBytes();
-        if (boxId == CurrentBoxNumber) CopyToCurrentBoxData(boxId);
-        Array.Copy(newBoxData, 0, ModifiedData, BoxOffsets[boxId], newBoxData.Length);
     }
 
     private Dictionary<int, PartyPokemon> GetPokemonFromStorage(byte[] storageBytes, string lang, int pokemonOffset, int pokemonSize, int trainerNameOffset, int nicknamesOffset)
