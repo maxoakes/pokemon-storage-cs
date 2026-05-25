@@ -49,15 +49,7 @@ public partial class MainWindow : Window
             Name = storageModel.DisplayTitle,
             Header = headerPanel,
             Content = cardViewerContainer
-        };      
-
-        foreach (var boxes in storageModel.PokemonLists.Values)
-        {
-            foreach (PokemonModel pokemonModel in boxes)
-            {
-                pokemonModel.SetCardClickEvent((s, e) => AboutPanel.OnNewSelection(pokemonModel.Pokemon));
-            }
-        }
+        };
 
         tabControl.Items.Add(tabItem);
         StorageModels.Add(storageModel);

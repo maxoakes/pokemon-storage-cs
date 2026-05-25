@@ -7,6 +7,7 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 using Avalonia.Platform.Storage;
+using Mysqlx.Session;
 using Newtonsoft.Json;
 using PokemonStorageDesktop.Models;
 using PokemonStorageLibrary.Models;
@@ -16,16 +17,25 @@ namespace PokemonStorageDesktop.Views;
 public partial class CardViewerContainer : UserControl
 {
     public MainWindow MainWindow { get; }
-    public StorageModel StorageModel { get; }
+    public StorageModel StorageModel { get; private set; }
     public List<PartyPokemon> SelectedPokemon { get { return StorageModel.PokemonLists.Values.SelectMany(x => x).Where(x => x.IsChecked).Select(x => x.Pokemon).ToList(); } }
     
     public CardViewerContainer(MainWindow mainWindow, StorageModel storageModel)
     {
         InitializeComponent();
-        StorageModel = storageModel;
         MainWindow = mainWindow;
-        foreach ((string boxName, List<PokemonModel> pokemonModels) in storageModel.PokemonLists)
+        StorageModel = storageModel;
+        StorageModel.CardViewerContainer = this;
+        InstantiateCards();
+    }
+
+    public void InstantiateCards()
+    {
+
+        foreach ((string boxName, List<PokemonModel> pokemonModels) in StorageModel.PokemonLists)
         {
+            // Apply the on-click event function to update the AboutPanel
+            pokemonModels.ForEach(x => x.SetCardClickEvent((s, e) => MainWindow.AboutPanel.OnNewSelection(x.Pokemon)));
             CardGroup cardGroup = new CardGroup();
             cardGroup.SetCards(pokemonModels);
             cardGroup.SetBannerText(boxName);
@@ -34,6 +44,11 @@ public partial class CardViewerContainer : UserControl
         
         // Add padding at the end to prevent the last card from being cut off
         parentPanel.Children.Add(new Border { Height = 64 });
+    }
+    
+    public void ResetCards()
+    {
+        parentPanel.Children.Clear();
     }
 
     public void SetExportOptions(List<StorageModel> storageModels)
@@ -170,6 +185,11 @@ public partial class CardViewerContainer : UserControl
                         
                     DialogBoxOk storageModelTransferDialog = new DialogBoxOk(resultMessage, "Successful Transfer");
                     await storageModelTransferDialog.ShowDialog<bool>(MainWindow);
+
+                    selectedStorageModel.ClearPokemonLists();
+                    selectedStorageModel.ParseFile();
+                    selectedStorageModel.CardViewerContainer.ResetCards();
+                    selectedStorageModel.CardViewerContainer.InstantiateCards();
                 }
                 break;
         }

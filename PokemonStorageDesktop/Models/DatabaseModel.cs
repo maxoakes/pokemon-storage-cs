@@ -12,13 +12,19 @@ public class DatabaseModel : StorageModel
 {
     private string ConnectionString { get; set; }
     public override string DisplayTitle { get { return Path.GetFileNameWithoutExtension(Utility.GetConnectionStringPath(ConnectionString)); } }
+    
     public DatabaseModel(string connectionString) : base()
     {
         ConnectionString = connectionString;
-        
-        List<Int64> primaryKeys = DbInterface.RetrieveTable("SELECT id FROM pokemon", connectionString).AsEnumerable().Select(x => x.Field<Int64>("id")).ToList();
-        List<PartyPokemon> databasePokemon = primaryKeys.Select(x => new PartyPokemon(x, connectionString)).ToList();
+        ParseFile();
+    }
+
+    public override bool ParseFile()
+    {
+        List<Int64> primaryKeys = DbInterface.RetrieveTable("SELECT id FROM pokemon", ConnectionString).AsEnumerable().Select(x => x.Field<Int64>("id")).ToList();
+        List<PartyPokemon> databasePokemon = primaryKeys.Select(x => new PartyPokemon(x, ConnectionString)).ToList();
         PokemonLists.Add("Database", databasePokemon.Select(x => new PokemonModel(x)).ToList());
+        return true;
     }
 
     public override int ImportPokemon(List<PartyPokemon> partyPokemonList)

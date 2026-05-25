@@ -26,9 +26,10 @@ public partial class SlotCard : UserControl
     {
         Pokemon = pokemon;
         tbNickname.Text = Pokemon.Nickname;
+        tbLevel.Text = $"Lv. {Pokemon.Level}";
+        tbGender.Text = Pokemon.GetGenderCharacter();
         tbOriginalTrainer.Text = $"O/T: {Pokemon.OriginalTrainer.Name}";
-        tbInformation1.Text = $"Lv. {Pokemon.Level} {Pokemon.GetGenderCharacter()}\n{Lookup.GetDatabaseIdentityById(Pokemon.Nature.Id, DatabaseObject.Natures).Name}";
-        tbInformation2.Text = Pokemon.DatabaseTag;
+        tbDatabaseTag.Text = Pokemon.DatabaseTag;
 
         borderCard.Background = new SolidColorBrush(PokemonModel.GetColorFromTypeString(Pokemon.Type1.Identifier));
         borderName.Background = new SolidColorBrush(PokemonModel.GetColorFromTypeString(Pokemon.Type2.Identifier));
@@ -40,17 +41,30 @@ public partial class SlotCard : UserControl
 
         RenderOptions.SetBitmapInterpolationMode(imageSprite, BitmapInterpolationMode.None);
         int targetVersionId = Pokemon.Origin.Game.VersionId;
+        IImage? retrievedImage;
         while (true)
         {
-            imageSprite.Source = await GetImageFromUrl(BuildSpriteUrl(targetVersionId));
-            if (imageSprite.Source != null || targetVersionId < 1) break;
+            retrievedImage = await GetImageFromUrl(BuildSpriteUrl(targetVersionId));
+            if (retrievedImage != null)
+            {
+                double scale = retrievedImage.Size.Width >= 80 ? 1f : 1f;
+                imageSprite.Source = retrievedImage;
+                imageSprite.Width = retrievedImage.Size.Width * scale;
+                imageSprite.Height = retrievedImage.Size.Height * scale;
+                break;
+            }
+            else if (targetVersionId < 1)
+            {
+                // There was an error getting any sprite so the image will be null
+                break;
+            }
             else 
             {
                 Console.WriteLine("Attempting next lowest version group for sprite");
                 targetVersionId--;
             }
         }
-        
+
     }
 
     public string BuildSpriteUrl(int versionId)

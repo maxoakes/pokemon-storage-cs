@@ -474,7 +474,7 @@ public partial class PartyPokemon
         {
             Gender.MALE => "♂",
             Gender.FEMALE => "♀",
-            _ => "",
+            _ => "○",
         };
     }
 

@@ -358,25 +358,25 @@ public class SaveDataGeneration1 : SaveData
 
     public static byte GetTypeGameIndexByIndex(byte index)
     {
-        switch (index)
+        return index switch
         {
-            case 1: return 0; // Normal
-            case 2: return 1; // Fighting
-            case 3: return 2; // Flying
-            case 4: return 3; // Poison
-            case 5: return 4; // Ground
-            case 6: return 5; // Rock
-            case 7: return 7; // Bug
-            case 8: return 8; // Ghost
-            case 10: return 20; // Fire
-            case 11: return 21; // Water
-            case 12: return 22; // Grass
-            case 13: return 23; // Electric
-            case 14: return 24; // Psychic
-            case 15: return 25; // Ice
-            case 16: return 26; // Dragon
-            default: return 255;
-        }
+            1 => 0,// Normal
+            2 => 1,// Fighting
+            3 => 2,// Flying
+            4 => 3,// Poison
+            5 => 4,// Ground
+            6 => 5,// Rock
+            7 => 7,// Bug
+            8 => 8,// Ghost
+            10 => 20,// Fire
+            11 => 21,// Water
+            12 => 22,// Grass
+            13 => 23,// Electric
+            14 => 24,// Psychic
+            15 => 25,// Ice
+            16 => 26,// Dragon
+            _ => 255,
+        };
     } 
 
     #endregion
