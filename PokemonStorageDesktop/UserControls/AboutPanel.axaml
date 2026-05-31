@@ -43,7 +43,7 @@
         </Style>
         <Style Selector="TextBlock.SubheaderTitle">
             <Setter Property="Foreground" Value="{StaticResource PrimaryDarkTextColor}"/>
-            <Setter Property="FontSize" Value="{StaticResource PrimaryTextSize}"/>
+            <Setter Property="FontSize" Value="{StaticResource NormalTextSize}"/>
             <Setter Property="FontWeight" Value="Regular"/>
             <Setter Property="HorizontalAlignment" Value="Center"/>
         </Style>

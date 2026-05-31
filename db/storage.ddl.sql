@@ -40,6 +40,11 @@ CREATE TABLE IF NOT EXISTS stats (
 
 CREATE TABLE IF NOT EXISTS pokemon (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
+    created TEXT DEFAULT (datetime('now','localtime')),
+    tag TEXT DEFAULT NULL,
+    fk_stats INTEGER REFERENCES stats,
+    fk_origin INTEGER REFERENCES origin,
+    fk_original_trainer INTEGER REFERENCES original_trainer,    
     language_id INTEGER NOT NULL,
     species_id INTEGER NOT NULL,
     alt_form_id INTEGER NOT NULL DEFAULT 0,
@@ -67,13 +72,7 @@ CREATE TABLE IF NOT EXISTS pokemon (
     gen3_misc_data INTEGER NOT NULL DEFAULT 0,
     ribbon_sinnoh1_data INTEGER NOT NULL DEFAULT 0,
     ribbon_sinnoh2_data INTEGER NOT NULL DEFAULT 0,
-    ribbon_hoenn_data INTEGER NOT NULL DEFAULT 0,
-    fk_stats INTEGER REFERENCES stats,
-    fk_origin INTEGER REFERENCES origin,
-    fk_original_trainer INTEGER REFERENCES original_trainer,
-    created TEXT DEFAULT (datetime('now','localtime')),
-    tag TEXT DEFAULT NULL,
-    deleted INTEGER NOT NULL DEFAULT 0
+    ribbon_hoenn_data INTEGER NOT NULL DEFAULT 0
 );
 
 CREATE TABLE IF NOT EXISTS move_set (

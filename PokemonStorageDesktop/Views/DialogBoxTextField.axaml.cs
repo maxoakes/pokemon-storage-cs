@@ -30,6 +30,6 @@ public partial class DialogBoxTextField : Window
 
     private async void Cancel_Click(object? sender, RoutedEventArgs e)
     {
-        this.Close("");
+        this.Close("$RESET");
     }
 }

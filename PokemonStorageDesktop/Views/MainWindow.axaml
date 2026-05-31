@@ -25,7 +25,7 @@
         <Style Selector="TabControl.PrimaryTabControl > TabItem TextBlock">
             <Setter Property="Foreground" Value="{StaticResource PrimaryDarkTextColor}"/>
             <Setter Property="VerticalAlignment" Value="Center"/>
-            <Setter Property="FontSize" Value="{StaticResource PrimaryTextSize}"/>
+            <Setter Property="FontSize" Value="{StaticResource NormalTextSize}"/>
         </Style>
         <Style Selector="TabControl.PrimaryTabControl > TabItem:pointerover /template/ Border#PART_LayoutRoot">
             <Setter Property="Background" Value="{StaticResource LightAccentColor}"/>

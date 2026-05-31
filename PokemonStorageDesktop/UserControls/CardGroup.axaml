@@ -24,7 +24,7 @@
       <Style Selector="TextBlock.BannerTitle">
             <Setter Property="Foreground" Value="{StaticResource PrimaryDarkTextColor}"/>
             <Setter Property="VerticalAlignment" Value="Center"/>
-            <Setter Property="FontSize" Value="{StaticResource PrimaryTextSize}"/>
+            <Setter Property="FontSize" Value="{StaticResource NormalTextSize}"/>
       </Style>
   </UserControl.Styles>
   <StackPanel>

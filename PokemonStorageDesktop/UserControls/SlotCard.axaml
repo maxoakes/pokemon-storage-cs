@@ -15,7 +15,7 @@
             <Setter Property="Margin" Value="0"/>
             <Setter Property="Padding" Value="0"/>
             <Setter Property="Width" Value="100"/>
-            <Setter Property="Height" Value="164"/>
+            <Setter Property="Height" Value="148"/>
             <Setter Property="CornerRadius" Value="{StaticResource StandardCornerRadius}"/>
             <Setter Property="Cursor" Value="Hand"/>
         </Style>
@@ -39,17 +39,22 @@
             <Setter Property="Margin" Value="6"/>
             <Setter Property="Padding" Value="2"/>
             <Setter Property="Background" Value="#88222222"/>
-            <Setter Property="CornerRadius" Value="4"/>
+            <Setter Property="CornerRadius" Value="{StaticResource StandardCornerRadius}"/>
         </Style>
         <Style Selector="Border.BigOverlayText TextBlock">
-            <Setter Property="FontSize" Value="{StaticResource PrimaryTextSize}"/>
+            <Setter Property="FontSize" Value="{StaticResource NormalTextSize}"/>
         </Style>
         <Style Selector="Border.SmallOverlayText TextBlock">
-            <Setter Property="FontSize" Value="{StaticResource SecondaryTextSize}"/>
+            <Setter Property="FontSize" Value="{StaticResource SmallTextSize}"/>
         </Style>
         <Style Selector="Border.SpriteOverlayCheckbox">
-            <Setter Property="Margin" Value="6"/>
+            <Setter Property="Margin" Value="5"/>
             <Setter Property="Padding" Value="0"/>
+        </Style>
+        <Style Selector="Border.TinyOverlayText">
+            <Setter Property="Margin" Value="2"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Width" Value="70"/>
         </Style>
         <Style Selector="CheckBox.Transfer /template/ Border#NormalRectangle">
             <Setter Property="Height" Value="16"/>
@@ -70,7 +75,7 @@
 
         <Style Selector="TextBlock.Nickname">
             <Setter Property="FontWeight" Value="Bold"/>
-            <Setter Property="FontSize" Value="{StaticResource PrimaryTextSize}"/>
+            <Setter Property="FontSize" Value="{StaticResource NormalTextSize}"/>
             <Setter Property="HorizontalAlignment" Value="Center"/>
             <Setter Property="Foreground" Value="{StaticResource SecondaryDarkTextColor}"/>
         </Style>
@@ -78,10 +83,16 @@
         <Style Selector="StackPanel.InfoPanel">
             <Setter Property="Margin" Value="4"/>
         </Style>
-        <Style Selector="TextBlock.InfoSmall">
-            <Setter Property="FontSize" Value="{StaticResource SecondaryTextSize}"/>
-            <Setter Property="HorizontalAlignment" Value="Left"/>
+        <Style Selector="TextBlock.Info">
             <Setter Property="Foreground" Value="{StaticResource SecondaryDarkTextColor}"/>
+        </Style>
+        <Style Selector="TextBlock.Small">
+            <Setter Property="FontSize" Value="{StaticResource SmallTextSize}"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+        </Style>
+        <Style Selector="TextBlock.Tiny">
+            <Setter Property="FontSize" Value="{StaticResource TinyTextSize}"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
         </Style>
     </UserControl.Styles>
 
@@ -101,6 +112,9 @@
                             <Border Classes="SpriteOverlayCheckbox" HorizontalAlignment="Left" VerticalAlignment="Top">
                                 <CheckBox x:Name="cbTransfer" Name="TransferCheckbox" Classes="Transfer"/>
                             </Border>
+                            <Border Classes="TinyOverlayText" HorizontalAlignment="Left" VerticalAlignment="Bottom">
+                                <TextBlock x:Name="tbDatabaseTag" Name="DatabaseValue" Classes="Info Tiny" Text="4-mono-bug-1"/>
+                            </Border>
                         </Grid>
                     </Border>
                     <Border x:Name="borderName" Classes="HeaderTitle">
@@ -108,8 +122,7 @@
                     </Border>
                 </StackPanel>
                 <StackPanel Classes="InfoPanel">
-                    <TextBlock x:Name="tbOriginalTrainer" Name="OriginalTrainerValue" Classes="InfoSmall" Text="O/T: Ash"/>
-                    <TextBlock x:Name="tbDatabaseTag" Name="DatabaseValue" Classes="InfoSmall" Text="4-mono-bug-1"/>
+                    <TextBlock x:Name="tbOriginalTrainer" Name="OriginalTrainerValue" Classes="Info Small" Text="O/T: Ash"/>
                 </StackPanel>
             </DockPanel>
         </Border>

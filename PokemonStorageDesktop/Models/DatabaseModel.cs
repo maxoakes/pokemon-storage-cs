@@ -21,9 +21,24 @@ public class DatabaseModel : StorageModel
 
     public override bool ParseFile()
     {
-        List<Int64> primaryKeys = DbInterface.RetrieveTable("SELECT id FROM pokemon", ConnectionString).AsEnumerable().Select(x => x.Field<Int64>("id")).ToList();
+        List<Int64> primaryKeys = DbInterface.RetrieveTable("SELECT id FROM pokemon ORDER BY tag, species_id, alt_form_id", ConnectionString).AsEnumerable().Select(x => x.Field<Int64>("id")).ToList();
         List<PartyPokemon> databasePokemon = primaryKeys.Select(x => new PartyPokemon(x, ConnectionString)).ToList();
-        PokemonLists.Add("Database", databasePokemon.Select(x => new PokemonModel(x)).ToList());
+        foreach (PartyPokemon pokemon in databasePokemon)
+        {
+            string generationName = $"Generation {pokemon.Origin.Game.GenerationId}";
+            if (PokemonLists.TryGetValue(generationName, out List<PokemonModel>? value))
+            {
+                value.Add(new PokemonModel(pokemon));
+            }
+            else
+            {
+                PokemonLists.Add(generationName, [
+                    new PokemonModel(pokemon)
+                ]);
+            }
+        }
+        
+        PokemonLists = PokemonLists.OrderBy(x => x.Key).ToDictionary(x => x.Key, x => x.Value);
         return true;
     }
 

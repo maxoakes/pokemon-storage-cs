@@ -28,7 +28,7 @@ public partial class SlotCard : UserControl
         tbNickname.Text = Pokemon.Nickname;
         tbLevel.Text = $"Lv. {Pokemon.Level}";
         tbGender.Text = Pokemon.GetGenderCharacter();
-        tbOriginalTrainer.Text = $"O/T: {Pokemon.OriginalTrainer.Name}";
+        tbOriginalTrainer.Text = $"{Pokemon.OriginalTrainer.Name} ({Pokemon.OriginalTrainer.PublicId})";
         tbDatabaseTag.Text = Pokemon.DatabaseTag;
 
         borderCard.Background = new SolidColorBrush(PokemonModel.GetColorFromTypeString(Pokemon.Type1.Identifier));

@@ -51,6 +51,11 @@ public partial class CardViewerContainer : UserControl
         parentPanel.Children.Clear();
     }
 
+    public void UncheckAll()
+    {
+        StorageModel.PokemonLists.Values.ToList().ForEach(x => x.ForEach(y => y.Card.TransferCheckbox.IsChecked = false));
+    }
+
     public void SetExportOptions(List<StorageModel> storageModels)
     {
         if (btnTransferSelected.Flyout is MenuFlyout flyout)
@@ -175,6 +180,10 @@ public partial class CardViewerContainer : UserControl
                             "Database Tag Assignment"
                         );
                         string tag = await databaseTagDialog.ShowDialog<string>(MainWindow);
+
+                        // Special return marker
+                        if (tag=="$RESET") return;
+                        
                         SelectedPokemon.ForEach(x => x.DatabaseTag = tag);
                     }
                     
@@ -190,6 +199,7 @@ public partial class CardViewerContainer : UserControl
                     selectedStorageModel.ParseFile();
                     selectedStorageModel.CardViewerContainer.ResetCards();
                     selectedStorageModel.CardViewerContainer.InstantiateCards();
+                    UncheckAll();
                 }
                 break;
         }
