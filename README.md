@@ -17,7 +17,6 @@ This was originally written in Python (https://github.com/maxoakes/pokemon-stora
 ## Todo
 
 * [BUG] Gen 4 Johto Pokemon report they were met at 'Faraway Place'
-* Add feature to delete and/or replace Pokemon from database (and save files?)
 * Remove unused info when showing Pokemon from older versions
 * Make theme consistant and clean it up
 * Add more/swappable themes

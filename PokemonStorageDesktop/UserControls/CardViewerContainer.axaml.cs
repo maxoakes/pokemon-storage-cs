@@ -69,6 +69,14 @@ public partial class CardViewerContainer : UserControl
             showdownItem.Click += ExportSelected_Click;
             flyout.Items.Add(showdownItem);
 
+            MenuItem jsonItem = new MenuItem 
+            { 
+                Name = "DEFAULT_Json", 
+                Header = "Export Selected to JSON"
+            };
+            jsonItem.Click += ExportSelected_Click;
+            flyout.Items.Add(jsonItem);
+
             if (StorageModel is DatabaseModel)
             {
                 MenuItem storageDeleteItem = new MenuItem
