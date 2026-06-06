@@ -594,4 +594,8 @@ public class Lookup
     }
 
     #endregion
+
+    #region Pokemon Storage
+
+    #endregion
 }

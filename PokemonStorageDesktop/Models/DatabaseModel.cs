@@ -10,7 +10,7 @@ namespace PokemonStorageDesktop.Models;
 
 public class DatabaseModel : StorageModel
 {
-    private string ConnectionString { get; set; }
+    public string ConnectionString { get; }
     public override string DisplayTitle { get { return Path.GetFileNameWithoutExtension(Utility.GetConnectionStringPath(ConnectionString)); } }
     
     public DatabaseModel(string connectionString) : base()

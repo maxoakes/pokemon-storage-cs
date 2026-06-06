@@ -1,5 +1,6 @@
 using System.Data;
 using Microsoft.Data.Sqlite;
+using Mysqlx.Resultset;
 
 namespace PokemonStorageLibrary.Models;
 
@@ -499,6 +500,13 @@ public partial class PartyPokemon
 
     public int InsertIntoDatabase(string connectionString)
     {
+        // If the original trainer does not exist, add it to the database
+        long? otPrimaryKey = OriginalTrainer.GetDatabasePrimaryKey(connectionString);
+        if (!otPrimaryKey.HasValue)
+        {
+            otPrimaryKey = OriginalTrainer.InsertIntoDatabase(connectionString);
+        }
+
         List<SqliteParameterPair> parameters = 
         [
             new SqliteParameterPair("language_id", SqliteType.Integer, LanguageId),
@@ -531,13 +539,38 @@ public partial class PartyPokemon
             new SqliteParameterPair("ribbon_hoenn_data", SqliteType.Integer, Ribbons.HoennSet),
             new SqliteParameterPair("fk_stats", SqliteType.Integer, Stats.InsertIntoDatabase()),
             new SqliteParameterPair("fk_origin", SqliteType.Integer, Origin.InsertIntoDatabase()),
-            new SqliteParameterPair("fk_original_trainer", SqliteType.Integer, OriginalTrainer.GetDatabasePrimaryKeyAndInsertIfNotExist()),
+            new SqliteParameterPair("fk_original_trainer", SqliteType.Integer, otPrimaryKey),
             new SqliteParameterPair("tag", SqliteType.Text, DatabaseTag),
         ];
 
         int primaryKey = DbInterface.InsertIntoDatabase("pokemon", parameters, connectionString);
         Moves.Values.ToList().ForEach(x => x.InsertIntoDatabase(primaryKey));
         return primaryKey;
+    }
+
+    public long DeleteFromDatabase(string connectionString)
+    {
+        if (DatabasePrimaryKey <= 0) return -1;
+
+        List<SqliteParameter> parameters = [
+            new SqliteParameter("PrimaryKey", SqliteType.Integer) { Value = DatabasePrimaryKey },
+        ];
+
+        DataRow selectResult = DbInterface.RetrieveSingleRow("SELECT * FROM pokemon p WHERE id=@PrimaryKey", connectionString, parameters);
+        parameters.Add(new SqliteParameter("StatsId", SqliteType.Integer) { Value = selectResult.Field<long>("fk_stats") });
+        parameters.Add(new SqliteParameter("OriginId", SqliteType.Integer) { Value = selectResult.Field<long>("fk_origin") });
+        parameters.Add(new SqliteParameter("OtId", SqliteType.Integer) { Value = selectResult.Field<long>("fk_original_trainer") });
+
+        int deleteMoveResult = DbInterface.ExecuteStatement("DELETE FROM move_set WHERE pokemon_id=@PrimaryKey", connectionString, parameters);
+        int deletePokemonResult = DbInterface.ExecuteStatement("DELETE FROM pokemon WHERE id=@PrimaryKey", connectionString, parameters);
+        int statsDeleteResult = DbInterface.ExecuteStatement("DELETE FROM stats WHERE id=@StatsId", connectionString, parameters);
+        int originDeleteResult = DbInterface.ExecuteStatement("DELETE FROM origin WHERE id=@OriginId", connectionString, parameters);
+        int otDeleteResult = 0;
+        if (!OriginalTrainer.IsTrainerUsedByPokemon(connectionString))
+        {
+            otDeleteResult = OriginalTrainer.DeleteFromDatabase(connectionString);
+        }
+        return deleteMoveResult + deletePokemonResult + statsDeleteResult + originDeleteResult + otDeleteResult;
     }
 
     #endregion

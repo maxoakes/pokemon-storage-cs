@@ -175,7 +175,22 @@ public static class DbInterface
         }
 
         return ExecuteScalar(command);
+    }
 
+    public static int ExecuteStatement(string statement, string connectionString, List<SqliteParameter>? parameters = null, bool isStoredProcedure = false)
+    {
+        SqliteCommand command = PrepareSqlCommand(statement, connectionString);
+        if (isStoredProcedure)
+        {
+            command.CommandType = CommandType.StoredProcedure;
+        }
+
+        if (parameters != null)
+        {
+            command.Parameters.AddRange([.. parameters.Select(x => PrepareParameterValue(x))]);
+        }
+
+        return ExecuteNonQuery(command);
     }
 
     #endregion

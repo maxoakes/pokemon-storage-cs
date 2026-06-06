@@ -39,7 +39,7 @@ public class Trainer
         }
     }
 
-    public int InsertIntoDatabase()
+    public int InsertIntoDatabase(string connectionString)
     {
         List<SqliteParameterPair> parameterPairs =
         [
@@ -49,40 +49,51 @@ public class Trainer
             new SqliteParameterPair("secret_id", SqliteType.Integer, SecretId)
         ];
 
-        return DbInterface.InsertIntoDatabase("original_trainer", parameterPairs, Lookup.DefaultStorageConnectionString);
+        return DbInterface.InsertIntoDatabase("original_trainer", parameterPairs, connectionString);
     }
 
-    public int GetDatabasePrimaryKeyIfExists()
+    public Int64? GetDatabasePrimaryKey(string connectionString)
     {
-        List<SqliteParameterPair> parameterPairs =
-        [
-            new SqliteParameterPair("name", SqliteType.Text, Name),
-            new SqliteParameterPair("gender", SqliteType.Integer, (int)Gender),
-            new SqliteParameterPair("public_id", SqliteType.Integer, PublicId),
-            new SqliteParameterPair("secret_id", SqliteType.Integer, SecretId)
+        List<SqliteParameter> parameters = [
+            new SqliteParameter("Name", SqliteType.Text) { Value = Name },
+            new SqliteParameter("PublicId", SqliteType.Integer) { Value = PublicId },
+            new SqliteParameter("SecretId", SqliteType.Integer) { Value = SecretId },
         ];
 
-        object? primaryKey = DbInterface.RetrieveScalar("SELECT id FROM original_trainer WHERE public_id = @public_id AND secret_id = @secret_id", Lookup.DefaultStorageConnectionString, parameterPairs.Select(x => x.SqliteParameter).ToList());
-        if (primaryKey == null || primaryKey == DBNull.Value)
+        return (long?)DbInterface.RetrieveScalar("SELECT id FROM original_trainer ot WHERE ot.name=@Name AND ot.public_id=@PublicId AND ot.secret_id=@SecretId", connectionString, parameters);
+    }
+
+    public bool IsTrainerUsedByPokemon(string connectionString)
+    {
+        Int64? thisPrimaryKey = GetDatabasePrimaryKey(connectionString);
+        if (thisPrimaryKey.HasValue)
+        {
+            List<SqliteParameter> parameters = [
+                new SqliteParameter("PrimaryKey", SqliteType.Integer) { Value = thisPrimaryKey.Value },
+            ];
+            long result = (long?)DbInterface.RetrieveScalar("SELECT count(*) FROM pokemon p LEFT JOIN original_trainer ot ON p.fk_original_trainer = ot.id WHERE p.fk_original_trainer=@PrimaryKey GROUP BY p.fk_original_trainer", connectionString, parameters) ?? 0;
+            return result > 0;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    public int DeleteFromDatabase(string connectionString)
+    {
+        Int64? thisPrimaryKey = GetDatabasePrimaryKey(connectionString);
+        if (thisPrimaryKey.HasValue)
+        {
+            List<SqliteParameter> parameters = [
+                new SqliteParameter("PrimaryKey", SqliteType.Integer) { Value = thisPrimaryKey.Value },
+            ];
+
+            return DbInterface.ExecuteStatement("DELETE FROM original_trainer WHERE id=@PrimaryKey", connectionString, parameters);
+        }
+        else
         {
             return -1;
-        }
-        else
-        {
-            return Convert.ToInt32(primaryKey);
-        }
-    }
-
-    public int GetDatabasePrimaryKeyAndInsertIfNotExist()
-    {
-        int primaryKey = GetDatabasePrimaryKeyIfExists();
-        if (primaryKey < 0)
-        {
-            return InsertIntoDatabase();
-        }
-        else
-        {
-            return primaryKey;
         }
     }
 

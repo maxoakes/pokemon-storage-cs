@@ -69,6 +69,17 @@ public partial class CardViewerContainer : UserControl
             showdownItem.Click += ExportSelected_Click;
             flyout.Items.Add(showdownItem);
 
+            if (StorageModel is DatabaseModel)
+            {
+                MenuItem storageDeleteItem = new MenuItem
+                {
+                    Name = "DatabaseDelete",
+                    Header = $"Delete Selected from {StorageModel.DisplayTitle}"
+                };
+                storageDeleteItem.Click += ExportSelected_Click;
+                flyout.Items.Add(storageDeleteItem);
+            }
+
             foreach (StorageModel storageModel in storageModels)
             {
                 // Skip the current one
@@ -142,6 +153,43 @@ public partial class CardViewerContainer : UserControl
                     );
                     await showdownTransferDialog.ShowDialog<bool>(MainWindow);
                 }
+                break;
+            case "DatabaseDelete":
+                if (StorageModel is DatabaseModel databaseModel)
+                {
+                    DialogBoxYesNo deleteDialog = new DialogBoxYesNo(
+                        $"Are you sure you would like to delete the following selected Pokemon?\n\n{string.Join("\n", SelectedPokemon.Select(x => x.Nickname))}",
+                        "Deletion Confirmation",
+                        $"Yes, Delete {SelectedPokemon.Count}",
+                        "No, Do Not Delete",
+                        ""
+                    );
+
+                    int? deleteDialogResult = await deleteDialog.ShowDialog<int?>(MainWindow);
+                    if (deleteDialogResult.HasValue && deleteDialogResult.Value == 1)
+                    {
+                        int pokemonCount = 0;
+                        long rowCount = 0;
+                        foreach (PartyPokemon pokemon in SelectedPokemon)
+                        {
+                            rowCount += pokemon.DeleteFromDatabase(databaseModel.ConnectionString);
+                            pokemonCount++;
+                        }
+
+                        DialogBoxOk deleteConfirmationDialog = new DialogBoxOk(
+                            $"{pokemonCount} Pokemon {(pokemonCount == 1 ? "was" : "were")} removed from {databaseModel.DisplayTitle}. ({rowCount} total rows affected)", 
+                            "Successful Deletion"
+                        );
+                        await deleteConfirmationDialog.ShowDialog<bool>(MainWindow);
+
+                        databaseModel.ClearPokemonLists();
+                        databaseModel.ParseFile();
+                        databaseModel.CardViewerContainer.ResetCards();
+                        databaseModel.CardViewerContainer.InstantiateCards();
+                        UncheckAll();
+                    }
+                }
+
                 break;
             default:
                 StorageModel? selectedStorageModel = MainWindow.StorageModels.Find(x => x.DisplayTitle == senderControl?.Name);

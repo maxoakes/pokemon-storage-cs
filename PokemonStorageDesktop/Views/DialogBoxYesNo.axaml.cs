@@ -22,7 +22,15 @@ public partial class DialogBoxYesNo : Window
         lblContent.Text = label;
         btnYes.Content = yesText;
         btnNo.Content = noText;
-        btnCancel.Content = cancelText;
+        if (string.IsNullOrWhiteSpace(cancelText))
+        {
+            buttonContainer.Children.Remove(btnCancel);
+        }
+        else
+        {
+            btnCancel.Content = cancelText;
+        }
+        
     }
 
     private async void Yes_Click(object? sender, RoutedEventArgs e)
